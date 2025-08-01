@@ -1,9 +1,9 @@
 import numpy as np
 from scipy.linalg import qr
 import copy
-from TTs import TTs
-import tt
-from tdevott import zRightOrth
+from .TTs import TTs
+from .tt import zCreMPS, zTT
+from .tdevott import zRightOrth
 
 class TTs1Q(TTs):
     """ MPS and MPO for 1qubit systems
@@ -70,7 +70,7 @@ class TTs1Q(TTs):
             rhoBondDims[i, 1] = min(bondDim, row, col)
             rhoBondDims[i+1, 0] = rhoBondDims[i, 1]
 
-        self.rho = tt.zCreMPS(self.numCore, rhoBondDims, levels)
+        self.rho = zCreMPS(self.numCore, rhoBondDims, levels)
 
         ket0, bra0 = qr(rhoIni)
 
@@ -141,7 +141,7 @@ class TTs1Q(TTs):
                 ann[i][j, j+1] = np.sqrt(j+1)
 
         # creare array of MPO
-        self.H = np.array([[tt.zTT() for _ in range(self.numCore)]
+        self.H = np.array([[zTT() for _ in range(self.numCore)]
                            for _ in range(3)])
         
         # set values for MPO
