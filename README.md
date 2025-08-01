@@ -1,5 +1,5 @@
 <p align="center">
-    <img src="docs/figures/logo.png" width="600">
+    <img src="docs/figures/entangling_qc.png" width="600">
 </p>
 
 <p align="center">
