@@ -16,9 +16,9 @@
 
 ---
 
-# Welcome to QuantumDNA
+# Welcome to HEOM
 
-**Author: [Dennis Herb](https://github.com/dehe1011)**
+**Authors: [Kiyoto Nakamura, Dennis Herb](https://github.com/dehe1011)**
 
 ## References
 
