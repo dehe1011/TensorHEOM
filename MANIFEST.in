@@ -1,0 +1,18 @@
+# Include the README, LICENSE, and other documentation files
+include README.md
+include LICENSE.txt
+include CITATION.bib
+
+# Include the MANIFEST file itself
+include MANIFEST.in
+
+# Include requirement files
+include requirements/*.txt
+
+# Include files in the package's root directory
+include heom/*.mplstyle
+# Include all .py files
+recursive-include heom *.py
+
+# Include specific data files
+include heom/data/*.json
