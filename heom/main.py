@@ -3,6 +3,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 
+from .TTs1Q import TTs1Q
 from .TTs2QId import TTs2QId
 from .tdevott import timeEvolution
 from .dynamics import outputCurrentStates, calcDynamics
@@ -52,9 +53,13 @@ def main(rho, sequence, bath, V, dtFB, stride, isRK13=False):
         bondDim = max(bondDim, bondDimTmp)
         isRK13 = isRK13 or isRK13Tmp
     
-    TTs = TTs2QId(rho['rhoIni'], bondDim,
-                  sequence[0]['omegaQ'], sequence[0]['J'],
-                  V, depth, nu, coeff)
+    if rho['numQ'] == 1:
+        TTs = TTs1Q(rho['rhoIni'], bondDim, sequence[0]['omegaQ'],
+                    V, depth, nu, coeff)
+    elif rho['numQ'] == 2:
+        TTs = TTs2QId(rho['rhoIni'], bondDim,
+                      sequence[0]['omegaQ'], sequence[0]['J'],
+                      V, depth, nu, coeff)
     
     timeEvo = timeEvolution(rho['numQ'], TTs, 0.5*dtFB, isRK13)
 
