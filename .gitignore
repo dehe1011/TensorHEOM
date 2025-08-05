@@ -20,22 +20,11 @@ htmlcov/
 __pycache__
 .pytest_cache/
 
-# pylint
-.pylintrc
-
-# mypy
-.mypy_cache/
-
 # created by coverage
 *.egg-info/
 .coverage
 
-# created by setuptools (python setup.py sdist bdist_wheel)
-dist/
-build/
-.egg-info/
-
-# created by build (python -m build)
+# created by build (python -m build) or by setuptools (python setup.py sdist bdist_wheel)
 dist/
 .egg-info/
 
