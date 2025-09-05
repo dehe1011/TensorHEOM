@@ -25,7 +25,7 @@ class directCplStepVarJ(iSwapDPulse):
         super().__init__()
 
         gateTime = kwargs['gateTime']
-        self.amp = np.pi / gateTime
+        self.amp = np.pi / 2 / gateTime
 
     def getGateTime(self, dt: float, params: list) -> int:
         """get gate time in the unit of dt
@@ -38,7 +38,7 @@ class directCplStepVarJ(iSwapDPulse):
                 int: gate time
         """
 
-        return int(np.pi / self.amp / dt)
+        return int(np.pi / 2 / self.amp / dt)
     
     def initSeq(self, totalSize: int) -> None:
         """initialize sequences
