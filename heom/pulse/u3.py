@@ -7,17 +7,17 @@ class U3Pulse(abstractPulse):
         -> rotation whose angle is in x-y plan + virtual Z gate
     """
 
-    def elementalGate(self) -> Instruction:
-        """return elemental gate
+    def elementalGates(self) -> list[Instruction]:
+        """return a list of elemental gates
 
-            returns (qiskit.circuit.Instruction):
-                elemental gate
+            returns (list[qiskit.circuit.Instruction]):
+                a list of elemental gates
         """
         theta = Parameter('theta')
         phi = Parameter('phi')
         lam = Parameter('lam')
 
-        return U3Gate(theta, phi, lam)
+        return [U3Gate(theta, phi, lam)]
 
     def vzTransform(self, params: list[float], globalPhase: float,
                 localPhase: list[float], qubitIdx: list[int])\
@@ -33,6 +33,7 @@ class U3Pulse(abstractPulse):
                     params[0]: theta
                     params[1]: phi
                     params[2]: lam
+                    params[4]: gate name ('u3')
                     for U3Gate(theta, phi, lam)
                 globalPhase (float): global phase
                 localPhase (list[float]): rotation angle of RZGate
@@ -48,10 +49,22 @@ class U3Pulse(abstractPulse):
                     after the new U3Gate
         """
 
-        theta, phi, lam = params
+        theta, phi, lam = params[0:3]
         globalPhase += 0.5 * (phi + lam)
         phase = localPhase[qubitIdx[0]]
         gateOut = U3Gate(theta, -(lam + phase), lam+phase)
         localPhase[qubitIdx[0]] += phi + lam
 
         return gateOut, globalPhase, localPhase
+    
+    def isDelayed(self, name: str) -> bool:
+        """returns whether idling should be inserted
+
+            params:
+                name (str): gate name ('u3')
+            return (bool):
+                True: idling is inserted after this gate
+                False: idling is not inserted
+        """
+
+        return True

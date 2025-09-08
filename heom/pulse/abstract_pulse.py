@@ -29,10 +29,14 @@ class abstractPulse(ABC):
         pass
 
     @abstractmethod
-    def elementalGate(self) -> Instruction:
+    def elementalGates(self) -> list[Instruction]:
         pass
 
     @abstractmethod
     def vzTransform(self, params, globalPhase, localPhase, qubtIdx)\
         -> tuple[Instruction, float, list[float]]:
+        pass
+
+    @abstractmethod
+    def isDelayed(self, name) -> bool:
         pass

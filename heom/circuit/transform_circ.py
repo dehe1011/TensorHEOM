@@ -14,7 +14,7 @@ def transform(qc: QuantumCircuit, TTs: TTs):
 
         returns:
             qiskit.QuantumCircuit: quantum circuit consisting of 
-                'rx', 'ry', and 'xx_plus_yy'
+                elemental gates defined in TTs
     """
 
     propDict = {}
@@ -25,12 +25,13 @@ def transform(qc: QuantumCircuit, TTs: TTs):
             prop = {tuple(qubitIdx): None,
                     (qubitIdx[1], qubitIdx[0]): None}
 
-        name = pulse.elementalGate().name
-        if name not in propDict.keys():
-            propDict[name] = prop
-        else:
-            for k, v in prop.items():
-                propDict[name][k] = v
+        for eGate in pulse.elementalGates():
+            name = eGate.name
+            if name not in propDict.keys():
+                propDict[name] = prop
+            else:
+                for k, v in prop.items():
+                    propDict[name][k] = v
 
     isAdded = {}
     for k in propDict.keys():
@@ -38,9 +39,10 @@ def transform(qc: QuantumCircuit, TTs: TTs):
 
     tgt = Target()
     for _, pulse in TTs.pulse:
-        key = pulse.elementalGate().name
-        if not isAdded[key]:
-            tgt.add_instruction(pulse.elementalGate(), propDict[key])
-            isAdded[key] = True
+        for eGate in pulse.elementalGates():
+            key = eGate.name
+            if not isAdded[key]:
+                tgt.add_instruction(eGate, propDict[key])
+                isAdded[key] = True
 
     return transpile(qc, target=tgt, optimization_level=1)

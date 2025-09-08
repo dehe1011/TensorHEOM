@@ -24,13 +24,14 @@ def setPulseSeq(qc: QuantumCircuit, TTs: TTs, omegaQ: list[float],
 
     # create a quantum circuit consisting of elemental gates only
     qcTransformed = transform(qc, TTs)
-
+    
     # apply virtual-Z-gate schemes
     qcVZ = QuantumCircuit(numQubits)
     globalPhase = 0
     localPhase = [0] * numQubits
     for gate in qcTransformed.data:
-        params = gate.operation.params
+        params = list(gate.operation.params)
+        params.append(gate.operation.name)
         qubitIdx = list(np.sort([q._index for q in gate.qubits]))
         pulseIdx = TTs.map[tuple(qubitIdx)]
         gateOut, globalPhase, localPhase = TTs.pulse[pulseIdx][1].vzTransform(
@@ -43,7 +44,6 @@ def setPulseSeq(qc: QuantumCircuit, TTs: TTs, omegaQ: list[float],
 
     # set gate time for each gate and insert idling
     idlingStep = int(idlingTime / dtFB)
-    qubits = [i for i in range(numQubits)]
     qcWithDelay = QuantumCircuit(numQubits)
     tgt = Target(dt=1)
     deltaT = Parameter('deltaT')
@@ -63,7 +63,10 @@ def setPulseSeq(qc: QuantumCircuit, TTs: TTs, omegaQ: list[float],
             gateTmp = Instruction(name, 1, 0, params)
 
         qcWithDelay.append(gateTmp, qubitIdx)
-        qcWithDelay.delay(idlingStep, qubits)
+
+        if TTs.pulse[pulseIdx][1].isDelayed(gate.operation.name):
+            qcWithDelay.delay(idlingStep, qubitIdx)
+        
 
         prop = {tuple(qubitIdx): InstructionProperties(duration=dur)}
         tgt.add_instruction(gateTmp, prop, name)
