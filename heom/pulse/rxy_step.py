@@ -4,6 +4,12 @@ from .u3 import U3Pulse
 class rxyStep(U3Pulse):
     """pulse for single-qubit gates with abrupt change
         elemental gate: U3 gate
+
+        attributes:
+            amp (float): amplitude of pulse
+            omega (float): drive frequency
+            ampSeq (numpy.ndarray): array of amplitude sequence
+            phaseSeq (numpy.ndarray): array of phase sequence
     """
 
     def __init__(self, **kwargs):

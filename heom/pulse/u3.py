@@ -5,19 +5,7 @@ from .abstract_pulse import abstractPulse
 class U3Pulse(abstractPulse):
     """U3 gate for single-qubit gates
         -> rotation whose angle is in x-y plan + virtual Z gate
-
-        attributes:
-            amp (float): amplitude of pulse
-            omega (float): drive frequency
-            ampSeq (numpy.ndarray): array of amplitude sequence
-            phaseSeq (numpy.ndarray): array of phase sequence
     """
-
-    def __init__(self, **kwargs):
-        self.amp = None
-        self.omeaga = None
-        self.ampSeq = None
-        self.phaseSeq = None
 
     def elementalGates(self) -> list[Instruction]:
         """return a list of elemental gates

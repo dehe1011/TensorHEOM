@@ -11,9 +11,6 @@ class iSwapDPulse(abstractPulse):
             iSwapD (qiskit.circuit.Instruction): iSwapD gate
             iSwapDSkip (qiskit.circiut.instruction): iSwapD gate
                 without idling
-            amp (float): amplitude of pulse
-            JSeq (numpy.ndarray):
-                sequence of coupling strength between qubits
     """
 
     def __init__(self, **kwargs):
@@ -47,9 +44,6 @@ class iSwapDPulse(abstractPulse):
         qc.append(self.iSwapD(), [0, 1])
 
         iSwapGate().add_decomposition(qc)
-
-        self.amp = None
-        self.Jseq = None
 
     def elementalGates(self) -> list[Instruction]:
         """return a list of elemental gate
@@ -104,28 +98,3 @@ class iSwapDPulse(abstractPulse):
         """
 
         return True if name == 'iswapd' else False
-
-    def getEnPtr(self) -> int:
-        """return end ponit of the pulse
-        """
-        
-        length = len(self.JSeq)
-        ptr = length - 1
-        for i in range(length-1, -1, -1):
-            if self.JSeq[ptr] == 0.0:
-                ptr -= 1
-                continue
-            else:
-                ptr += 1
-                break
-
-        return ptr
-    
-    def cropPulse(self, en) -> None:
-        """crop the sequence
-
-            params:
-                en (int): end point of the sequence
-        """
-
-        self.JSeq = self.JSeq[0:en]    
