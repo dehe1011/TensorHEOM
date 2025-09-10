@@ -5,7 +5,19 @@ from .abstract_pulse import abstractPulse
 class U3Pulse(abstractPulse):
     """U3 gate for single-qubit gates
         -> rotation whose angle is in x-y plan + virtual Z gate
+
+        attributes:
+            amp (float): amplitude of pulse
+            omega (float): drive frequency
+            ampSeq (numpy.ndarray): array of amplitude sequence
+            phaseSeq (numpy.ndarray): array of phase sequence
     """
+
+    def __init__(self, **kwargs):
+        self.amp = None
+        self.omeaga = None
+        self.ampSeq = None
+        self.phaseSeq = None
 
     def elementalGates(self) -> list[Instruction]:
         """return a list of elemental gates
@@ -68,3 +80,32 @@ class U3Pulse(abstractPulse):
         """
 
         return True
+       
+    def getEnPtr(self) -> int:
+        """return end ponit of the pulse sequence
+
+            returns:
+                ptr (int): end point of the sequence
+        """
+        
+        length = len(self.ampSeq)
+        ptr = length - 1
+        for i in range(length-1, -1, -1):
+            if self.ampSeq[ptr] == 0.0:
+                ptr -= 1
+                continue
+            else:
+                ptr += 1
+                break
+
+        return ptr
+    
+    def cropPulse(self, en) -> None:
+        """crop the sequence
+
+            params:
+                en (int): end point of the sequence
+        """
+
+        self.ampSeq = self.ampSeq[0:en]
+        self.phaseSeq = self.phaseSeq[0:en]    

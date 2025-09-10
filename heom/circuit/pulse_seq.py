@@ -76,9 +76,7 @@ def setPulseSeq(qc: QuantumCircuit, TTs: TTs, omegaQ: list[float],
     totalSize = qcScheduled.estimate_duration(tgt, 'dt')
     for _, pulse in TTs.pulse:
         pulse.initSeq(totalSize)
-    TTs.omegaQSeq = np.zeros([numQubits, totalSize])
-    for i in range(numQubits):
-        TTs.omegaQSeq[i] = omegaQ[i]
+    TTs.omegaQSeq = [np.ones(totalSize) * omegaQ[i] for i in range(numQubits)]
 
     ptr = [0] * numQubits
 
@@ -88,9 +86,10 @@ def setPulseSeq(qc: QuantumCircuit, TTs: TTs, omegaQ: list[float],
             pulseIdx = TTs.map[tuple(qubitIdx)]
             dur = gate.operation.params[0]
 
+            st = ptr[qubitIdx[0]]
             omegaQTmp = [omegaQ[qubitIdx[0]], omegaQ[qubitIdx[1]]]
-            TTs.omegaQSeq[qubitIdx[0]][ptr[i]:ptr[i]+dur], \
-                TTs.omegaQSeq[qubitIdx[1]][ptr[i]:ptr[i]+dur] = \
+            TTs.omegaQSeq[qubitIdx[0]][st:st+dur], \
+                TTs.omegaQSeq[qubitIdx[1]][st:st+dur] = \
                 TTs.pulse[pulseIdx][1].setOmegaQ(dur, omegaQTmp)
             
             TTs.pulse[pulseIdx][1].setSeq(ptr[qubitIdx[0]], dur, [])
@@ -108,3 +107,15 @@ def setPulseSeq(qc: QuantumCircuit, TTs: TTs, omegaQ: list[float],
             qubitIdx = gate.qubits[0]._index
             dur = gate.operation.params[0]
             ptr[qubitIdx] += dur
+
+    # crop redundant section at the end of the sequence
+    ptrs = []
+    for pulse in TTs.pulse:
+        ptrs.append(pulse[1].getEnPtr())
+
+    en = max(ptrs)
+    for pulse in TTs.pulse:
+        pulse[1].cropPulse(en)
+
+    for i in range(numQubits):
+        TTs.omegaQSeq[i] = TTs.omegaQSeq[i][0:en]

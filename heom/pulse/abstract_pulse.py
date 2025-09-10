@@ -40,3 +40,11 @@ class abstractPulse(ABC):
     @abstractmethod
     def isDelayed(self, name) -> bool:
         pass
+
+    @abstractmethod
+    def getEnPtr(self) -> int:
+        pass
+
+    @abstractmethod
+    def cropPulse(self, en) -> None:
+        pass

@@ -7,12 +7,6 @@ class directCplStepVarJ(iSwapDPulse):
         variable coupling strength between qubits
 
         elemental gate: complex conjugate of iSWAP (iSwapD)
-
-        attributes:
-            amp (float): amplitude of pulse
-            iSwapD (qiskit.circuit.Instruction): elemental gate
-            JSeq (numpy.ndarray):
-                sequence of coupling strength between qubits
     """
 
     def __init__(self, **kwargs):
@@ -22,7 +16,7 @@ class directCplStepVarJ(iSwapDPulse):
                     kwargs['gateTime'] (float):
                         gate time of XXPlusYYGate(pi) (= iSwapD)
         """
-        super().__init__()
+        super().__init__(**kwargs)
 
         gateTime = kwargs['gateTime']
         self.amp = np.pi / 2 / gateTime
@@ -98,3 +92,28 @@ class directCplStepVarJ(iSwapDPulse):
         """
 
         return self.JSeq[stepNum]
+    
+    def getEnPtr(self) -> int:
+        """return end ponit of the pulse
+        """
+        
+        length = len(self.JSeq)
+        ptr = length - 1
+        for i in range(length-1, -1, -1):
+            if self.JSeq[ptr] == 0.0:
+                ptr -= 1
+                continue
+            else:
+                ptr += 1
+                break
+
+        return ptr
+    
+    def cropPulse(self, en) -> None:
+        """crop the sequence
+
+            params:
+                en (int): end point of the sequence
+        """
+
+        self.JSeq = self.JSeq[0:en]
