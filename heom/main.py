@@ -29,20 +29,7 @@ def main(fileName, qc, idlingTime, pulse, map, rho,
             rho (dict): properties of systems
                 rho['numQ']: number of qubits
                 rho['rhoIni'] (numpy.ndarray): initial reduced density matrix
-                rho['omegaQ'] (list): list of qubit frequency
-                
-            #####################################################
-            sequence (list): list of dictionary
-                Each dictionary specifies a single gate operation.
-                    params['time'] (float): simulation time
-                    params['omega'] (numpy.ndarray):
-                        1d array of drive frequency
-                    params['amp'] (numpy.ndarray): 1d array of drive amplitude
-                    params['phase'] (numpy.ndarray): 1d array of initial phase
-                    params['omegaQ'] (list): list of qubit frequency
-                    params['J'] (list):
-                        list of coupling strength between two qubits
-            #####################################################
+                rho['omegaQ'] (list): list of qubit frequency                
             bath (list): list of bath name
             V (numpy.ndarray): 3d array of system-bath coupling
                 V[j, :, :]: system operator coupled with j th bath
