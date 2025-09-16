@@ -10,21 +10,14 @@ class timeEvolution():
 
         attributes:
             dt (float): step width
-            numQ (int): number of qubits
             numCore (int): number of cores
-            omega (list): list of drive frequency
-            amp (list): list of drive amplitude
-            phase (list): list of initial phase of drive
-            numH (int): number of Hamiltonians ...
-                        time-independent part + drive part
             segArray (list): list of segments used for update of core
             ZNRK (int): stage number of Runge-Kutta
             zA, zB, zC (numpy.ndarray): parameters for Runge-Kutta
     """
-    def __init__(self, numQ: int, TTsIni: TTs, dt: float, isRK13: bool):
+    def __init__(self, TTsIni: TTs, dt: float, isRK13: bool):
         """
             params:
-                numQ (int): number of qubits
                 TTsIni (TTs.TTs): initialized MPS and MPO
                 dt (float): step witdh for forward/backward time integration
                 isRK13 (bool): Runge-Kutta method
@@ -32,13 +25,10 @@ class timeEvolution():
                     False: 5-stage 4th-order Runge-Kutta
         """
         self.dt = dt
-        self.numQ = numQ
+        self.numH = TTsIni.numH
+        self.getPrefactors = TTsIni.getPrefactors
 
-        self.omega = np.zeros(numQ)
-        self.amp = np.zeros(numQ)
-        self.phase = np.zeros(numQ)
 
-        self.numH = 2*numQ + 1
         self.segArray = self.zInitSegment(TTsIni)
 
         if isRK13: # RK13-5
@@ -148,26 +138,7 @@ class timeEvolution():
             
         return segArray
 
-
-    def setFieldParams(self, omega, amp, phase):
-        """set field parameters
-
-            params:
-                omega (numpy.ndarray): 1d array of frequency
-                amp (numpy.ndarray): 1d array of amplitude
-                phase (numpy.ndarray): 1d array of initial phase
-        """
-
-        for i in range(self.numQ):
-            self.omega[i] = omega[i]
-
-        for i in range(self.numQ):
-            self.amp[i] = amp[i]
-
-        for i in range(self.numQ):
-            self.phase[i] = phase[i]
-
-    def zTTTimeEvo(self, rho, H, time):
+    def zTTTimeEvo(self, rho, H, time, stepNum):
         """time evolution of rho with H at time
 
             params:
@@ -176,11 +147,14 @@ class timeEvolution():
                 H (numpy.ndarray): 
                     2d array of tt.zTT (MPO), Hamiltonian
                 time (float): current time
+                stepNum (int): current step number
         """
 
         numCore = len(rho)
 
         intBonds = [0] * (self.numH)
+
+        self.stepNum = stepNum
 
         # Forward sweep
         i = 0
@@ -237,32 +211,12 @@ class timeEvolution():
                     rho[i], H[j, i], self.segArray[j][i + 1])
                 intBonds[j] = H[j, i].bondDimL
 
-            self.zSRK4(S, i - 1, rho[i].bondDimL, intBonds, time + self.dt)
+            self.zSRK4(S, i - 1, rho[i].bondDimL, 
+                       intBonds, time + self.dt)
 
         i = 0
         zGetKS(rho[i], S)
         self.zKRK4St(rho[i], H[:, i], i, time + self.dt)
-
-    def getPreFact(self, timeIn):
-        """compute prefactor terms for Runge-Kutta update
-
-            params:
-                timeIn (float): current time
-
-            returns:
-                preFact (numpy.ndarray): prefactor                
-        """
-
-        preFact = np.zeros(self.numH, dtype=np.complex128)
-        preFact[0] = self.dt
-
-        for i in range(self.numQ):
-            preFact[2*i+1] = self.dt * self.amp[i] * \
-                np.cos(self.omega[i] * timeIn + self.phase[i])
-            preFact[2*(i+1)] = self.dt * self.amp[i] * \
-                np.sin(self.omega[i] * timeIn + self.phase[i])
-
-        return preFact
 
     def zKRK4St(self, rho, H, coreIdx, time):
         """RK integration of K at starting point
@@ -279,12 +233,12 @@ class timeEvolution():
 
         for i in range(self.ZNRK):
             timeTmp = time + self.dt * self.zC[i]
-            preFact = self.getPreFact(timeTmp)
+            preFact = self.getPrefactors(self.dt, timeTmp, self.stepNum)
 
             dumCore1 *= self.zA[i]
             for j in range(self.numH):
-                dumCore2 = zGetKSt(rho, H[j], 
-                                         self.segArray[j][coreIdx+1])
+                dumCore2 = zGetKSt(rho, H[j],
+                                   self.segArray[j][coreIdx+1])
                 dumCore1 += preFact[j] * dumCore2
             
             rho.core += self.zB[i] * dumCore1
@@ -304,7 +258,7 @@ class timeEvolution():
 
         for i in range(self.ZNRK):
             timeTmp = time + self.dt * self.zC[i]
-            preFact = self.getPreFact(timeTmp)
+            preFact = self.getPrefactors(self.dt, timeTmp, self.stepNum)
 
             dumCore1 *= self.zA[i]
             for j in range(self.numH):
@@ -329,7 +283,7 @@ class timeEvolution():
 
         for i in range(self.ZNRK):
             timeTmp = time + self.dt * self.zC[i]
-            preFact = self.getPreFact(timeTmp)
+            preFact = self.getPrefactors(self.dt, timeTmp, self.stepNum)
 
             dumCore1 *= self.zA[i]
             for j in range(self.numH):
@@ -356,7 +310,7 @@ class timeEvolution():
 
         for i in range(self.ZNRK):
             timeTmp = time + self.dt * self.zC[i]
-            preFact = -self.getPreFact(timeTmp)
+            preFact = -self.getPrefactors(self.dt, timeTmp, self.stepNum)
 
             dumS1 *= self.zA[i]
             for j in range(self.numH):

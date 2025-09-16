@@ -8,14 +8,30 @@ from .TTs2QId import TTs2QId
 from .tdevott import timeEvolution
 from .dynamics import outputCurrentStates, calcDynamics
 from .bath import getBathParams
+from .circuit.pulse_seq import setPulseSeq
 
-def main(rho, sequence, bath, V, dtFB, stride, isRK13=False):
+def main(fileName, qc, idlingTime, pulse, map, rho,
+         bath, V, dtFB, stride, isRK13=False):
     """main function for simulation
+        Dyanmics of the reduced density operator are written in fileName.
     
         params:
+            fileName (str): file name for output
+            qc (qiskit.QuantumCircuit): quantum circuit for simulation
+            idlingTime (float): idling time, in the unit of omegaQ[0] 
+            pulse (list[
+                list[list[qubitIdx], pulse.abstract_pulse.abstractPulse]
+                ]):
+            map (dict[tuple[int]: int]): dictionary for a mapping from
+                qubit indeces to pulse indeces
+                keys (tuple[int]): qubit indedes
+                values (int): pulse indeces for self.pulse
             rho (dict): properties of systems
                 rho['numQ']: number of qubits
                 rho['rhoIni'] (numpy.ndarray): initial reduced density matrix
+                rho['omegaQ'] (list): list of qubit frequency
+                
+            #####################################################
             sequence (list): list of dictionary
                 Each dictionary specifies a single gate operation.
                     params['time'] (float): simulation time
@@ -26,6 +42,7 @@ def main(rho, sequence, bath, V, dtFB, stride, isRK13=False):
                     params['omegaQ'] (list): list of qubit frequency
                     params['J'] (list):
                         list of coupling strength between two qubits
+            #####################################################
             bath (list): list of bath name
             V (numpy.ndarray): 3d array of system-bath coupling
                 V[j, :, :]: system operator coupled with j th bath
@@ -34,9 +51,6 @@ def main(rho, sequence, bath, V, dtFB, stride, isRK13=False):
             isRK13 (bool): Runge-Kutta method
                 True: 13-stage 5th-order Runge-Kutta
                 False: 5-stage 4th-order Runge-Kutta
-
-        returns:
-            result (pandas.DataFrame): time trace of the density matrix
     """
 
     nu = []
@@ -54,26 +68,18 @@ def main(rho, sequence, bath, V, dtFB, stride, isRK13=False):
         isRK13 = isRK13 or isRK13Tmp
     
     if rho['numQ'] == 1:
-        TTs = TTs1Q(rho['rhoIni'], bondDim, sequence[0]['omegaQ'],
-                    V, depth, nu, coeff)
+        TTs = TTs1Q(rho['rhoIni'], bondDim, V, depth, nu, coeff, pulse, map)
     elif rho['numQ'] == 2:
-        TTs = TTs2QId(rho['rhoIni'], bondDim,
-                      sequence[0]['omegaQ'], sequence[0]['J'],
-                      V, depth, nu, coeff)
+        TTs = TTs2QId(rho['rhoIni'], bondDim, V, depth, nu, coeff, pulse, map)
     
-    timeEvo = timeEvolution(rho['numQ'], TTs, 0.5*dtFB, isRK13)
+    setPulseSeq(qc, TTs, rho['omegaQ'], dtFB, idlingTime)
+    timeEvo = timeEvolution(TTs, 0.5*dtFB, isRK13)
 
-    result = []
-    currentTime = 0.0
+    with open(fileName, 'w') as file:
+        currentTime = 0.0
+        outputCurrentStates(currentTime, TTs, file)
 
-    result += outputCurrentStates(currentTime, TTs)
-
-    for params in tqdm(sequence):
-        params['currentTime'] = currentTime
-        result += calcDynamics(params, dtFB, stride, TTs, timeEvo)
-        currentTime = result[-1][0]
-
-    return pd.DataFrame(result)
+        calcDynamics(dtFB, stride, TTs, timeEvo, file)
 
 # 2qubit case, H+CNOT sequence
    

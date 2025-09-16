@@ -9,24 +9,32 @@ class TTs1Q(TTs):
     """ MPS and MPO for 1qubit systems
     """
 
-    def __init__(self, rhoIni, bondDim, omegaQ, V, depth, nu, coeff):
+    def __init__(self, rhoIni, bondDim, V, depth, nu, coeff,
+                 pulse, map):
         """
             params:
                 rhoIni (numpy.ndarray): initial reduced density operator
                 bondDim (int): bondDimension of MPS
-                omegaQ (numpy.ndarray): 1d array of qubit frequency
                 V (numpy.ndarray):
                     matrices for qubit-reservoir coupling (3d array)
                 nu (list): list of poles for FP-HEOM
                 coeff (list): list of residues for FP-HEOM
                 depth (list):
                     1d list of depth of hierarchy of FP-HEOM (from 0 to depth)
+                pulse (list[
+                    list[list[qubitIdx], pulse.abstract_pulse.abstractPulse]
+                    ]):
+                map (dict[tuple[int]: int]): dictionary for a mapping from
+                    qubit indeces to pulse indeces
+                    keys (tuple[int]): qubit indedes
+                    values (int): pulse indeces for self.pulse
         """
 
         super().__init__()
 
         self.dim = [nu[0].shape[0]]
 
+        self.numQ = 1
         self.numCore = 2 * self.dim[0] + 2
         self.ptrKet = [0]
         self.ptrBra = [2*self.dim[0]+1]
@@ -35,9 +43,13 @@ class TTs1Q(TTs):
 
         zRightOrth(self.rho)
 
-        self.zGetMPO(omegaQ, V, depth, nu, coeff)
+        self.numH = 4
+        self.zGetMPO(V, depth, nu, coeff)
 
         self.indices = self.getIndices()
+
+        self.pulse = pulse
+        self.map = map
 
     def zGetMPS(self, rhoIni, bondDim, depth):
         """create MPS
@@ -101,12 +113,10 @@ class TTs1Q(TTs):
                 coreTmp[j, 0, j] = 1.0 + 0.0j
             self.rho[i].core = copy.deepcopy(coreTmp.flatten(order='F'))
 
-    def zGetMPO(self, omegaQ, V, depth, nu, coeff):
+    def zGetMPO(self, V, depth, nu, coeff):
         """create MPO
 
             params:
-                omegaQ (numpy.ndarray): 1d array of qubit frequency
-                J (list): list of coupling strength between two qubits
                 V (numpy.ndarray):
                     matrices for qubit-reservoir coupling (3d array)
                 pol (list): list of poles for FP-HEOM
@@ -142,7 +152,7 @@ class TTs1Q(TTs):
 
         # creare array of MPO
         self.H = np.array([[zTT() for _ in range(self.numCore)]
-                           for _ in range(3)])
+                           for _ in range(self.numH)])
         
         # set values for MPO
         # system part
@@ -150,7 +160,6 @@ class TTs1Q(TTs):
         j = 0
         i = self.ptrKet[0]
         coreTmp = np.zeros([1, 2, 2, 4], dtype=np.complex128)
-        coreTmp[0, :, :, 0] = -0.5j * omegaQ[0] * sZ.T
         coreTmp[0, :, :, 1] = np.eye(sZ.shape[0])
         coreTmp[0, :, :, 3] = V[0].T
 
@@ -162,7 +171,6 @@ class TTs1Q(TTs):
         i = self.ptrBra[0]
         coreTmp = np.zeros([4, 2, 2, 1], dtype=np.complex128)
         coreTmp[0, :, :, 0] = np.eye(sZ.shape[0])
-        coreTmp[1, :, :, 0] = 0.5j * omegaQ[0] * sZ
         coreTmp[2, :, :, 0] = V[0]
 
         self.H[j, i].bondDimL = coreTmp.shape[0]
@@ -175,8 +183,30 @@ class TTs1Q(TTs):
         self.H[j, i].level = coreTmp.shape[1]
         self.H[j, i].core = copy.deepcopy(coreTmp.flatten(order='F'))
 
-        # drive for qubit 1 (cos)
+        # Zeeman splitting for qubit 1
         j = 1
+        i = self.ptrKet[0]
+        coreTmp = np.zeros([1, 2, 2, 2], dtype=np.complex128)
+        coreTmp[0, :, :, 0] =  0.5j * sZ.T
+        coreTmp[0, :, :, 1] = np.eye(sZ.shape[0])
+
+        self.H[j, i].bondDimL = coreTmp.shape[0]
+        self.H[j, i].bondDimR = coreTmp.shape[3]
+        self.H[j, i].level = coreTmp.shape[1]
+        self.H[j, i].core = copy.deepcopy(coreTmp.flatten(order='F'))
+
+        i = self.ptrBra[0]
+        coreTmp = np.zeros([2, 2, 2, 1], dtype=np.complex128)
+        coreTmp[0, :, :, 0] = np.eye(sZ.shape[0])
+        coreTmp[1, :, :, 0] = -0.5j * sZ
+
+        self.H[j, i].bondDimL = coreTmp.shape[0]
+        self.H[j, i].bondDimR = coreTmp.shape[3]
+        self.H[j, i].level = coreTmp.shape[1]
+        self.H[j, i].core = copy.deepcopy(coreTmp.flatten(order='F'))
+
+        # drive for qubit 1 (cos)
+        j = 2
         i = self.ptrKet[0]
         coreTmp = np.zeros([1, 2, 2, 2], dtype=np.complex128)
         coreTmp[0, :, :, 0] = -0.5j * sX.T
@@ -198,7 +228,7 @@ class TTs1Q(TTs):
         self.H[j, i].core = copy.deepcopy(coreTmp.flatten(order='F'))
 
         # drive for qubit 1 (sin)
-        j = 2
+        j = 3
         i = self.ptrKet[0]
         coreTmp = np.zeros([1, 2, 2, 2], dtype=np.complex128)
         coreTmp[0, :, :, 0] = -0.5j * sY.T
@@ -219,8 +249,8 @@ class TTs1Q(TTs):
         self.H[j, i].level = coreTmp.shape[1]
         self.H[j, i].core = copy.deepcopy(coreTmp.flatten(order='F'))
 
-        # time-independent part
         # reservoir
+        # time-independent part
         j = 0
         for l in range(1):
             coreTmp = np.zeros([4, depth[l]+1, depth[l]+1, 4],
@@ -258,7 +288,6 @@ class TTs1Q(TTs):
                 self.H[j, k].level = coreTmp.shape[1]
                 self.H[j, k].core = copy.deepcopy(coreTmp.flatten(order='F'))
 
-        # reservoir
         l = 0
         # drive for qubit 1
         coreTmp = np.zeros([2, depth[l]+1, depth[l]+1, 2],
@@ -266,48 +295,13 @@ class TTs1Q(TTs):
         coreTmp[0, :, :, 0] = np.eye(depth[l]+1)
         coreTmp[1, :, :, 1] = np.eye(depth[l]+1)
 
-        for j in range(1, 3):
+        for j in range(1, 4):
             for i in range(self.ptrKet[l]+1, self.ptrBra[l]):
                 self.H[j, i].bondDimL = coreTmp.shape[0]
                 self.H[j, i].bondDimR = coreTmp.shape[3]
                 self.H[j, i].level = coreTmp.shape[1]
                 self.H[j, i].core = copy.deepcopy(coreTmp.flatten(order='F'))
     
-    def changeCpl(self, J):
-        """There is no coupling.
-        """
-        return
-    
-    def changeFreq(self, omegaQ):
-        """change qubit frequency
-
-            params:
-                omegaQ (list): list of qubit frequency
-        """
-
-        sZ = np.array([[1.0,  0.0],
-                    [0.0, -1.0]], dtype=np.complex128)
-
-        # ptrKet[0]
-        HLocal = self.H[0, self.ptrKet[0]]
-        shape4d = (HLocal.bondDimL, HLocal.level, HLocal.level,
-                   HLocal.bondDimR)
-        coreTmp = copy.deepcopy(HLocal.core.reshape(shape4d, order='F'))
-
-        coreTmp[0, :, :, 0] = -0.5j * omegaQ[0] * sZ.T
-
-        HLocal.core = copy.deepcopy(coreTmp.flatten(order='F'))
-
-        # ptrBra[0]
-        HLocal = self.H[0, self.ptrBra[0]]
-        shape4d = (HLocal.bondDimL, HLocal.level, HLocal.level,
-                   HLocal.bondDimR)
-        coreTmp = copy.deepcopy(HLocal.core.reshape(shape4d, order='F'))
-
-        coreTmp[1, :, :, 0] = 0.5j * omegaQ[0] * sZ
-
-        HLocal.core = copy.deepcopy(coreTmp.flatten(order='F'))
-
     def getIndices(self):
         """compute MPS indices for output
 
@@ -323,3 +317,21 @@ class TTs1Q(TTs):
             indices[i, self.ptrBra[0]] = qWiseIdx[1]
 
         return indices
+
+    def getPrefactors(self, dt: float, time: float, stepNum: int)\
+            -> np.ndarray:
+        """compute prefactor terms for Runge-Kutta update
+
+            params:
+                dt (float): step size for Runge-Kutta integration
+                time (float): current time
+                stepNum (int): current step number of the integration
+            
+            returns:
+                list[float]: prefactors corresponding to MPO
+        """
+
+        preSX, preSY = self.pulse[0][1].getPrefactor(dt, time, stepNum)
+
+        return np.array(
+            [dt, dt * self.omegaQSeq[0][stepNum], dt * preSX, dt * preSY])
