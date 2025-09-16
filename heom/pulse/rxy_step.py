@@ -88,9 +88,9 @@ class rxyStep(U3Pulse):
                 preSY (float): prefactor for sigma_y term
         """
 
-        preSX = dt * self.ampSeq[stepNum]\
+        preSX = self.ampSeq[stepNum]\
             * np.cos(self.omega * time + self.phaseSeq[stepNum])
-        preSY = dt * self.ampSeq[stepNum]\
+        preSY = self.ampSeq[stepNum]\
             * np.sin(self.omega * time + self.phaseSeq[stepNum])
         
         return preSX, preSY
