@@ -24,19 +24,24 @@ def setPulseSeq(qc: QuantumCircuit, TTs: TTs, omegaQ: list[float],
 
     # create a quantum circuit consisting of elemental gates only
     qcTransformed = transform(qc, TTs)
-    
+
     # apply virtual-Z-gate schemes
     qcVZ = QuantumCircuit(numQubits)
     globalPhase = 0
     localPhase = [0] * numQubits
     for gate in qcTransformed.data:
-        params = list(gate.operation.params)
-        params.append(gate.operation.name)
-        qubitIdx = list(np.sort([q._index for q in gate.qubits]))
-        pulseIdx = TTs.map[tuple(qubitIdx)]
-        gateOut, globalPhase, localPhase = TTs.pulse[pulseIdx][1].vzTransform(
-            params, globalPhase, localPhase, qubitIdx
-        )
+        if gate.name != 'delay':
+            params = list(gate.operation.params)
+            params.append(gate.operation.name)
+            qubitIdx = list(np.sort([q._index for q in gate.qubits]))
+            pulseIdx = TTs.map[tuple(qubitIdx)]
+            gateOut, globalPhase, localPhase = \
+                TTs.pulse[pulseIdx][1].vzTransform(
+                    params, globalPhase, localPhase, qubitIdx
+                )
+        else:
+            gateOut = gate.operation
+
         qcVZ.append(gateOut, qubitIdx)
     
     qcVZ.global_phase = globalPhase
@@ -50,26 +55,29 @@ def setPulseSeq(qc: QuantumCircuit, TTs: TTs, omegaQ: list[float],
     tgt.add_instruction(Delay(deltaT))
 
     for i, gate in enumerate(qcVZ.data):
-        name = f'g{i}'
         qubitIdx = list(np.sort([q._index for q in gate.qubits]))
         params = gate.operation.params
-        pulseIdx = TTs.map[tuple(qubitIdx)]
-        dur = TTs.pulse[pulseIdx][1].getGateTime(dtFB, params)
-        params = [dur] + params
-        
-        if len(qubitIdx) == 2:
-            gateTmp = Instruction(name, 2, 0, params)
+        if gate.name != 'delay':
+            name = f'g{i}'
+            pulseIdx = TTs.map[tuple(qubitIdx)]
+            dur = TTs.pulse[pulseIdx][1].getGateTime(dtFB, params)
+            params = [dur] + params
+            
+            if len(qubitIdx) == 2:
+                gateTmp = Instruction(name, 2, 0, params)
+            else:
+                gateTmp = Instruction(name, 1, 0, params)
+
+            qcWithDelay.append(gateTmp, qubitIdx)
+
+            if TTs.pulse[pulseIdx][1].isDelayed(gate.operation.name):
+                qcWithDelay.delay(idlingStep, qubitIdx)
+            
+
+            prop = {tuple(qubitIdx): InstructionProperties(duration=dur)}
+            tgt.add_instruction(gateTmp, prop, name)
         else:
-            gateTmp = Instruction(name, 1, 0, params)
-
-        qcWithDelay.append(gateTmp, qubitIdx)
-
-        if TTs.pulse[pulseIdx][1].isDelayed(gate.operation.name):
-            qcWithDelay.delay(idlingStep, qubitIdx)
-        
-
-        prop = {tuple(qubitIdx): InstructionProperties(duration=dur)}
-        tgt.add_instruction(gateTmp, prop, name)
+            qcWithDelay.delay(params[0], qubitIdx)
 
     qcScheduled = transpile(qcWithDelay, target=tgt, scheduling_method='alap')
 

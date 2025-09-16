@@ -1,6 +1,7 @@
 from numpy import pi
 from qiskit import QuantumCircuit, transpile
 from qiskit.transpiler import Target
+from qiskit.circuit import Delay, Parameter
 from ..TTs import TTs
 
 def transform(qc: QuantumCircuit, TTs: TTs):
@@ -38,6 +39,13 @@ def transform(qc: QuantumCircuit, TTs: TTs):
         isAdded[k] = False
 
     tgt = Target()
+
+    numQubit = qc.num_qubits
+    dur = Parameter('dur')
+    for i in range (numQubit):
+        propDelay = {(i, ): None}
+    tgt.add_instruction(Delay(dur), propDelay)
+
     for _, pulse in TTs.pulse:
         for eGate in pulse.elementalGates():
             key = eGate.name
