@@ -72,15 +72,7 @@ class TTs1Q(TTs):
         rhoBondDims[0, 0] = 1
         rhoBondDims[self.numCore - 1, 1] = 1
 
-        for i in range(self.numCore-1):
-            row = rhoBondDims[i, 0] * levels[i]
-            col = 1
-            for j in range(i+1, self.numCore):
-                col *= levels[j]
-                if col > row:
-                    break
-            rhoBondDims[i, 1] = min(bondDim, row, col)
-            rhoBondDims[i+1, 0] = rhoBondDims[i, 1]
+        rhoBondDims = self.getRhoBondDims(rhoBondDims, levels, bondDim)
 
         self.rho = zCreMPS(self.numCore, rhoBondDims, levels)
 
@@ -134,21 +126,7 @@ class TTs1Q(TTs):
         sY = np.array([[0.0 , -1.0j],
                     [1.0j,  0.0 ]], dtype=np.complex128)
 
-        num = []
-        cre  =[]
-        ann = []
-
-        for i in range(len(depth)):
-            num.append(np.diag(np.arange(depth[i]+1)+0j))
-
-            cre.append(np.zeros([depth[i]+1, depth[i]+1],
-                                dtype=np.complex128))
-            ann.append(np.zeros([depth[i]+1, depth[i]+1],
-                                dtype=np.complex128))
-
-            for j in range(cre[i].shape[0]-1):
-                cre[i][j+1, j] = np.sqrt(j+1)
-                ann[i][j, j+1] = np.sqrt(j+1)
+        num, cre, ann = self.createBathOperators(depth)
 
         # creare array of MPO
         self.H = np.array([[zTT() for _ in range(self.numCore)]
@@ -328,10 +306,11 @@ class TTs1Q(TTs):
                 stepNum (int): current step number of the integration
             
             returns:
-                list[float]: prefactors corresponding to MPO
+                numpy.ndarray: prefactors corresponding to MPO
         """
 
-        preSX, preSY = self.pulse[0][1].getPrefactor(dt, time, stepNum)
+        pulseIdx = self.map[(np.int64(0), )]
+        preSX, preSY = self.pulse[pulseIdx][1].getPrefactor(dt, time, stepNum)
 
         return np.array(
             [dt, dt * self.omegaQSeq[0][stepNum], dt * preSX, dt * preSY])
