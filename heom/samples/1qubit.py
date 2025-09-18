@@ -15,15 +15,15 @@ def run():
 
     idlingTime = 0.1
 
-    kwargs1Q = {'omega': -1., 'gateTime': 0.1 * np.pi}
-
-    pulse = [[[0], rxyStep(**kwargs1Q)]]
-    map = {(np.int64(0),): 0}
-
     rho = {'numQ': 1}
     rho['rhoIni'] = np.array([[1, 0],
                               [0, 0]], dtype=np.complex128)
     rho['omegaQ'] = [1.]
+
+    kwargs1Q = {'omega': -rho['omegaQ'][0], 'gateTime': 0.1 * np.pi}
+
+    pulse = [[[0], rxyStep(**kwargs1Q)]]
+    map = {(np.int64(0),): 0}
 
     bath = ['s=1']
 
