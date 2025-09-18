@@ -9,7 +9,8 @@ class TTs2QId(TTs):
     """MPS and MPO for 2qubit systems (independent reservoir)
     """
 
-    def __init__(self, rhoIni, bondDim, omegaQ, J, V, depth, nu, coeff):
+    def __init__(self, rhoIni, bondDim, V, depth, nu, coeff,
+                 pulse, map):
         """
             params:
                 rhoIni (numpy.ndarray): initial reduced density operator
@@ -22,12 +23,20 @@ class TTs2QId(TTs):
                 coeff (list): list of residues for FP-HEOM
                 depth (list):
                     1d list of depth of hierarchy of FP-HEOM (from 0 to depth)
+                pulse (list[
+                    list[list[qubitIdx], pulse.abstract_pulse.abstractPulse]
+                    ]):
+                map (dict[tuple[int]: int]): dictionary for a mapping from
+                    qubit indeces to pulse indeces
+                    keys (tuple[int]): qubit indedes
+                    values (int): pulse indeces for self.pulse
         """
 
         super().__init__()
         
         self.dim = [nu[i].shape[0] for i in range(len(nu))]
 
+        self.numQ = 2
         self.numCore = 2 * self.dim[0] + 2 * self.dim[1] + 4
         self.ptrKet = [0, 2*self.dim[0] + 2]
         self.ptrBra = [2*self.dim[0] + 1, 2*self.dim[0] + 2*self.dim[1] + 3]
@@ -36,9 +45,13 @@ class TTs2QId(TTs):
 
         zRightOrth(self.rho)
 
-        self.zGetMPO(omegaQ, J, V, depth, nu, coeff)
+        self.numH = 8
+        self.zGetMPO(V, depth, nu, coeff)
 
-        self.indices = self.getIndices()        
+        self.indices = self.getIndices()
+
+        self.pulse = pulse
+        self.map = map
 
     def zGetMPS(self, rhoIni, bondDim, depth):
         """create MPS
@@ -64,15 +77,7 @@ class TTs2QId(TTs):
         rhoBondDims[0, 0] = 1
         rhoBondDims[self.numCore - 1, 1] = 1
 
-        for i in range(self.numCore-1):
-            row = rhoBondDims[i, 0] * levels[i]
-            col = 1
-            for j in range(i+1, self.numCore):
-                col *= levels[j]
-                if col > row:
-                    break
-            rhoBondDims[i, 1] = min(bondDim, row, col)
-            rhoBondDims[i+1, 0] = rhoBondDims[i, 1]
+        rhoBondDims = self.getRhoBondDims(rhoBondDims, levels, bondDim)
 
         self.rho = zCreMPS(self.numCore, rhoBondDims, levels)
 
@@ -122,7 +127,7 @@ class TTs2QId(TTs):
                 coreTmp[j, 0, j] = 1.0 + 0.0j
             self.rho[i].core = copy.deepcopy(coreTmp.flatten(order='F'))
 
-    def zGetMPO(self, omegaQ, J, V, depth, nu, coeff):
+    def zGetMPO(self, V, depth, nu, coeff):
         """create MPO
 
             params:
@@ -155,33 +160,20 @@ class TTs2QId(TTs):
         cre  =[]
         ann = []
 
-        for i in range(len(depth)):
-            num.append(np.diag(np.arange(depth[i]+1)+0j))
-
-            cre.append(np.zeros([depth[i]+1, depth[i]+1],
-                                dtype=np.complex128))
-            ann.append(np.zeros([depth[i]+1, depth[i]+1],
-                                dtype=np.complex128))
-
-            for j in range(cre[i].shape[0]-1):
-                cre[i][j+1, j] = np.sqrt(j+1)
-                ann[i][j, j+1] = np.sqrt(j+1)
+        num, cre, ann = self.createBathOperators(depth)
 
         # creare array of MPO
         self.H = np.array([[zTT() for _ in range(self.numCore)]
-                           for _ in range(5)])
+                           for _ in range(self.numH)])
 
         # set values for MPO
         # system part
         # time-independent part
         j = 0
         i = self.ptrKet[0]
-        coreTmp = np.zeros([1, 2, 2, 6], dtype=np.complex128)
-        coreTmp[0, :, :, 0] = -0.5j * omegaQ[0] * sZ.T
+        coreTmp = np.zeros([1, 2, 2, 4], dtype=np.complex128)
         coreTmp[0, :, :, 1] = np.eye(sZ.shape[0])
         coreTmp[0, :, :, 3] = V[0].T
-        coreTmp[0, :, :, 4] = -1j * J[0] * sP.T
-        coreTmp[0, :, :, 5] = -1j * J[0] * sM.T
 
         self.H[j, i].bondDimL = coreTmp.shape[0]
         self.H[j, i].bondDimR = coreTmp.shape[3]
@@ -189,15 +181,10 @@ class TTs2QId(TTs):
         self.H[j, i].core = copy.deepcopy(coreTmp.flatten(order='F'))
 
         i = self.ptrBra[0]
-        coreTmp = np.zeros([6, 2, 2, 6], dtype=np.complex128)
+        coreTmp = np.zeros([4, 2, 2, 2], dtype=np.complex128)
         coreTmp[0, :, :, 0] = np.eye(sZ.shape[0])
-        coreTmp[1, :, :, 0] = 0.5j * omegaQ[0] * sZ
         coreTmp[1, :, :, 1] = np.eye(sZ.shape[0])
-        coreTmp[1, :, :, 4] = sP
-        coreTmp[1, :, :, 5] = sM
         coreTmp[2, :, :, 0] = V[0]
-        coreTmp[4, :, :, 2] = np.eye(sZ.shape[0])
-        coreTmp[5, :, :, 3] = np.eye(sZ.shape[0])
 
         self.H[j, i].bondDimL = coreTmp.shape[0]
         self.H[j, i].bondDimR = coreTmp.shape[3]
@@ -205,15 +192,10 @@ class TTs2QId(TTs):
         self.H[j, i].core = copy.deepcopy(coreTmp.flatten(order='F'))
 
         i = self.ptrKet[1]
-        coreTmp = np.zeros([6, 2, 2, 6], dtype=np.complex128)
+        coreTmp = np.zeros([2, 2, 2, 4], dtype=np.complex128)
         coreTmp[0, :, :, 0] = np.eye(sZ.shape[0])
-        coreTmp[1, :, :, 0] = -0.5j * omegaQ[1] * sZ.T
         coreTmp[1, :, :, 1] = np.eye(sZ.shape[0])
         coreTmp[1, :, :, 3] = V[1].T
-        coreTmp[2, :, :, 0] = sM.T
-        coreTmp[3, :, :, 0] = sP.T
-        coreTmp[4, :, :, 4] = np.eye(sZ.shape[0])
-        coreTmp[5, :, :, 5] = np.eye(sZ.shape[0])
 
         self.H[j, i].bondDimL = coreTmp.shape[0]
         self.H[j, i].bondDimR = coreTmp.shape[3]
@@ -221,12 +203,49 @@ class TTs2QId(TTs):
         self.H[j, i].core = copy.deepcopy(coreTmp.flatten(order='F'))
 
         i = self.ptrBra[1]
-        coreTmp = np.zeros([6, 2, 2, 1], dtype=np.complex128)
+        coreTmp = np.zeros([4, 2, 2, 1], dtype=np.complex128)
         coreTmp[0, :, :, 0] = np.eye(sZ.shape[0])
-        coreTmp[1, :, :, 0] = 0.5j * omegaQ[1] * sZ
         coreTmp[2, :, :, 0] = V[1]
-        coreTmp[4, :, :, 0] = 1j * J[0] * sM
-        coreTmp[5, :, :, 0] = 1j * J[0] * sP
+
+        self.H[j, i].bondDimL = coreTmp.shape[0]
+        self.H[j, i].bondDimR = coreTmp.shape[3]
+        self.H[j, i].level = coreTmp.shape[1]
+        self.H[j, i].core = copy.deepcopy(coreTmp.flatten(order='F'))
+
+        # Zeeman splitting for qubit 1
+        j = 1
+        i = self.ptrKet[0]
+        coreTmp = np.zeros([1, 2, 2, 2], dtype=np.complex128)
+        coreTmp[0, :, :, 0] = 0.5j * sZ.T
+        coreTmp[0, :, :, 1] = np.eye(sZ.shape[0])
+
+        self.H[j, i].bondDimL = coreTmp.shape[0]
+        self.H[j, i].bondDimR = coreTmp.shape[3]
+        self.H[j, i].level = coreTmp.shape[1]
+        self.H[j, i].core = copy.deepcopy(coreTmp.flatten(order='F'))
+
+        i = self.ptrBra[0]
+        coreTmp = np.zeros([2, 2, 2, 1], dtype=np.complex128)
+        coreTmp[0, :, :, 0] = np.eye(sZ.shape[0])
+        coreTmp[1, :, :, 0] = -0.5j * sZ
+
+        self.H[j, i].bondDimL = coreTmp.shape[0]
+        self.H[j, i].bondDimR = coreTmp.shape[3]
+        self.H[j, i].level = coreTmp.shape[1]
+        self.H[j, i].core = copy.deepcopy(coreTmp.flatten(order='F'))
+
+        i = self.ptrKet[1]
+        coreTmp = np.zeros([1, 2, 2, 1], dtype=np.complex128)
+        coreTmp[0, :, :, 0] = np.eye(sZ.shape[0])
+
+        self.H[j, i].bondDimL = coreTmp.shape[0]
+        self.H[j, i].bondDimR = coreTmp.shape[3]
+        self.H[j, i].level = coreTmp.shape[1]
+        self.H[j, i].core = copy.deepcopy(coreTmp.flatten(order='F'))
+
+        i = self.ptrBra[1]
+        coreTmp = np.zeros([1, 2, 2, 1], dtype=np.complex128)
+        coreTmp[0, :, :, 0] = np.eye(sZ.shape[0])
 
         self.H[j, i].bondDimL = coreTmp.shape[0]
         self.H[j, i].bondDimR = coreTmp.shape[3]
@@ -234,7 +253,7 @@ class TTs2QId(TTs):
         self.H[j, i].core = copy.deepcopy(coreTmp.flatten(order='F'))
 
         # drive for qubit 1 (cos)
-        j = 1
+        j = 2
         i = self.ptrKet[0]
         coreTmp = np.zeros([1, 2, 2, 2], dtype=np.complex128)
         coreTmp[0, :, :, 0] = -0.5j * sX.T
@@ -274,7 +293,7 @@ class TTs2QId(TTs):
         self.H[j, i].core = copy.deepcopy(coreTmp.flatten(order='F'))
 
         # drive for qubit 1 (sin)
-        j = 2
+        j = 3
         i = self.ptrKet[0]
         coreTmp = np.zeros([1, 2, 2, 2], dtype=np.complex128)
         coreTmp[0, :, :, 0] = -0.5j * sY.T
@@ -313,8 +332,48 @@ class TTs2QId(TTs):
         self.H[j, i].level = coreTmp.shape[1]
         self.H[j, i].core = copy.deepcopy(coreTmp.flatten(order='F'))
 
-        # drive for qubit 2 (cos)
-        j = 3
+        # Zeeman splitting for qubit 0
+        j = 4
+        i = self.ptrKet[0]
+        coreTmp = np.zeros([1, 2, 2, 1], dtype=np.complex128)
+        coreTmp[0, :, :, 0] = np.eye(sZ.shape[0])
+
+        self.H[j, i].bondDimL = coreTmp.shape[0]
+        self.H[j, i].bondDimR = coreTmp.shape[3]
+        self.H[j, i].level = coreTmp.shape[1]
+        self.H[j, i].core = copy.deepcopy(coreTmp.flatten(order='F'))
+
+        i = self.ptrBra[0]
+        coreTmp = np.zeros([1, 2, 2, 1], dtype=np.complex128)
+        coreTmp[0, :, :, 0] = np.eye(sZ.shape[0])
+
+        self.H[j, i].bondDimL = coreTmp.shape[0]
+        self.H[j, i].bondDimR = coreTmp.shape[3]
+        self.H[j, i].level = coreTmp.shape[1]
+        self.H[j, i].core = copy.deepcopy(coreTmp.flatten(order='F'))
+
+        i = self.ptrKet[1]
+        coreTmp = np.zeros([1, 2, 2, 2], dtype=np.complex128)
+        coreTmp[0, :, :, 0] = 0.5j * sZ.T
+        coreTmp[0, :, :, 1] = np.eye(sZ.shape[0])
+
+        self.H[j, i].bondDimL = coreTmp.shape[0]
+        self.H[j, i].bondDimR = coreTmp.shape[3]
+        self.H[j, i].level = coreTmp.shape[1]
+        self.H[j, i].core = copy.deepcopy(coreTmp.flatten(order='F'))
+
+        i = self.ptrBra[1]
+        coreTmp = np.zeros([2, 2, 2, 1], dtype=np.complex128)
+        coreTmp[0, :, :, 0] = np.eye(sZ.shape[0])
+        coreTmp[1, :, :, 0] = -0.5j * sZ
+
+        self.H[j, i].bondDimL = coreTmp.shape[0]
+        self.H[j, i].bondDimR = coreTmp.shape[3]
+        self.H[j, i].level = coreTmp.shape[1]
+        self.H[j, i].core = copy.deepcopy(coreTmp.flatten(order='F'))
+
+        # drive for qubit 0 (cos)
+        j = 5
         i = self.ptrKet[0]
         coreTmp = np.zeros([1, 2, 2, 1], dtype=np.complex128)
         coreTmp[0, :, :, 0] = np.eye(sZ.shape[0])
@@ -353,8 +412,8 @@ class TTs2QId(TTs):
         self.H[j, i].level = coreTmp.shape[1]
         self.H[j, i].core = copy.deepcopy(coreTmp.flatten(order='F'))
 
-        # drive for qubit 2 (sin)
-        j = 4
+        # drive for qubit 0 (sin)
+        j = 6
         i = self.ptrKet[0]
         coreTmp = np.zeros([1, 2, 2, 1], dtype=np.complex128)
         coreTmp[0, :, :, 0] = np.eye(sZ.shape[0])
@@ -393,11 +452,60 @@ class TTs2QId(TTs):
         self.H[j, i].level = coreTmp.shape[1]
         self.H[j, i].core = copy.deepcopy(coreTmp.flatten(order='F'))
 
+        # direct coupling
+        j = 7
+        i = self.ptrKet[0]
+        coreTmp = np.zeros([1, 2, 2, 3], dtype=np.complex128)
+        coreTmp[0, :, :, 0] = np.eye(sZ.shape[0])
+        coreTmp[0, :, :, 1] = -1j * sP.T
+        coreTmp[0, :, :, 2] = -1j * sM.T
+
+        self.H[j, i].bondDimL = coreTmp.shape[0]
+        self.H[j, i].bondDimR = coreTmp.shape[3]
+        self.H[j, i].level = coreTmp.shape[1]
+        self.H[j, i].core = copy.deepcopy(coreTmp.flatten(order='F'))
+
+        i = self.ptrBra[0]
+        coreTmp = np.zeros([3, 2, 2, 4], dtype=np.complex128)
+        coreTmp[0, :, :, 2] = sP
+        coreTmp[0, :, :, 3] = sM
+        coreTmp[1, :, :, 0] = np.eye(sZ.shape[0])
+        coreTmp[2, :, :, 1] = np.eye(sZ.shape[0])
+
+        self.H[j, i].bondDimL = coreTmp.shape[0]
+        self.H[j, i].bondDimR = coreTmp.shape[3]
+        self.H[j, i].level = coreTmp.shape[1]
+        self.H[j, i].core = copy.deepcopy(coreTmp.flatten(order='F'))
+
+        i = self.ptrKet[1]
+        coreTmp = np.zeros([4, 2, 2, 3], dtype=np.complex128)
+        coreTmp[0, :, :, 0] = sM.T
+        coreTmp[1, :, :, 0] = sP.T
+        coreTmp[2, :, :, 1] = np.eye(sZ.shape[0])
+        coreTmp[3, :, :, 2] = np.eye(sZ.shape[0])
+
+        self.H[j, i].bondDimL = coreTmp.shape[0]
+        self.H[j, i].bondDimR = coreTmp.shape[3]
+        self.H[j, i].level = coreTmp.shape[1]
+        self.H[j, i].core = copy.deepcopy(coreTmp.flatten(order='F'))
+
+        i = self.ptrBra[1]
+        coreTmp = np.zeros([3, 2, 2, 1], dtype=np.complex128)
+        coreTmp[0, :, :, 0] = np.eye(sZ.shape[0])
+        coreTmp[1, :, :, 0] = 1j * sM
+        coreTmp[2, :, :, 0] = 1j * sP
+
+        self.H[j, i].bondDimL = coreTmp.shape[0]
+        self.H[j, i].bondDimR = coreTmp.shape[3]
+        self.H[j, i].level = coreTmp.shape[1]
+        self.H[j, i].core = copy.deepcopy(coreTmp.flatten(order='F'))
+
+
         # time-independent part
-        # reservoir 1 and 2
+        # reservoir 0 and 1
         j = 0
         for l in range(2):
-            coreTmp = np.zeros([6, depth[l]+1, depth[l]+1, 6],
+            coreTmp = np.zeros([4, depth[l]+1, depth[l]+1, 4],
                                dtype=np.complex128)
             for i in range(self.dim[l]):
                 k = self.ptrKet[l] + 2 * i + 1
@@ -410,8 +518,6 @@ class TTs2QId(TTs):
                 coreTmp[3, :, :, 0] = np.sqrt(coeff[l][i]) \
                     * (cre[l].T - ann[l].T)
                 coreTmp[3, :, :, 3] = np.eye(depth[l]+1)
-                coreTmp[4, :, :, 4] = np.eye(depth[l]+1)
-                coreTmp[5, :, :, 5] = np.eye(depth[l]+1)
 
                 self.H[j, k].bondDimL = coreTmp.shape[0]
                 self.H[j, k].bondDimR = coreTmp.shape[3]
@@ -428,13 +534,28 @@ class TTs2QId(TTs):
                 coreTmp[2, :, :, 2] = np.eye(depth[l]+1)
                 coreTmp[3, :, :, 0] = np.sqrt(coeff[l][i].conj()) * ann[l].T
                 coreTmp[3, :, :, 3] = np.eye(depth[l]+1)
-                coreTmp[4, :, :, 4] = np.eye(depth[l]+1)
-                coreTmp[5, :, :, 5] = np.eye(depth[l]+1)
 
                 self.H[j, k].bondDimL = coreTmp.shape[0]
                 self.H[j, k].bondDimR = coreTmp.shape[3]
                 self.H[j, k].level = coreTmp.shape[1]
                 self.H[j, k].core = copy.deepcopy(coreTmp.flatten(order='F'))
+
+        # direct coupling
+        # reservoir 0 and 1
+        j = 7
+        for l in range(2):
+            coreTmp = np.zeros([3, depth[l]+1, depth[l]+1, 3],
+                            dtype=np.complex128)
+            coreTmp[0, :, :, 0] = np.eye(depth[l]+1)
+            coreTmp[1, :, :, 1] = np.eye(depth[l]+1)
+            coreTmp[2, :, :, 2] = np.eye(depth[l]+1)
+
+            for i in range(self.ptrKet[l]+1, self.ptrBra[l]):
+                self.H[j, i].bondDimL = coreTmp.shape[0]
+                self.H[j, i].bondDimR = coreTmp.shape[3]
+                self.H[j, i].level = coreTmp.shape[1]
+                self.H[j, i].core = copy.deepcopy(coreTmp.flatten(order='F'))
+
 
         # reservoir 1
         l = 0
@@ -444,136 +565,51 @@ class TTs2QId(TTs):
         coreTmp[0, :, :, 0] = np.eye(depth[l]+1)
         coreTmp[1, :, :, 1] = np.eye(depth[l]+1)
 
-        for j in range(1, 3):
+        for j in range(1, 4):
             for i in range(self.ptrKet[l]+1, self.ptrBra[l]):
                 self.H[j, i].bondDimL = coreTmp.shape[0]
                 self.H[j, i].bondDimR = coreTmp.shape[3]
                 self.H[j, i].level = coreTmp.shape[1]
                 self.H[j, i].core = copy.deepcopy(coreTmp.flatten(order='F'))
 
-        # drive for qubit 2
+        # drive for qubit 0
         coreTmp = np.zeros([1, depth[l]+1, depth[l]+1, 1],
                            dtype=np.complex128)
         coreTmp[0, :, :, 0] = np.eye(depth[l]+1)
 
-        for j in range(3, 5):
+        for j in range(4, 7):
             for i in range(self.ptrKet[l]+1, self.ptrBra[l]):
                 self.H[j, i].bondDimL = coreTmp.shape[0]
                 self.H[j, i].bondDimR = coreTmp.shape[3]
                 self.H[j, i].level = coreTmp.shape[1]
                 self.H[j, i].core = copy.deepcopy(coreTmp.flatten(order='F'))
 
-        # reservoir 2
+        # reservoir 0
         l = 1
         # drive for qubit 1
         coreTmp = np.zeros([1, depth[l]+1, depth[l]+1, 1],
                            dtype=np.complex128)
         coreTmp[0, :, :, 0] = np.eye(depth[l]+1)
 
-        for j in range(1, 3):
+        for j in range(1, 4):
             for i in range(self.ptrKet[l]+1, self.ptrBra[l]):
                 self.H[j, i].bondDimL = coreTmp.shape[0]
                 self.H[j, i].bondDimR = coreTmp.shape[3]
                 self.H[j, i].level = coreTmp.shape[1]
                 self.H[j, i].core = copy.deepcopy(coreTmp.flatten(order='F'))
 
-        # drive for qubit 2
+        # drive for qubit 0
         coreTmp = np.zeros([2, depth[l]+1, depth[l]+1, 2],
                            dtype=np.complex128)
         coreTmp[0, :, :, 0] = np.eye(depth[l]+1)
         coreTmp[1, :, :, 1] = np.eye(depth[l]+1)
 
-        for j in range(3, 5):
+        for j in range(4, 7):
             for i in range(self.ptrKet[l]+1, self.ptrBra[l]):
                 self.H[j, i].bondDimL = coreTmp.shape[0]
                 self.H[j, i].bondDimR = coreTmp.shape[3]
                 self.H[j, i].level = coreTmp.shape[1]
                 self.H[j, i].core = copy.deepcopy(coreTmp.flatten(order='F'))
-
-    def changeCpl(self, J):
-        """change coupling strength between two qubits
-
-            params:
-                J (list): list of coupling strength (len(J) = 1)
-        """
-
-        sP = np.array([[0.0, 1.0],
-                    [0.0, 0.0]], dtype=np.complex128)
-
-        sM = np.array([[0.0, 0.0],
-                    [1.0, 0.0]], dtype=np.complex128)
-
-        # ptrKet[0]
-        HLocal = self.H[0, self.ptrKet[0]]
-        shape4d = (HLocal.bondDimL, HLocal.level, HLocal.level,
-                   HLocal.bondDimR)
-        coreTmp = copy.deepcopy(HLocal.core.reshape(shape4d, order='F'))
-
-        coreTmp[0, :, :, 4] = -1j * J[0] * sP.T
-        coreTmp[0, :, :, 5] = -1j * J[0] * sM.T
-
-        HLocal.core = copy.deepcopy(coreTmp.flatten(order='F'))
-
-        # ptrBra[1]
-        HLocal = self.H[0, self.ptrBra[1]]
-        shape4d = (HLocal.bondDimL, HLocal.level, HLocal.level,
-                   HLocal.bondDimR)
-        coreTmp = copy.deepcopy(HLocal.core.reshape(shape4d, order='F'))
-
-        coreTmp[4, :, :, 0] = 1j * J[0] * sM
-        coreTmp[5, :, :, 0] = 1j * J[0] * sP
-
-        HLocal.core = copy.deepcopy(coreTmp.flatten(order='F'))
-
-    def changeFreq(self, omegaQ):
-        """change qubit frequency
-
-            params:
-                omegaQ (list): list of qubit frequency
-        """
-
-        sZ = np.array([[1.0,  0.0],
-                    [0.0, -1.0]], dtype=np.complex128)
-
-        # ptrKet[0]
-        HLocal = self.H[0, self.ptrKet[0]]
-        shape4d = (HLocal.bondDimL, HLocal.level, HLocal.level,
-                   HLocal.bondDimR)
-        coreTmp = copy.deepcopy(HLocal.core.reshape(shape4d, order='F'))
-
-        coreTmp[0, :, :, 0] = -0.5j * omegaQ[0] * sZ.T
-
-        HLocal.core = copy.deepcopy(coreTmp.flatten(order='F'))
-
-        # ptrBra[0]
-        HLocal = self.H[0, self.ptrBra[0]]
-        shape4d = (HLocal.bondDimL, HLocal.level, HLocal.level,
-                   HLocal.bondDimR)
-        coreTmp = copy.deepcopy(HLocal.core.reshape(shape4d, order='F'))
-
-        coreTmp[1, :, :, 0] = 0.5j * omegaQ[0] * sZ
-
-        HLocal.core = copy.deepcopy(coreTmp.flatten(order='F'))
-
-        # ptrKet[1]
-        HLocal = self.H[0, self.ptrKet[1]]
-        shape4d = (HLocal.bondDimL, HLocal.level, HLocal.level,
-                   HLocal.bondDimR)
-        coreTmp = copy.deepcopy(HLocal.core.reshape(shape4d, order='F'))
-
-        coreTmp[1, :, :, 0] = -0.5j * omegaQ[1] * sZ.T
-
-        HLocal.core = copy.deepcopy(coreTmp.flatten(order='F'))
-
-        # ptrBra[1]
-        HLocal = self.H[0, self.ptrBra[1]]
-        shape4d = (HLocal.bondDimL, HLocal.level, HLocal.level,
-                   HLocal.bondDimR)
-        coreTmp = copy.deepcopy(HLocal.core.reshape(shape4d, order='F'))
-
-        coreTmp[1, :, :, 0] = 0.5j * omegaQ[1] * sZ
-
-        HLocal.core = copy.deepcopy(coreTmp.flatten(order='F'))
 
     def getIndices(self):
         """compute MPS indices for output
@@ -592,6 +628,40 @@ class TTs2QId(TTs):
             indices[i, self.ptrBra[1]] = qWiseIdx[3]
 
         return indices
+    
+    def getPrefactors(self, dt: float, time: float, stepNum: int)\
+            -> np.ndarray:
+        """compute prefactor terms for Runge-Kutta update
+
+            params:
+                dt (float): step size for Runge-Kutta integration
+                time (float): current time
+                stepNum (int): current step number of the integration
+            
+            returns:
+                numpy.ndarray: prefactors corresponding to MPO
+        """
+
+        pulseIdx = self.map[(np.int64(0), )]
+        preSX0, preSY0 = \
+            self.pulse[pulseIdx][1].getPrefactor(dt, time, stepNum)
+        
+        pulseIdx = self.map[(np.int64(1), )]
+        preSX1, preSY1 = \
+            self.pulse[pulseIdx][1].getPrefactor(dt, time, stepNum)
+        
+        pulseIdx = self.map[(np.int64(0), np.int64(1))]
+        preJ = self.pulse[pulseIdx][1].getPrefactor(dt, time, stepNum)
+
+        return np.array([dt,
+                         dt * self.omegaQSeq[0][stepNum],
+                         dt * preSX1,
+                         dt * preSY1,
+                         dt * self.omegaQSeq[1][stepNum],
+                         dt * preSX0,
+                         dt * preSY0,
+                         dt * preJ])
+
 
 def QRTT(rhoIni):
     """QR decomposition of initial reduced density operator
