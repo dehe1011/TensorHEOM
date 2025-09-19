@@ -10,7 +10,7 @@ class TTs1Q(TTs):
     """
 
     def __init__(self, rhoIni, bondDim, V, depth, nu, coeff,
-                 pulse, map):
+                 pulse, pulseMap):
         """
             params:
                 rhoIni (numpy.ndarray): initial reduced density operator
@@ -22,9 +22,11 @@ class TTs1Q(TTs):
                 depth (list):
                     1d list of depth of hierarchy of FP-HEOM (from 0 to depth)
                 pulse (list[
-                    list[list[qubitIdx], pulse.abstract_pulse.abstractPulse]
+                    list[list[int], pulse.abstract_pulse.abstractPulse]
                     ]):
-                map (dict[tuple[int]: int]): dictionary for a mapping from
+                    list for elemental gates
+                pulseMap (dict[tuple[int]: int]):
+                    dictionary for a mapping from
                     qubit indeces to pulse indeces
                     keys (tuple[int]): qubit indedes
                     values (int): pulse indeces for self.pulse
@@ -49,7 +51,7 @@ class TTs1Q(TTs):
         self.indices = self.getIndices()
 
         self.pulse = pulse
-        self.map = map
+        self.map = pulseMap
 
     def zGetMPS(self, rhoIni, bondDim, depth):
         """create MPS
