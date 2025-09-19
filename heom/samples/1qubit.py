@@ -1,7 +1,6 @@
 from qiskit import QuantumCircuit
 import numpy as np
 from .. import main
-from ..pulse.rxy_step import rxyStep
 
 def run():
     fileName = 'rdo_1qubit.csv'
@@ -20,10 +19,9 @@ def run():
                               [0, 0]], dtype=np.complex128)
     rho['omegaQ'] = [1.]
 
+    gateList = [[[0], 'rxyStep', ]]
     kwargs1Q = {'omega': -rho['omegaQ'][0], 'gateTime': 0.1 * np.pi}
-
-    pulse = [[[0], rxyStep(**kwargs1Q)]]
-    map = {(np.int64(0),): 0}
+    gateList = [[[0], 'rxyStep', kwargs1Q]]
 
     bath = ['s=1']
 
@@ -38,7 +36,7 @@ def run():
 
     stride = int(strideTime / dtFB)
 
-    main(fileName, qc, idlingTime, pulse, map, rho,
+    main(fileName, qc, idlingTime, gateList, rho,
          bath, V, dtFB, stride)
     
 if __name__ == '__main__':

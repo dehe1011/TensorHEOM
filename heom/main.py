@@ -8,9 +8,10 @@ from .TTs2QId import TTs2QId
 from .tdevott import timeEvolution
 from .dynamics import outputCurrentStates, calcDynamics
 from .bath import getBathParams
+from .pulse.set_gates import setGates
 from .circuit.pulse_seq import setPulseSeq
 
-def main(fileName, qc, idlingTime, pulse, map, rho,
+def main(fileName, qc, idlingTime, gateList, rho,
          bath, V, dtFB, stride, isRK13=False):
     """main function for simulation
         Dyanmics of the reduced density operator are written in fileName.
@@ -19,13 +20,7 @@ def main(fileName, qc, idlingTime, pulse, map, rho,
             fileName (str): file name for output
             qc (qiskit.QuantumCircuit): quantum circuit for simulation
             idlingTime (float): idling time, in the unit of omegaQ[0] 
-            pulse (list[
-                list[list[qubitIdx], pulse.abstract_pulse.abstractPulse]
-                ]):
-            map (dict[tuple[int]: int]): dictionary for a mapping from
-                qubit indeces to pulse indeces
-                keys (tuple[int]): qubit indedes
-                values (int): pulse indeces for self.pulse
+            gateList (list): list for qubit gates
             rho (dict): properties of systems
                 rho['numQ']: number of qubits
                 rho['rhoIni'] (numpy.ndarray): initial reduced density matrix
@@ -54,10 +49,14 @@ def main(fileName, qc, idlingTime, pulse, map, rho,
         bondDim = max(bondDim, bondDimTmp)
         isRK13 = isRK13 or isRK13Tmp
     
+    pulse, pulseMap = setGates(gateList)
+
     if rho['numQ'] == 1:
-        TTs = TTs1Q(rho['rhoIni'], bondDim, V, depth, nu, coeff, pulse, map)
+        TTs = TTs1Q(rho['rhoIni'], bondDim, V, depth, nu, coeff,
+                    pulse, pulseMap)
     elif rho['numQ'] == 2:
-        TTs = TTs2QId(rho['rhoIni'], bondDim, V, depth, nu, coeff, pulse, map)
+        TTs = TTs2QId(rho['rhoIni'], bondDim, V, depth, nu, coeff,
+                      pulse, pulseMap)
     
     setPulseSeq(qc, TTs, rho['omegaQ'], dtFB, idlingTime)
     timeEvo = timeEvolution(TTs, 0.5*dtFB, isRK13)
