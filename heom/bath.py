@@ -32,4 +32,5 @@ def getBathParams(bath):
     nu = np.array(jsonDict['nu_real']) + 1j * np.array(jsonDict['nu_imag'])
     coeff = np.array(jsonDict['coeff_real']) + 1j * np.array(jsonDict['coeff_imag'])
 
-    return nu, coeff, jsonDict['depth'], jsonDict['bondDim'], jsonDict['isRK13']
+    return nu, coeff, jsonDict['depth'], \
+        jsonDict['bondDim'], jsonDict['isRK13']
