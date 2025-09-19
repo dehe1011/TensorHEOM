@@ -156,460 +156,187 @@ class TTs2QId(TTs):
         sM = np.array([[0.0, 0.0],
                     [1.0, 0.0]], dtype=np.complex128)
 
-        num = []
-        cre  =[]
-        ann = []
-
-        num, cre, ann = self.createBathOperators(depth)
-
         # creare array of MPO
         self.H = np.array([[zTT() for _ in range(self.numCore)]
                            for _ in range(self.numH)])
 
         # set values for MPO
         # system part
+        eye = np.eye(sZ.shape[0])
         # time-independent part
         j = 0
         i = self.ptrKet[0]
         coreTmp = np.zeros([1, 2, 2, 4], dtype=np.complex128)
-        coreTmp[0, :, :, 1] = np.eye(sZ.shape[0])
+        coreTmp[0, :, :, 1] = eye
         coreTmp[0, :, :, 3] = V[0].T
 
-        self.H[j, i].bondDimL = coreTmp.shape[0]
-        self.H[j, i].bondDimR = coreTmp.shape[3]
-        self.H[j, i].level = coreTmp.shape[1]
-        self.H[j, i].core = copy.deepcopy(coreTmp.flatten(order='F'))
+        self.setH(coreTmp, self.H[j, i])
 
         i = self.ptrBra[0]
         coreTmp = np.zeros([4, 2, 2, 2], dtype=np.complex128)
-        coreTmp[0, :, :, 0] = np.eye(sZ.shape[0])
-        coreTmp[1, :, :, 1] = np.eye(sZ.shape[0])
+        coreTmp[0, :, :, 0] = eye
+        coreTmp[1, :, :, 1] = eye
         coreTmp[2, :, :, 0] = V[0]
 
-        self.H[j, i].bondDimL = coreTmp.shape[0]
-        self.H[j, i].bondDimR = coreTmp.shape[3]
-        self.H[j, i].level = coreTmp.shape[1]
-        self.H[j, i].core = copy.deepcopy(coreTmp.flatten(order='F'))
+        self.setH(coreTmp, self.H[j, i])
 
         i = self.ptrKet[1]
         coreTmp = np.zeros([2, 2, 2, 4], dtype=np.complex128)
-        coreTmp[0, :, :, 0] = np.eye(sZ.shape[0])
-        coreTmp[1, :, :, 1] = np.eye(sZ.shape[0])
+        coreTmp[0, :, :, 0] = eye
+        coreTmp[1, :, :, 1] = eye
         coreTmp[1, :, :, 3] = V[1].T
 
-        self.H[j, i].bondDimL = coreTmp.shape[0]
-        self.H[j, i].bondDimR = coreTmp.shape[3]
-        self.H[j, i].level = coreTmp.shape[1]
-        self.H[j, i].core = copy.deepcopy(coreTmp.flatten(order='F'))
+        self.setH(coreTmp, self.H[j, i])
 
         i = self.ptrBra[1]
         coreTmp = np.zeros([4, 2, 2, 1], dtype=np.complex128)
-        coreTmp[0, :, :, 0] = np.eye(sZ.shape[0])
+        coreTmp[0, :, :, 0] = eye
         coreTmp[2, :, :, 0] = V[1]
 
-        self.H[j, i].bondDimL = coreTmp.shape[0]
-        self.H[j, i].bondDimR = coreTmp.shape[3]
-        self.H[j, i].level = coreTmp.shape[1]
-        self.H[j, i].core = copy.deepcopy(coreTmp.flatten(order='F'))
+        self.setH(coreTmp, self.H[j, i])
 
-        # Zeeman splitting for qubit 1
-        j = 1
-        i = self.ptrKet[0]
+        # System Hamiltonians
+        # ket vector with operation
         coreTmp = np.zeros([1, 2, 2, 2], dtype=np.complex128)
+        coreTmp[0, :, :, 1] = eye
+
+        # Zeeman splitting (j = 1, 4)
         coreTmp[0, :, :, 0] = 0.5j * sZ.T
-        coreTmp[0, :, :, 1] = np.eye(sZ.shape[0])
+        for l in range(self.numQ):
+            i = self.ptrKet[l]
+            j = 3 * l + 1
+            self.setH(coreTmp, self.H[j, i])
 
-        self.H[j, i].bondDimL = coreTmp.shape[0]
-        self.H[j, i].bondDimR = coreTmp.shape[3]
-        self.H[j, i].level = coreTmp.shape[1]
-        self.H[j, i].core = copy.deepcopy(coreTmp.flatten(order='F'))
-
-        i = self.ptrBra[0]
-        coreTmp = np.zeros([2, 2, 2, 1], dtype=np.complex128)
-        coreTmp[0, :, :, 0] = np.eye(sZ.shape[0])
-        coreTmp[1, :, :, 0] = -0.5j * sZ
-
-        self.H[j, i].bondDimL = coreTmp.shape[0]
-        self.H[j, i].bondDimR = coreTmp.shape[3]
-        self.H[j, i].level = coreTmp.shape[1]
-        self.H[j, i].core = copy.deepcopy(coreTmp.flatten(order='F'))
-
-        i = self.ptrKet[1]
-        coreTmp = np.zeros([1, 2, 2, 1], dtype=np.complex128)
-        coreTmp[0, :, :, 0] = np.eye(sZ.shape[0])
-
-        self.H[j, i].bondDimL = coreTmp.shape[0]
-        self.H[j, i].bondDimR = coreTmp.shape[3]
-        self.H[j, i].level = coreTmp.shape[1]
-        self.H[j, i].core = copy.deepcopy(coreTmp.flatten(order='F'))
-
-        i = self.ptrBra[1]
-        coreTmp = np.zeros([1, 2, 2, 1], dtype=np.complex128)
-        coreTmp[0, :, :, 0] = np.eye(sZ.shape[0])
-
-        self.H[j, i].bondDimL = coreTmp.shape[0]
-        self.H[j, i].bondDimR = coreTmp.shape[3]
-        self.H[j, i].level = coreTmp.shape[1]
-        self.H[j, i].core = copy.deepcopy(coreTmp.flatten(order='F'))
-
-        # drive for qubit 1 (cos)
-        j = 2
-        i = self.ptrKet[0]
-        coreTmp = np.zeros([1, 2, 2, 2], dtype=np.complex128)
+        # drive (cos, j = 2, 5)
         coreTmp[0, :, :, 0] = -0.5j * sX.T
-        coreTmp[0, :, :, 1] = np.eye(sZ.shape[0])
+        for l in range(self.numQ):
+            i = self.ptrKet[l]
+            j = 3 * l + 2
+            self.setH(coreTmp, self.H[j, i])
 
-        self.H[j, i].bondDimL = coreTmp.shape[0]
-        self.H[j, i].bondDimR = coreTmp.shape[3]
-        self.H[j, i].level = coreTmp.shape[1]
-        self.H[j, i].core = copy.deepcopy(coreTmp.flatten(order='F'))
-
-        i = self.ptrBra[0]
-        coreTmp = np.zeros([2, 2, 2, 1], dtype=np.complex128)
-        coreTmp[0, :, :, 0] = np.eye(sZ.shape[0])
-        coreTmp[1, :, :, 0] = 0.5j * sX
-
-        self.H[j, i].bondDimL = coreTmp.shape[0]
-        self.H[j, i].bondDimR = coreTmp.shape[3]
-        self.H[j, i].level = coreTmp.shape[1]
-        self.H[j, i].core = copy.deepcopy(coreTmp.flatten(order='F'))
-
-        i = self.ptrKet[1]
-        coreTmp = np.zeros([1, 2, 2, 1], dtype=np.complex128)
-        coreTmp[0, :, :, 0] = np.eye(sZ.shape[0])
-
-        self.H[j, i].bondDimL = coreTmp.shape[0]
-        self.H[j, i].bondDimR = coreTmp.shape[3]
-        self.H[j, i].level = coreTmp.shape[1]
-        self.H[j, i].core = copy.deepcopy(coreTmp.flatten(order='F'))
-
-        i = self.ptrBra[1]
-        coreTmp = np.zeros([1, 2, 2, 1], dtype=np.complex128)
-        coreTmp[0, :, :, 0] = np.eye(sZ.shape[0])
-
-        self.H[j, i].bondDimL = coreTmp.shape[0]
-        self.H[j, i].bondDimR = coreTmp.shape[3]
-        self.H[j, i].level = coreTmp.shape[1]
-        self.H[j, i].core = copy.deepcopy(coreTmp.flatten(order='F'))
-
-        # drive for qubit 1 (sin)
-        j = 3
-        i = self.ptrKet[0]
-        coreTmp = np.zeros([1, 2, 2, 2], dtype=np.complex128)
+        # drive (sin, j = 3, 6)
         coreTmp[0, :, :, 0] = -0.5j * sY.T
-        coreTmp[0, :, :, 1] = np.eye(sZ.shape[0])
+        for l in range(self.numQ):
+            i = self.ptrKet[l]
+            j = 3 * l + 3
+            self.setH(coreTmp, self.H[j, i])
 
-        self.H[j, i].bondDimL = coreTmp.shape[0]
-        self.H[j, i].bondDimR = coreTmp.shape[3]
-        self.H[j, i].level = coreTmp.shape[1]
-        self.H[j, i].core = copy.deepcopy(coreTmp.flatten(order='F'))
-
-        i = self.ptrBra[0]
+        # bra vector with operation
         coreTmp = np.zeros([2, 2, 2, 1], dtype=np.complex128)
-        coreTmp[0, :, :, 0] = np.eye(sZ.shape[0])
-        coreTmp[1, :, :, 0] = 0.5j * sY
+        coreTmp[0, :, :, 0] = eye
 
-        self.H[j, i].bondDimL = coreTmp.shape[0]
-        self.H[j, i].bondDimR = coreTmp.shape[3]
-        self.H[j, i].level = coreTmp.shape[1]
-        self.H[j, i].core = copy.deepcopy(coreTmp.flatten(order='F'))
-
-        i = self.ptrKet[1]
-        coreTmp = np.zeros([1, 2, 2, 1], dtype=np.complex128)
-        coreTmp[0, :, :, 0] = np.eye(sZ.shape[0])
-
-        self.H[j, i].bondDimL = coreTmp.shape[0]
-        self.H[j, i].bondDimR = coreTmp.shape[3]
-        self.H[j, i].level = coreTmp.shape[1]
-        self.H[j, i].core = copy.deepcopy(coreTmp.flatten(order='F'))
-
-        i = self.ptrBra[1]
-        coreTmp = np.zeros([1, 2, 2, 1], dtype=np.complex128)
-        coreTmp[0, :, :, 0] = np.eye(sZ.shape[0])
-
-        self.H[j, i].bondDimL = coreTmp.shape[0]
-        self.H[j, i].bondDimR = coreTmp.shape[3]
-        self.H[j, i].level = coreTmp.shape[1]
-        self.H[j, i].core = copy.deepcopy(coreTmp.flatten(order='F'))
-
-        # Zeeman splitting for qubit 0
-        j = 4
-        i = self.ptrKet[0]
-        coreTmp = np.zeros([1, 2, 2, 1], dtype=np.complex128)
-        coreTmp[0, :, :, 0] = np.eye(sZ.shape[0])
-
-        self.H[j, i].bondDimL = coreTmp.shape[0]
-        self.H[j, i].bondDimR = coreTmp.shape[3]
-        self.H[j, i].level = coreTmp.shape[1]
-        self.H[j, i].core = copy.deepcopy(coreTmp.flatten(order='F'))
-
-        i = self.ptrBra[0]
-        coreTmp = np.zeros([1, 2, 2, 1], dtype=np.complex128)
-        coreTmp[0, :, :, 0] = np.eye(sZ.shape[0])
-
-        self.H[j, i].bondDimL = coreTmp.shape[0]
-        self.H[j, i].bondDimR = coreTmp.shape[3]
-        self.H[j, i].level = coreTmp.shape[1]
-        self.H[j, i].core = copy.deepcopy(coreTmp.flatten(order='F'))
-
-        i = self.ptrKet[1]
-        coreTmp = np.zeros([1, 2, 2, 2], dtype=np.complex128)
-        coreTmp[0, :, :, 0] = 0.5j * sZ.T
-        coreTmp[0, :, :, 1] = np.eye(sZ.shape[0])
-
-        self.H[j, i].bondDimL = coreTmp.shape[0]
-        self.H[j, i].bondDimR = coreTmp.shape[3]
-        self.H[j, i].level = coreTmp.shape[1]
-        self.H[j, i].core = copy.deepcopy(coreTmp.flatten(order='F'))
-
-        i = self.ptrBra[1]
-        coreTmp = np.zeros([2, 2, 2, 1], dtype=np.complex128)
-        coreTmp[0, :, :, 0] = np.eye(sZ.shape[0])
+        # Zeeman splitting (j = 1, 4)
         coreTmp[1, :, :, 0] = -0.5j * sZ
+        for l in range(self.numQ):
+            i = self.ptrBra[l]
+            j = 3 * l + 1
+            self.setH(coreTmp, self.H[j, i])
 
-        self.H[j, i].bondDimL = coreTmp.shape[0]
-        self.H[j, i].bondDimR = coreTmp.shape[3]
-        self.H[j, i].level = coreTmp.shape[1]
-        self.H[j, i].core = copy.deepcopy(coreTmp.flatten(order='F'))
-
-        # drive for qubit 0 (cos)
-        j = 5
-        i = self.ptrKet[0]
-        coreTmp = np.zeros([1, 2, 2, 1], dtype=np.complex128)
-        coreTmp[0, :, :, 0] = np.eye(sZ.shape[0])
-
-        self.H[j, i].bondDimL = coreTmp.shape[0]
-        self.H[j, i].bondDimR = coreTmp.shape[3]
-        self.H[j, i].level = coreTmp.shape[1]
-        self.H[j, i].core = copy.deepcopy(coreTmp.flatten(order='F'))
-
-        i = self.ptrBra[0]
-        coreTmp = np.zeros([1, 2, 2, 1], dtype=np.complex128)
-        coreTmp[0, :, :, 0] = np.eye(sZ.shape[0])
-
-        self.H[j, i].bondDimL = coreTmp.shape[0]
-        self.H[j, i].bondDimR = coreTmp.shape[3]
-        self.H[j, i].level = coreTmp.shape[1]
-        self.H[j, i].core = copy.deepcopy(coreTmp.flatten(order='F'))
-
-        i = self.ptrKet[1]
-        coreTmp = np.zeros([1, 2, 2, 2], dtype=np.complex128)
-        coreTmp[0, :, :, 0] = -0.5j * sX.T
-        coreTmp[0, :, :, 1] = np.eye(sZ.shape[0])
-
-        self.H[j, i].bondDimL = coreTmp.shape[0]
-        self.H[j, i].bondDimR = coreTmp.shape[3]
-        self.H[j, i].level = coreTmp.shape[1]
-        self.H[j, i].core = copy.deepcopy(coreTmp.flatten(order='F'))
-
-        i = self.ptrBra[1]
-        coreTmp = np.zeros([2, 2, 2, 1], dtype=np.complex128)
-        coreTmp[0, :, :, 0] = np.eye(sZ.shape[0])
+        # drive (cos, j = 2, 5)        
         coreTmp[1, :, :, 0] = 0.5j * sX
+        for l in range(self.numQ):
+            i = self.ptrBra[l]
+            j = 3 * l + 2
+            self.setH(coreTmp, self.H[j, i])
 
-        self.H[j, i].bondDimL = coreTmp.shape[0]
-        self.H[j, i].bondDimR = coreTmp.shape[3]
-        self.H[j, i].level = coreTmp.shape[1]
-        self.H[j, i].core = copy.deepcopy(coreTmp.flatten(order='F'))
-
-        # drive for qubit 0 (sin)
-        j = 6
-        i = self.ptrKet[0]
-        coreTmp = np.zeros([1, 2, 2, 1], dtype=np.complex128)
-        coreTmp[0, :, :, 0] = np.eye(sZ.shape[0])
-
-        self.H[j, i].bondDimL = coreTmp.shape[0]
-        self.H[j, i].bondDimR = coreTmp.shape[3]
-        self.H[j, i].level = coreTmp.shape[1]
-        self.H[j, i].core = copy.deepcopy(coreTmp.flatten(order='F'))
-
-        i = self.ptrBra[0]
-        coreTmp = np.zeros([1, 2, 2, 1], dtype=np.complex128)
-        coreTmp[0, :, :, 0] = np.eye(sZ.shape[0])
-
-        self.H[j, i].bondDimL = coreTmp.shape[0]
-        self.H[j, i].bondDimR = coreTmp.shape[3]
-        self.H[j, i].level = coreTmp.shape[1]
-        self.H[j, i].core = copy.deepcopy(coreTmp.flatten(order='F'))
-
-        i = self.ptrKet[1]
-        coreTmp = np.zeros([1, 2, 2, 2], dtype=np.complex128)
-        coreTmp[0, :, :, 0] = -0.5j * sY.T
-        coreTmp[0, :, :, 1] = np.eye(sZ.shape[0])
-
-        self.H[j, i].bondDimL = coreTmp.shape[0]
-        self.H[j, i].bondDimR = coreTmp.shape[3]
-        self.H[j, i].level = coreTmp.shape[1]
-        self.H[j, i].core = copy.deepcopy(coreTmp.flatten(order='F'))
-
-        i = self.ptrBra[1]
-        coreTmp = np.zeros([2, 2, 2, 1], dtype=np.complex128)
-        coreTmp[0, :, :, 0] = np.eye(sZ.shape[0])
+        # drive (sin, j = 3, 6)
         coreTmp[1, :, :, 0] = 0.5j * sY
+        for l in range(self.numQ):
+            i = self.ptrBra[l]
+            j = 3 * l + 3
+            self.setH(coreTmp, self.H[j, i])
 
-        self.H[j, i].bondDimL = coreTmp.shape[0]
-        self.H[j, i].bondDimR = coreTmp.shape[3]
-        self.H[j, i].level = coreTmp.shape[1]
-        self.H[j, i].core = copy.deepcopy(coreTmp.flatten(order='F'))
+        # ket and bra vectors without operation
+        coreTmp = np.zeros([1, 2, 2, 1], dtype=np.complex128)
+        coreTmp[0, :, :, 0] = eye
+
+        for l in range(self.numQ):
+            st = 3 * l + 1
+            en = 3 * l + 4
+            for k in list(range(l)) + list(range(l+1, self.numQ)):
+                for i in [self.ptrKet[k], self.ptrBra[k]]:
+                    for j in range(st, en):
+                        self.setH(coreTmp, self.H[j, i])
 
         # direct coupling
         j = 7
         i = self.ptrKet[0]
         coreTmp = np.zeros([1, 2, 2, 3], dtype=np.complex128)
-        coreTmp[0, :, :, 0] = np.eye(sZ.shape[0])
+        coreTmp[0, :, :, 0] = eye
         coreTmp[0, :, :, 1] = -1j * sP.T
         coreTmp[0, :, :, 2] = -1j * sM.T
 
-        self.H[j, i].bondDimL = coreTmp.shape[0]
-        self.H[j, i].bondDimR = coreTmp.shape[3]
-        self.H[j, i].level = coreTmp.shape[1]
-        self.H[j, i].core = copy.deepcopy(coreTmp.flatten(order='F'))
+        self.setH(coreTmp, self.H[j, i])
 
         i = self.ptrBra[0]
         coreTmp = np.zeros([3, 2, 2, 4], dtype=np.complex128)
         coreTmp[0, :, :, 2] = sP
         coreTmp[0, :, :, 3] = sM
-        coreTmp[1, :, :, 0] = np.eye(sZ.shape[0])
-        coreTmp[2, :, :, 1] = np.eye(sZ.shape[0])
+        coreTmp[1, :, :, 0] = eye
+        coreTmp[2, :, :, 1] = eye
 
-        self.H[j, i].bondDimL = coreTmp.shape[0]
-        self.H[j, i].bondDimR = coreTmp.shape[3]
-        self.H[j, i].level = coreTmp.shape[1]
-        self.H[j, i].core = copy.deepcopy(coreTmp.flatten(order='F'))
+        self.setH(coreTmp, self.H[j, i])
 
         i = self.ptrKet[1]
         coreTmp = np.zeros([4, 2, 2, 3], dtype=np.complex128)
         coreTmp[0, :, :, 0] = sM.T
         coreTmp[1, :, :, 0] = sP.T
-        coreTmp[2, :, :, 1] = np.eye(sZ.shape[0])
-        coreTmp[3, :, :, 2] = np.eye(sZ.shape[0])
+        coreTmp[2, :, :, 1] = eye
+        coreTmp[3, :, :, 2] = eye
 
-        self.H[j, i].bondDimL = coreTmp.shape[0]
-        self.H[j, i].bondDimR = coreTmp.shape[3]
-        self.H[j, i].level = coreTmp.shape[1]
-        self.H[j, i].core = copy.deepcopy(coreTmp.flatten(order='F'))
+        self.setH(coreTmp, self.H[j, i])
 
         i = self.ptrBra[1]
         coreTmp = np.zeros([3, 2, 2, 1], dtype=np.complex128)
-        coreTmp[0, :, :, 0] = np.eye(sZ.shape[0])
+        coreTmp[0, :, :, 0] = eye
         coreTmp[1, :, :, 0] = 1j * sM
         coreTmp[2, :, :, 0] = 1j * sP
 
-        self.H[j, i].bondDimL = coreTmp.shape[0]
-        self.H[j, i].bondDimR = coreTmp.shape[3]
-        self.H[j, i].level = coreTmp.shape[1]
-        self.H[j, i].core = copy.deepcopy(coreTmp.flatten(order='F'))
+        self.setH(coreTmp, self.H[j, i])
 
-
+        # reservoir
         # time-independent part
-        # reservoir 0 and 1
         j = 0
-        for l in range(2):
-            coreTmp = np.zeros([4, depth[l]+1, depth[l]+1, 4],
-                               dtype=np.complex128)
-            for i in range(self.dim[l]):
-                k = self.ptrKet[l] + 2 * i + 1
-                coreTmp.fill(0)
-                coreTmp[0, :, :, 0] = np.eye(depth[l]+1)
-                coreTmp[1, :, :, 0] = nu[l][i] * num[l].T
-                coreTmp[1, :, :, 1] = np.eye(depth[l]+1)
-                coreTmp[1, :, :, 2] = np.sqrt(coeff[l][i]) * ann[l].T
-                coreTmp[2, :, :, 2] = np.eye(depth[l]+1)
-                coreTmp[3, :, :, 0] = np.sqrt(coeff[l][i]) \
-                    * (cre[l].T - ann[l].T)
-                coreTmp[3, :, :, 3] = np.eye(depth[l]+1)
-
-                self.H[j, k].bondDimL = coreTmp.shape[0]
-                self.H[j, k].bondDimR = coreTmp.shape[3]
-                self.H[j, k].level = coreTmp.shape[1]
-                self.H[j, k].core = copy.deepcopy(coreTmp.flatten(order='F'))
-
-                k = self.ptrKet[l] + 2 * i + 2
-                coreTmp.fill(0)
-                coreTmp[0, :, :, 0] = np.eye(depth[l]+1)
-                coreTmp[1, :, :, 0] = nu[l][i].conj() * num[l].T
-                coreTmp[1, :, :, 1] = np.eye(depth[l]+1)
-                coreTmp[1, :, :, 2] = np.sqrt(coeff[l][i].conj()) * \
-                    (cre[l].T - ann[l].T)
-                coreTmp[2, :, :, 2] = np.eye(depth[l]+1)
-                coreTmp[3, :, :, 0] = np.sqrt(coeff[l][i].conj()) * ann[l].T
-                coreTmp[3, :, :, 3] = np.eye(depth[l]+1)
-
-                self.H[j, k].bondDimL = coreTmp.shape[0]
-                self.H[j, k].bondDimR = coreTmp.shape[3]
-                self.H[j, k].level = coreTmp.shape[1]
-                self.H[j, k].core = copy.deepcopy(coreTmp.flatten(order='F'))
+        for l in range(self.numQ):
+            self.setBathMPO(depth[l], nu[l], coeff[l], l, j)
 
         # direct coupling
-        # reservoir 0 and 1
         j = 7
-        for l in range(2):
+        for l in range(self.numQ):
             coreTmp = np.zeros([3, depth[l]+1, depth[l]+1, 3],
-                            dtype=np.complex128)
+                               dtype=np.complex128)
             coreTmp[0, :, :, 0] = np.eye(depth[l]+1)
             coreTmp[1, :, :, 1] = np.eye(depth[l]+1)
             coreTmp[2, :, :, 2] = np.eye(depth[l]+1)
 
             for i in range(self.ptrKet[l]+1, self.ptrBra[l]):
-                self.H[j, i].bondDimL = coreTmp.shape[0]
-                self.H[j, i].bondDimR = coreTmp.shape[3]
-                self.H[j, i].level = coreTmp.shape[1]
-                self.H[j, i].core = copy.deepcopy(coreTmp.flatten(order='F'))
+                self.setH(coreTmp, self.H[j, i])
 
+        # reservoir
+        # single-qubit operation
+        for l in range(self.numQ):
+            st = 3 * l + 1
+            en = 3 * l + 4
 
-        # reservoir 1
-        l = 0
-        # drive for qubit 1
-        coreTmp = np.zeros([2, depth[l]+1, depth[l]+1, 2],
-                           dtype=np.complex128)
-        coreTmp[0, :, :, 0] = np.eye(depth[l]+1)
-        coreTmp[1, :, :, 1] = np.eye(depth[l]+1)
+            # reservoir for qubit without operation
+            for k in list(range(l)) + list(range(l+1, self.numQ)):
+                coreTmp = np.zeros([1, depth[k]+1, depth[k]+1, 1],
+                                   dtype=np.complex128)
+                coreTmp[0, :, :, 0] = np.eye(depth[k]+1)
+                
+                for j in range(st, en):
+                    for i in range(self.ptrKet[k]+1, self.ptrBra[k]):
+                        self.setH(coreTmp, self.H[j, i])
 
-        for j in range(1, 4):
-            for i in range(self.ptrKet[l]+1, self.ptrBra[l]):
-                self.H[j, i].bondDimL = coreTmp.shape[0]
-                self.H[j, i].bondDimR = coreTmp.shape[3]
-                self.H[j, i].level = coreTmp.shape[1]
-                self.H[j, i].core = copy.deepcopy(coreTmp.flatten(order='F'))
+            # reservoir for qubit with operation
+            coreTmp = np.zeros([2, depth[l]+1, depth[l]+1, 2],
+                               dtype=np.complex128)
+            coreTmp[0, :, :, 0] = np.eye(depth[l]+1)
+            coreTmp[1, :, :, 1] = np.eye(depth[l]+1)
 
-        # drive for qubit 0
-        coreTmp = np.zeros([1, depth[l]+1, depth[l]+1, 1],
-                           dtype=np.complex128)
-        coreTmp[0, :, :, 0] = np.eye(depth[l]+1)
-
-        for j in range(4, 7):
-            for i in range(self.ptrKet[l]+1, self.ptrBra[l]):
-                self.H[j, i].bondDimL = coreTmp.shape[0]
-                self.H[j, i].bondDimR = coreTmp.shape[3]
-                self.H[j, i].level = coreTmp.shape[1]
-                self.H[j, i].core = copy.deepcopy(coreTmp.flatten(order='F'))
-
-        # reservoir 0
-        l = 1
-        # drive for qubit 1
-        coreTmp = np.zeros([1, depth[l]+1, depth[l]+1, 1],
-                           dtype=np.complex128)
-        coreTmp[0, :, :, 0] = np.eye(depth[l]+1)
-
-        for j in range(1, 4):
-            for i in range(self.ptrKet[l]+1, self.ptrBra[l]):
-                self.H[j, i].bondDimL = coreTmp.shape[0]
-                self.H[j, i].bondDimR = coreTmp.shape[3]
-                self.H[j, i].level = coreTmp.shape[1]
-                self.H[j, i].core = copy.deepcopy(coreTmp.flatten(order='F'))
-
-        # drive for qubit 0
-        coreTmp = np.zeros([2, depth[l]+1, depth[l]+1, 2],
-                           dtype=np.complex128)
-        coreTmp[0, :, :, 0] = np.eye(depth[l]+1)
-        coreTmp[1, :, :, 1] = np.eye(depth[l]+1)
-
-        for j in range(4, 7):
-            for i in range(self.ptrKet[l]+1, self.ptrBra[l]):
-                self.H[j, i].bondDimL = coreTmp.shape[0]
-                self.H[j, i].bondDimR = coreTmp.shape[3]
-                self.H[j, i].level = coreTmp.shape[1]
-                self.H[j, i].core = copy.deepcopy(coreTmp.flatten(order='F'))
+            for j in range(st, en):
+                for i in range(self.ptrKet[l]+1, self.ptrBra[l]):
+                    self.setH(coreTmp, self.H[j, i])
 
     def getIndices(self):
         """compute MPS indices for output

@@ -126,145 +126,83 @@ class TTs1Q(TTs):
         sY = np.array([[0.0 , -1.0j],
                     [1.0j,  0.0 ]], dtype=np.complex128)
 
-        num, cre, ann = self.createBathOperators(depth)
-
         # creare array of MPO
         self.H = np.array([[zTT() for _ in range(self.numCore)]
                            for _ in range(self.numH)])
         
         # set values for MPO
         # system part
+
+        eye = np.eye(sZ.shape[0])
         # time-independent part
         j = 0
         i = self.ptrKet[0]
         coreTmp = np.zeros([1, 2, 2, 4], dtype=np.complex128)
-        coreTmp[0, :, :, 1] = np.eye(sZ.shape[0])
+        coreTmp[0, :, :, 1] = eye
         coreTmp[0, :, :, 3] = V[0].T
 
-        self.H[j, i].bondDimL = coreTmp.shape[0]
-        self.H[j, i].bondDimR = coreTmp.shape[3]
-        self.H[j, i].level = coreTmp.shape[1]
-        self.H[j, i].core = copy.deepcopy(coreTmp.flatten(order='F'))
+        self.setH(coreTmp, self.H[j, i])
 
         i = self.ptrBra[0]
         coreTmp = np.zeros([4, 2, 2, 1], dtype=np.complex128)
-        coreTmp[0, :, :, 0] = np.eye(sZ.shape[0])
+        coreTmp[0, :, :, 0] = eye
         coreTmp[2, :, :, 0] = V[0]
 
-        self.H[j, i].bondDimL = coreTmp.shape[0]
-        self.H[j, i].bondDimR = coreTmp.shape[3]
-        self.H[j, i].level = coreTmp.shape[1]
-        self.H[j, i].core = copy.deepcopy(coreTmp.flatten(order='F'))
-
-        self.H[j, i].bondDimL = coreTmp.shape[0]
-        self.H[j, i].bondDimR = coreTmp.shape[3]
-        self.H[j, i].level = coreTmp.shape[1]
-        self.H[j, i].core = copy.deepcopy(coreTmp.flatten(order='F'))
-
+        self.setH(coreTmp, self.H[j, i])
+        
         # Zeeman splitting for qubit 1
         j = 1
         i = self.ptrKet[0]
         coreTmp = np.zeros([1, 2, 2, 2], dtype=np.complex128)
         coreTmp[0, :, :, 0] =  0.5j * sZ.T
-        coreTmp[0, :, :, 1] = np.eye(sZ.shape[0])
+        coreTmp[0, :, :, 1] = eye
 
-        self.H[j, i].bondDimL = coreTmp.shape[0]
-        self.H[j, i].bondDimR = coreTmp.shape[3]
-        self.H[j, i].level = coreTmp.shape[1]
-        self.H[j, i].core = copy.deepcopy(coreTmp.flatten(order='F'))
+        self.setH(coreTmp, self.H[j, i])
 
         i = self.ptrBra[0]
         coreTmp = np.zeros([2, 2, 2, 1], dtype=np.complex128)
-        coreTmp[0, :, :, 0] = np.eye(sZ.shape[0])
+        coreTmp[0, :, :, 0] = eye
         coreTmp[1, :, :, 0] = -0.5j * sZ
 
-        self.H[j, i].bondDimL = coreTmp.shape[0]
-        self.H[j, i].bondDimR = coreTmp.shape[3]
-        self.H[j, i].level = coreTmp.shape[1]
-        self.H[j, i].core = copy.deepcopy(coreTmp.flatten(order='F'))
+        self.setH(coreTmp, self.H[j, i])
 
         # drive for qubit 1 (cos)
         j = 2
         i = self.ptrKet[0]
         coreTmp = np.zeros([1, 2, 2, 2], dtype=np.complex128)
         coreTmp[0, :, :, 0] = -0.5j * sX.T
-        coreTmp[0, :, :, 1] = np.eye(sZ.shape[0])
+        coreTmp[0, :, :, 1] = eye
 
-        self.H[j, i].bondDimL = coreTmp.shape[0]
-        self.H[j, i].bondDimR = coreTmp.shape[3]
-        self.H[j, i].level = coreTmp.shape[1]
-        self.H[j, i].core = copy.deepcopy(coreTmp.flatten(order='F'))
+        self.setH(coreTmp, self.H[j, i])
 
         i = self.ptrBra[0]
         coreTmp = np.zeros([2, 2, 2, 1], dtype=np.complex128)
-        coreTmp[0, :, :, 0] = np.eye(sZ.shape[0])
+        coreTmp[0, :, :, 0] = eye
         coreTmp[1, :, :, 0] = 0.5j * sX
 
-        self.H[j, i].bondDimL = coreTmp.shape[0]
-        self.H[j, i].bondDimR = coreTmp.shape[3]
-        self.H[j, i].level = coreTmp.shape[1]
-        self.H[j, i].core = copy.deepcopy(coreTmp.flatten(order='F'))
+        self.setH(coreTmp, self.H[j, i])
 
         # drive for qubit 1 (sin)
         j = 3
         i = self.ptrKet[0]
         coreTmp = np.zeros([1, 2, 2, 2], dtype=np.complex128)
         coreTmp[0, :, :, 0] = -0.5j * sY.T
-        coreTmp[0, :, :, 1] = np.eye(sZ.shape[0])
+        coreTmp[0, :, :, 1] = eye
 
-        self.H[j, i].bondDimL = coreTmp.shape[0]
-        self.H[j, i].bondDimR = coreTmp.shape[3]
-        self.H[j, i].level = coreTmp.shape[1]
-        self.H[j, i].core = copy.deepcopy(coreTmp.flatten(order='F'))
+        self.setH(coreTmp, self.H[j, i])
 
         i = self.ptrBra[0]
         coreTmp = np.zeros([2, 2, 2, 1], dtype=np.complex128)
-        coreTmp[0, :, :, 0] = np.eye(sZ.shape[0])
+        coreTmp[0, :, :, 0] = eye
         coreTmp[1, :, :, 0] = 0.5j * sY
 
-        self.H[j, i].bondDimL = coreTmp.shape[0]
-        self.H[j, i].bondDimR = coreTmp.shape[3]
-        self.H[j, i].level = coreTmp.shape[1]
-        self.H[j, i].core = copy.deepcopy(coreTmp.flatten(order='F'))
+        self.setH(coreTmp, self.H[j, i])
 
         # reservoir
         # time-independent part
         j = 0
-        for l in range(1):
-            coreTmp = np.zeros([4, depth[l]+1, depth[l]+1, 4],
-                               dtype=np.complex128)
-            for i in range(self.dim[l]):
-                k = self.ptrKet[l] + 2 * i + 1
-                coreTmp.fill(0)
-                coreTmp[0, :, :, 0] = np.eye(depth[l]+1)
-                coreTmp[1, :, :, 0] = nu[l][i] * num[l].T
-                coreTmp[1, :, :, 1] = np.eye(depth[l]+1)
-                coreTmp[1, :, :, 2] = np.sqrt(coeff[l][i]) * ann[l].T
-                coreTmp[2, :, :, 2] = np.eye(depth[l]+1)
-                coreTmp[3, :, :, 0] = np.sqrt(coeff[l][i]) \
-                    * (cre[l].T - ann[l].T)
-                coreTmp[3, :, :, 3] = np.eye(depth[l]+1)
-
-                self.H[j, k].bondDimL = coreTmp.shape[0]
-                self.H[j, k].bondDimR = coreTmp.shape[3]
-                self.H[j, k].level = coreTmp.shape[1]
-                self.H[j, k].core = copy.deepcopy(coreTmp.flatten(order='F'))
-
-                k = self.ptrKet[l] + 2 * i + 2
-                coreTmp.fill(0)
-                coreTmp[0, :, :, 0] = np.eye(depth[l]+1)
-                coreTmp[1, :, :, 0] = nu[l][i].conj() * num[l].T
-                coreTmp[1, :, :, 1] = np.eye(depth[l]+1)
-                coreTmp[1, :, :, 2] = np.sqrt(coeff[l][i].conj()) * \
-                    (cre[l].T - ann[l].T)
-                coreTmp[2, :, :, 2] = np.eye(depth[l]+1)
-                coreTmp[3, :, :, 0] = np.sqrt(coeff[l][i].conj()) * ann[l].T
-                coreTmp[3, :, :, 3] = np.eye(depth[l]+1)
-
-                self.H[j, k].bondDimL = coreTmp.shape[0]
-                self.H[j, k].bondDimR = coreTmp.shape[3]
-                self.H[j, k].level = coreTmp.shape[1]
-                self.H[j, k].core = copy.deepcopy(coreTmp.flatten(order='F'))
+        for l in range(self.numQ):
+            self.setBathMPO(depth[l], nu[l], coeff[l], l, j)
 
         l = 0
         # drive for qubit 1
@@ -275,10 +213,7 @@ class TTs1Q(TTs):
 
         for j in range(1, 4):
             for i in range(self.ptrKet[l]+1, self.ptrBra[l]):
-                self.H[j, i].bondDimL = coreTmp.shape[0]
-                self.H[j, i].bondDimR = coreTmp.shape[3]
-                self.H[j, i].level = coreTmp.shape[1]
-                self.H[j, i].core = copy.deepcopy(coreTmp.flatten(order='F'))
+                self.setH(coreTmp, self.H[j, i])
     
     def getIndices(self):
         """compute MPS indices for output

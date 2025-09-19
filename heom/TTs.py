@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 import numpy as np
+import copy
 
 class TTs(ABC):
     """abstract class for MPS and MPO
@@ -65,34 +66,74 @@ class TTs(ABC):
 
         return rhoBondDims
 
-    def createBathOperators(self, depth):
-        """compute bath operators
+    def setBathMPO(self, depth, nu, coeff, sysIdx, HIdx):
+        """compute MPO cores
+            set values to self.H
 
-            depth (list[int]): maximum hierarchy for each bath
-            returns:
-                num (list[np.ndarray]): 1d list of number operators
-                cre (list[np.ndarray]): 1d list of creation operators
-                ann (list[np.ndarray]): 1d list of annihilation operators
+            params:
+                depth (int): maximum hierarchy for bath
+                nu (numpy.ndarray): poles for FP-HEOM
+                coeff (numpy.ndarray): residues for FP-HEOM
+                sysIdx (int): system index for ptrKet and ptrBra
+                HIdx (int): MPO index
         """
 
-        num = []
-        cre  =[]
-        ann = []
-
-        for i in range(len(depth)):
-            num.append(np.diag(np.arange(depth[i]+1)+0j))
-
-            cre.append(np.zeros([depth[i]+1, depth[i]+1],
-                                dtype=np.complex128))
-            ann.append(np.zeros([depth[i]+1, depth[i]+1],
-                                dtype=np.complex128))
-
-            for j in range(cre[i].shape[0]-1):
-                cre[i][j+1, j] = np.sqrt(j+1)
-                ann[i][j, j+1] = np.sqrt(j+1)
-
-        return num, cre, ann
+        dim  = len(nu)
         
+        num = np.diag(np.arange(depth+1)+0j)
+
+        cre = np.zeros([depth+1, depth+1], dtype=np.complex128)
+        ann = np.zeros([depth+1, depth+1], dtype=np.complex128)
+
+        for i in range(cre.shape[0]-1):
+            cre[i+1, i] = np.sqrt(i+1)
+            ann[i, i+1] = np.sqrt(i+1)
+
+        coreTmp = np.zeros([4, depth+1, depth+1, 4], dtype=np.complex128)
+
+        eye = np.eye(depth+1)
+
+        for i in range(dim):
+            k = self.ptrKet[sysIdx] + 2 * i + 1
+            coreTmp.fill(0)
+            coreTmp[0, :, :, 0] = eye
+            coreTmp[1, :, :, 0] = nu[i] * num.T
+            coreTmp[1, :, :, 1] = eye
+            coreTmp[1, :, :, 2] = np.sqrt(coeff[i]) * ann.T
+            coreTmp[2, :, :, 2] = eye
+            coreTmp[3, :, :, 0] = np.sqrt(coeff[i]) * (cre.T - ann.T)
+            coreTmp[3, :, :, 3] = eye
+
+            self.setH(coreTmp, self.H[HIdx, k])
+
+            k = self.ptrKet[sysIdx] + 2 * i + 2
+            coreTmp.fill(0)
+            coreTmp[0, :, :, 0] = eye
+            coreTmp[1, :, :, 0] = nu[i].conj() * num.T
+            coreTmp[1, :, :, 1] = eye
+            coreTmp[1, :, :, 2] = np.sqrt(coeff[i].conj()) * (cre.T - ann.T)
+            coreTmp[2, :, :, 2] = np.eye(depth+1)
+            coreTmp[3, :, :, 0] = np.sqrt(coeff[i].conj()) * ann.T
+            coreTmp[3, :, :, 3] = np.eye(depth+1)
+
+            self.setH(coreTmp, self.H[HIdx, k])
+
+
+    def setH(self, coreIn, TTOut):
+        """set values to MPO cores,
+            by copying values from coreIn to TTOut
+        
+            params:
+                coreIn (numpy.ndarray): MPO core for input
+                TTOut (tt.zTT): MPO for output, overwritten
+        """
+
+        TTOut.bondDimL = coreIn.shape[0]
+        TTOut.bondDimR = coreIn.shape[3]
+        TTOut.level = coreIn.shape[1]
+        TTOut.core = copy.deepcopy(coreIn.flatten(order='F'))
+
+
     @abstractmethod
     def getPrefactors(self, dt: float, time: float, stepNum: int):
         pass
