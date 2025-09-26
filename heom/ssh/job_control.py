@@ -1,6 +1,6 @@
 from qiskit import qpy
 from .connect_ssh import getClient
-from .commands import commandsForSubmission
+from .commands import commandsForSubmission, getStatus
 
 def submitJob(submissionParams, qc, idlingTime, gateList, rho,
               bath, V, dtFB, stride, isRK13=False):
@@ -80,5 +80,50 @@ def submitJob(submissionParams, qc, idlingTime, gateList, rho,
     
     print(stdout.read().decode())
     print("Save the job ID! It is used for getting results.")
+
+    client.close()
+
+def downloadResult(downloadParams, jobID, fileName):
+    """download a result file (csv file, name: {joID}.csv) from HPC cluster
+
+        params:
+            downloadParams (dict):
+            parameters for downloading
+                downloadParams['hostname'] (str): server name to connect to
+                downloadParams['username'] (str): user name
+                submissoinParams['schedulerName'] (str): job scheduler name
+            jobID: job ID of the simulation
+            fileName: file name for the local machine
+    """
+
+    # connect to an HPC server
+    client = getClient(downloadParams['hostname'],
+                       downloadParams['username'])
+
+    # check whether the simulation is completed
+    isCompleted = getStatus(downloadParams['schedulerName'], jobID, client)
+    if not isCompleted:
+        print('The job is not yet completed.')
+        return
+
+    # chech whether the result file exists
+    remoteName = f'{jobID}.csv'
+
+    stdin, stdout, stderr = client.exec_command('find -name ' + remoteName)
+    outMessage = stdout.read().decode()
+
+    if len(outMessage) == 0:
+        print('The job might have failed. ' +
+              'The job is not running, ' +
+              'but the corresponidng output file cannot be found.')
+        return
+    
+    # download
+    remotePath = outMessage[2:-1] # remove './' and '\n'
+
+    sftp = client.open_sftp()
+    sftp.get(remotePath, fileName)
+
+    sftp.close()
 
     client.close()

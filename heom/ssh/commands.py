@@ -1,4 +1,4 @@
-from .slurm import slurmShell
+from .slurm import slurmShell, slurmStatus
 
 def commandsForSubmission(submissionParams, qpyName, path):
     """create commands for job submission
@@ -47,3 +47,18 @@ def commandsForSubmission(submissionParams, qpyName, path):
     commands += shell
 
     return commands
+
+def getStatus(schedulerName, jobID, client):
+    """return whether the job with jobID is completed
+
+        params:
+            schedulerName (str): job scheduler name
+            jobID: job ID of the simulation
+            client (paramiko.client.SSHClient): client for ssh connection
+
+        returns:
+            bool: whether the job is completed
+    """
+
+    if schedulerName == 'slurm':
+        return slurmStatus(jobID, client)

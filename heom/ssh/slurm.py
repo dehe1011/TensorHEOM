@@ -1,5 +1,5 @@
 def slurmShell(submissionParams, qpyName, scriptName):
-    """shell script for the Slurm system
+    """shell script for Slurm systems
     
         params:
             submissionParams (dict):
@@ -46,3 +46,21 @@ def slurmShell(submissionParams, qpyName, scriptName):
     submissionCommand = 'sbatch'
 
     return shell, submissionCommand
+
+def slurmStatus(jobID, client):
+    """return whether the job with jobID is completed
+        For Slurm systems
+
+        params:
+            jobID: job ID of the simulation
+            client (paramiko.client.SSHClient): client for ssh connection
+
+        returns:
+            bool: whether the job is completed
+    """
+
+    command = f'squeue -j {jobID}'
+    stdin, stdout, stderr = client.exec_command(command)
+    outMessage = stdout.read().decode()
+
+    return False if str(jobID) in outMessage else True
