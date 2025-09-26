@@ -23,6 +23,9 @@ def commandsForSubmission(submissionParams, qpyName, path):
     """
     SCRIPTNAME = 'run.py'
     SHELLNAME = 'job.sh'
+    TASKSPERNODE = 1
+
+    submissionParams['tasksPerNode'] = TASKSPERNODE
 
     pythonScript = 'import sys\n'
     pythonScript += 'from heom.cui.run import run\n\n'

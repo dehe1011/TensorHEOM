@@ -6,6 +6,8 @@ def slurmShell(submissionParams, qpyName, scriptName):
                 parameters for submissoin
                 submissoinParams['schedulerName']: job scheduler name
                 submissionParams['numNodes'] (int): the number of nodes
+                submissionParams['tasksPerNode'] (int):
+                    the number of tasks per node
                 submissionParams['cpusPerTask'] (int):
                     the number of cpus per task
                 submissionParams['maxTime'] (str):
@@ -21,12 +23,11 @@ def slurmShell(submissionParams, qpyName, scriptName):
             submissionCommand(str): submission command
     """
 
-    TASKSPERNODE = 1
-
     # shell script for submission
     shell = '#!/bin/bash\n'
     shell += f"#SBATCH --nodes={submissionParams['numNodes']}\n"
-    shell += f'#SBATCH --ntasks-per-node={TASKSPERNODE}\n'
+    shell += '#SBATCH --ntasks-per-node=' \
+        f"{submissionParams['tasksPerNode']}\n"
     shell += f"#SBATCH --cpus-per-task={submissionParams['cpusPerTask']}\n"
     shell += '#SBATCH -t ' + submissionParams['maxTime'] + '\n'
     shell += submissionParams['others'] + '\n\n'
