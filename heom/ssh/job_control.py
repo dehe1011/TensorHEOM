@@ -13,8 +13,6 @@ def submitJob(submissionParams, qc, idlingTime, gateList, rho,
                 submissionParams['username'] (str): user name
                 submissoinParams['schedulerName'] (str): job scheduler name
                 submissionParams['numNodes'] (int): the number of nodes
-                submissionParams['tasksPerNode'] (int):
-                    the number of tasks per node
                 submissionParams['cpusPerTask'] (int):
                     the number of cpus per task
                 submissionParams['maxTime'] (str):
