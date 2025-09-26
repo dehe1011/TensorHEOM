@@ -1,24 +1,31 @@
+"""For JUSTUS2
+
+"""
 import socket
 import paramiko
-import getpass
 
-def handler(title, instructions, prompt_list):
-    answers = []
+def handlerWithValues(password, otp):
+    def handler(title, instructions, prompt_list):
+        answers = []
 
-    for pr in prompt_list:
-        query = pr[0]
-        ans = getpass.getpass(query)
+        for pr in prompt_list:
+            query = pr[0]
+            if query == 'Your OTP:':
+                answers.append(otp)
+            elif query == 'Password:':
+                answers.append(password)
 
-        answers.append(ans)
+        return answers
+    return handler
 
-    return answers
-
-def getClient(hostname, username):
+def getClient(hostname, username, password, otp):
     """get Client of paramiko
 
         params:
             hostname (str): server name to connect to
             username (str): user name
+            password (str): password
+            otp (str): one-time password
 
         returns:
             client (paramiko.client.SSHClient)
@@ -31,7 +38,7 @@ def getClient(hostname, username):
     sock.connect((hostname, 22))
     ts = paramiko.Transport(sock)
     ts.start_client()
-    ts.auth_interactive(username, handler)
+    ts.auth_interactive(username, handlerWithValues(password, otp))
 
     client._transport = ts
 
