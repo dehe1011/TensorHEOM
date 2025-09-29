@@ -1,4 +1,4 @@
-from .slurm import slurmShell
+from .slurm import slurmShell, slurmStatus
 
 def commandsForSubmission(submissionParams, qpyName, path):
     """create commands for job submission
@@ -8,8 +8,6 @@ def commandsForSubmission(submissionParams, qpyName, path):
                 parameters for submissoin
                 submissoinParams['schedulerName']: job scheduler name
                 submissionParams['numNodes'] (int): the number of nodes
-                submissionParams['tasksPerNode'] (int):
-                    the number of tasks per node
                 submissionParams['cpusPerTask'] (int):
                     the number of cpus per task
                 submissionParams['maxTime'] (str):
@@ -25,6 +23,9 @@ def commandsForSubmission(submissionParams, qpyName, path):
     """
     SCRIPTNAME = 'run.py'
     SHELLNAME = 'job.sh'
+    TASKSPERNODE = 1
+
+    submissionParams['tasksPerNode'] = TASKSPERNODE
 
     pythonScript = 'import sys\n'
     pythonScript += 'from heom.cui.run import run\n\n'
@@ -46,3 +47,18 @@ def commandsForSubmission(submissionParams, qpyName, path):
     commands += shell
 
     return commands
+
+def getStatus(schedulerName, jobID, client):
+    """return whether the job with jobID is completed
+
+        params:
+            schedulerName (str): job scheduler name
+            jobID: job ID of the simulation
+            client (paramiko.client.SSHClient): client for ssh connection
+
+        returns:
+            bool: whether the job is completed
+    """
+
+    if schedulerName == 'slurm':
+        return slurmStatus(jobID, client)
