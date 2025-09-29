@@ -2,7 +2,7 @@ from qiskit import QuantumCircuit
 import numpy as np
 from .. import main
 
-def run():
+def run1():
     fileName = 'rdo_1qubit.csv'
 
     qc = QuantumCircuit(1)
@@ -40,4 +40,4 @@ def run():
          bath, V, dtFB, stride)
     
 if __name__ == '__main__':
-    run()
+    run1()

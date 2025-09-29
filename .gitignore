@@ -6,7 +6,8 @@
 howto/
 fortran/
 TODO.txt
-development/
+
+result.csv
 
 # documentation
 docs/_build/

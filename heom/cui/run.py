@@ -2,7 +2,7 @@ from qiskit import qpy
 import numpy as np
 from ..main import main
 
-def run(inputName: str, outputName: str):
+def run_cui(inputName: str, outputName: str):
     """run simulation using serialized file
 
         params:

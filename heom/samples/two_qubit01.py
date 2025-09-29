@@ -1,17 +1,18 @@
 from qiskit import QuantumCircuit
 import numpy as np
 from .. import main
-from ..pulse.rxy_step import rxyStep
-from ..pulse.direct_cpl_step_varJ import directCplStepVarJ
 
-def run():
-    fileName = 'rdo_2qubit02.csv'
+def run2():
+    fileName = 'rdo_2qubit01.csv'
 
     qc = QuantumCircuit(2)
-    qc.h(0)
-    qc.cx(0, 1)
+    qc.ry(-0.5*np.pi, 1)
+    qc.rx(0.5*np.pi, 0)
+    qc.iswap(0, 1)
+    qc.ry(-0.5*np.pi, 1)
+    qc.iswap(0, 1)
 
-    idlingTime = 0.005
+    idlingTime = 0.0
 
     rho = {'numQ': 2}
     rho['rhoIni'] = np.array([[1, 0, 0, 0],
@@ -50,4 +51,4 @@ def run():
          bath, V, dtFB, stride)
     
 if __name__ == '__main__':
-    run()
+    run2()
