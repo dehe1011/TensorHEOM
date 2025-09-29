@@ -1,5 +1,6 @@
 import os
 
+import numpy as np
 import customtkinter as ctk
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
@@ -48,19 +49,25 @@ class PlottingWindow(ctk.CTkToplevel):
         )
 
         if self.controller.plot_kwargs['plot_type'] == 'Full density matrix':
-            self.plot_dm()
+            self.plot_full_dm()
 
         self.plotting(self.fig)
 
     # ------------------------------------------------------------------
 
-    def plot_dm(self):
-        self.fig, self.ax = plt.subplots(4,4, figsize=(2*3.4, 2*2.1), sharex=True, sharey=True)
-        for i, a in enumerate(self.ax.flatten()):
-            a.plot(self.controller.result[0], self.controller.result[i+1].values.real)
-            a.plot(self.controller.result[0], self.controller.result[i+1].values.imag)
+    def plot_full_dm(self):
+        dim = self.controller.dm_list[0].shape[0]
+        self.fig, self.ax = plt.subplots(dim, dim, figsize=(dim*1.7, dim*1.05), sharex=True, sharey=True)
+        for i in range(dim):
+            for j in range(dim):
+                self.ax[i,j].plot(self.controller.t_list, [dm[i,j].real for dm in self.controller.dm_list])
+                self.ax[i,j].plot(self.controller.t_list, [dm[i,j].imag for dm in self.controller.dm_list])
+                self.ax[i,j].plot(self.controller.t_list, [np.abs(dm[i,j]) for dm in self.controller.dm_list])
 
-            a.set_yticks([-1, -0.5, 0, 0.5, 1])
+                self.ax[i,j].set_yticks([-1, -0.5, 0, 0.5, 1])
+        for j in range(dim):
+            self.ax[-1,j].set_xlabel("Time [ns]")
+        self.ax[0,0].legend(['Re', 'Im', 'Abs'], loc='upper right', fontsize=5)
 
     # ------------------------------------------------------------------
 

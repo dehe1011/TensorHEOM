@@ -1,17 +1,28 @@
 import webbrowser
 import time
+import os
+
 import customtkinter as ctk
+from tkinter import filedialog
 import numpy as np
+import qutip as q
 from scipy.linalg import eigvals
+from qiskit import QuantumCircuit
+from qiskit.quantum_info import Operator
+from qiskit import qpy
 
-from ..main import get_result
-
+from ..main import main
 from .left_frame import LeftFrame
 from .middle_frame import MiddleFrame
 from .right_frame import RightFrame
 from .help_frame import HelpFrame
 from .scrollable_console_frame import ScrollableConsoleFrame
 from .plotting_window import PlottingWindow
+from .circuit_editor_window import CircuitEditor
+from .state_editor_window import StateEditor
+from .gui_utils import load_density_matrices
+
+from .hpc_settings_window import HPCSettings
 
 # --------------------------------------------------
 
@@ -23,13 +34,19 @@ class TensorHeomApp(ctk.CTk):
         super().__init__()
 
         self.title("TensorHEOM")
+
         self.kwargs = {}
-        self.target = np.array([
-                [0.5, 0, 0, 0.5],
-                [0, 0, 0, 0],
-                [0, 0, 0, 0],
-                [0.5, 0, 0, 0.5]
-            ], dtype=complex)
+        self.plot_kwargs = {}
+        self.num_qubits = None
+        self.qc = None
+        self.init_state = None
+        self.fileName = "result.csv"
+        self.rho = None
+        self.gateList = []
+        self.t_list = None
+        self.dm_list = None
+
+        self.submissionParams = None
 
         # Configure the grid layout for the root window
         self.grid_columnconfigure(0, weight=1)  # Column 0 takes 1 part
@@ -70,7 +87,9 @@ class TensorHeomApp(ctk.CTk):
 
         # --------------------------------------------------------------
 
-        # self.right_frame.change_state("disabled")
+        self.middle_frame.change_state("disabled")
+        self.right_frame.change_state1("disabled")
+        self.right_frame.change_state2("disabled")
 
     # ------------------------------------------------------------------
 
@@ -80,44 +99,152 @@ class TensorHeomApp(ctk.CTk):
     def open_paper(self):
         webbrowser.open("https://journals.aps.org/prresearch/abstract/10.1103/PhysRevResearch.6.033215")
 
-    def calculate(self): 
-        t0 = time.time()
-        print("Calculating...")
-        self.right_frame.change_state("normal")
-        self.middle_frame.change_state("disabled")
-        self.left_frame.change_state("disabled")
+    def submit(self): 
+        
+        if self.t_list is not None and self.dm_list is not None:
+            print(self.t_list)
+            print('Info: Results already calculated and loaded.')
 
-        self.kwargs = {
-            **self.left_frame.get_kwargs(),
-            **self.middle_frame.get_kwargs()
-        }
-        self.result = get_result(**self.kwargs)
+        elif os.path.exists("result.csv"):
+            print("Warning: results.csv already exists, please rename or delete it.")
+            self.t_list, self.dm_list = load_density_matrices("result.csv")
 
-        dms = np.array(self.result.values)[:,1:]
-        self.dms = np.array([dm.reshape(4, 4) for dm in dms])
+        else:
+            t0 = time.time()
+            main(self.fileName, self.qc, self.kwargs['idlingTime'], self.gateList, self.rho, 
+                 self.kwargs['bath'], self.kwargs['V'], self.kwargs['dtFB'], self.kwargs['stride'])
+            self.t_list, self.dm_list = load_density_matrices("result.csv")
+            print(f"Calculation finished in {time.time()-t0}s. Saved as result.csv.")
 
-        t1 = time.time()
-        print(f"Calculation done in {t1-t0}s.")
+        self.right_frame.change_state2("normal")
 
-    def back(self):
-        self.right_frame.change_state("disabled")
+
+    # ------------------------------------------------------------------
+
+    def open_circuit_editor(self):
+        self.num_qubits = self.left_frame.get_kwargs()['numQ']
+        self.continue_to_middle_frame()
+        print("Opening circuit editor window...")
+        popup = CircuitEditor(self, save_file="circuit.qpy")
+        popup.grab_set()
+        self.wait_window(popup)
+
+    def open_state_editor(self):
+        print("Opening state editor window...")
+        popup = StateEditor(self)
+        popup.grab_set()
+        self.wait_window(popup)
+
+    def load_circuit(self):
+        filepath = filedialog.askopenfilename(filetypes=[("QPY files", "*.qpy")])
+        with open(filepath, "rb") as f:
+            circuits = qpy.load(f)
+        self.qc = circuits[0]
+        self.num_qubits = self.qc.num_qubits
+        self.left_frame.num_qubits_counter.set(str(self.num_qubits))
+        print(f"Info: Circuit loaded successfully from {filepath}.")
+        self.continue_to_middle_frame()
+
+    def load_result(self):
+        filepath = filedialog.askopenfilename(filetypes=[("CSV files", "*.csv")])
+        self.t_list, self.dm_list = load_density_matrices(filepath)
+        print(f"Info: Result file loaded successfully from {filepath}.")
+        self.right_frame.change_state2("normal")
+
+    def back_to_middle_frame(self):
+        self.right_frame.change_state1("disabled")
+        self.right_frame.change_state2("disabled")
         self.middle_frame.change_state("normal")
+        self.left_frame.change_state("disabled")
+        self.t_list = None
+        self.dm_list = None
+
+    def back_to_left_frame(self):
+        self.right_frame.change_state1("disabled")
+        self.right_frame.change_state2("disabled")
+        self.middle_frame.change_state("disabled")
         self.left_frame.change_state("normal")
 
-    def submit(self):
+    def continue_to_middle_frame(self):
+        self.kwargs = self.left_frame.get_kwargs()
+        self.num_qubits = self.kwargs['numQ']
+        
+        if self.qc is None:
+            print("Please define a quantum circuit to continue.")
+            return 
+
+        self.init_state = q.tensor( [q.fock_dm(2,0) for _ in range(self.num_qubits)] ).full().real
+        if self.kwargs['numQ'] == 3: 
+            print('Warning: 3 qubit circuits are not yet supported.')
+        else:
+            self.left_frame.change_state("disabled")
+            self.middle_frame.change_state("normal")
+
+    def continue_to_right_frame(self):
+        self.kwargs.update(self.middle_frame.get_kwargs())
+
+        self.kwargs['rhoIni'] = self.init_state
+        self.kwargs['V'] = np.array([[[0, 1],[1, 0]] for _ in range(self.num_qubits)], dtype=np.complex128)
+        self.kwargs['stride'] = int(self.kwargs['strideTime'] / self.kwargs['dtFB']) 
+
+        # rho
+        self.rho = {'numQ': self.kwargs['numQ']}
+        default_rhoIni = q.tensor( [q.fock_dm(2,0) for _ in range(self.kwargs['numQ'])] ).full()
+        self.rho['rhoIni'] = self.kwargs.get('rhoIni', default_rhoIni)
+        self.rho['omegaQ'] = self.kwargs['omegaQ'] # * 2*np.pi  # frequency to angular frequency
+
+        # gateList
+        if self.kwargs['numQ'] == 1:
+            kwargs1Q = {'omega': -self.rho['omegaQ'][0], 'gateTime': self.kwargs['gate_time']*np.pi}
+            self.gateList = [[[0], 'rxyStep', kwargs1Q]]
+
+        elif self.kwargs['numQ'] == 2:
+            kwargs1Q = [{'omega': -self.rho['omegaQ'][0], 'gateTime': self.kwargs['gate_time']},
+                        {'omega': -self.rho['omegaQ'][1], 'gateTime': self.kwargs['gate_time']},]
+            kwargs2Q = {'gateTime': self.kwargs['gate_time']/2}
+            self.gateList = [[[0], 'rxyStep', kwargs1Q[0]],
+                             [[1], 'rxyStep', kwargs1Q[1]],
+                             [[0, 1], 'directCplStepVarJ', kwargs2Q]]  
+            
+        if self.kwargs['useHPC']:   
+            print("Opening HPC settings window...")
+            popup = HPCSettings(self)
+            popup.grab_set()
+            self.wait_window(popup)
+            
+        if self.kwargs['architecture'] == 'ladder':
+            print('Warning: ladder architecture is not yet supported.')
+            return
+        
+        self.middle_frame.change_state("disabled")
+        self.right_frame.change_state1("normal")
+        print("Info: Ready to submit job.")
+
+    # ------------------------------------------------------------------
+
+    def plot(self):
         self.plot_kwargs = self.right_frame.get_kwargs()
-        self.plotting_window = PlottingWindow(self)
+        PlottingWindow(self)
 
     def calculate_fidelity(self):
         # print("Calculating fidelity...")
-        rho = self.dms[-1]
-        F = np.real(np.trace(rho @ self.target))
+        rho = self.dm_list[-1]
+
+        U = Operator(self.qc).data
+        target = U @ self.rho['rhoIni'] @ U.conj().T
+
+        F = np.real(np.trace(rho @ target))
         print(f"Fidelity: {F}")
         return F
 
     def calculate_concurrence(self):
         # print("Calculating concurrence...")
-        rho = self.dms[-1]
+
+        if not self.kwargs['numQ'] == 2:
+            print("Concurrence is only defined for 2 qubits.")
+            return None
+    
+        rho = self.dm_list[-1]
 
         sigma_y = np.array([[0, -1j], [1j, 0]])
         Y = np.kron(sigma_y, sigma_y)

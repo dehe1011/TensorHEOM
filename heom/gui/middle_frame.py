@@ -1,10 +1,8 @@
 import customtkinter as ctk
-import numpy as np
 
 from .gui_utils import change_state_all_widgets
 
 # ----------------------------------------------------------------------
-
 
 class MiddleFrame(ctk.CTkFrame):
     def __init__(self, master):
@@ -17,43 +15,73 @@ class MiddleFrame(ctk.CTkFrame):
 
         # label
         self.logo_label = ctk.CTkLabel(
+            self, text="System", font=ctk.CTkFont(size=20, weight="bold")
+        )
+        self.logo_label.grid(row=row, column=0, columnspan=2, pady=10, padx=10)
+        row += 1
+
+        # qubit architecture combobox
+        self.qubit_architecture_label = ctk.CTkLabel(self, text="Qubit architecture:")
+        self.qubit_architecture_label.grid(row=row, column=0, padx=10, pady=10)
+
+        self.qubit_architecture_combobox = ctk.CTkComboBox(
+            self, values=["chain", "ladder"]
+        )
+        self.qubit_architecture_combobox.set("chain")
+        self.qubit_architecture_combobox.grid(row=row, column=1, padx=10, pady=10)
+        row += 1
+
+        # qubit frequency label and entry
+        self.qubit_frequency_label = ctk.CTkLabel(self, text="Qubit frequency (GHz):")
+        self.qubit_frequency_label.grid(row=row, column=0, padx=10, pady=10)
+
+        self.qubit_frequency_entry = ctk.CTkEntry(self)
+        self.qubit_frequency_entry.insert(0, 1)
+        self.qubit_frequency_entry.grid(row=row, column=1, padx=10, pady=10)
+        row += 1
+
+        # --------------------------------------------------------------
+
+        # label
+        self.logo_label = ctk.CTkLabel(
+            self, text="Gates", font=ctk.CTkFont(size=20, weight="bold")
+        )
+        self.logo_label.grid(row=row, column=0, columnspan=2, pady=10, padx=10)
+        row += 1
+
+        # Idling time label and entry
+        self.idling_time_label = ctk.CTkLabel(self, text="Idling time (ns):")
+        self.idling_time_label.grid(row=row, column=0, padx=10, pady=10)
+        self.idling_time_entry = ctk.CTkEntry(self)
+        self.idling_time_entry.insert(0, 0.1)
+        self.idling_time_entry.grid(row=row, column=1, padx=10, pady=10)
+        row += 1
+
+        # Gate time label and entry
+        self.gate_time_label = ctk.CTkLabel(self, text="Gate time (ns):")
+        self.gate_time_label.grid(row=row, column=0, padx=10, pady=10)
+        self.gate_time_entry = ctk.CTkEntry(self)
+        self.gate_time_entry.insert(0, 0.1)
+        self.gate_time_entry.grid(row=row, column=1, padx=10, pady=10)
+        row += 1
+
+        # --------------------------------------------------------------
+
+        # label
+        self.logo_label = ctk.CTkLabel(
             self, text="Bath", font=ctk.CTkFont(size=20, weight="bold")
         )
         self.logo_label.grid(row=row, column=0, columnspan=2, pady=10, padx=10)
         row += 1
 
         # exponent combobox
-        self.exponent_label = ctk.CTkLabel(self, text="Exponent:")
+        self.exponent_label = ctk.CTkLabel(self, text="Select bath:")
         self.exponent_label.grid(row=row, column=0, padx=10, pady=10)
         self.exponent_combobox = ctk.CTkComboBox(
-            self, values=["1", "1/2", "1/8"]
+            self, values=["s=1", "s=1/2", "s=1/8"]
         )
-        self.exponent_combobox.set("1")
+        self.exponent_combobox.set("s=1")
         self.exponent_combobox.grid(row=row, column=1, padx=10, pady=10)
-        row += 1
-
-        # cutoff frequency label and entry
-        self.cutoff_frequency_label = ctk.CTkLabel(self, text="Cutoff frequency (GHz):")
-        self.cutoff_frequency_label.grid(row=row, column=0, padx=10, pady=10)
-        self.cutoff_frequency_entry = ctk.CTkEntry(self)
-        self.cutoff_frequency_entry.insert(0, 50)
-        self.cutoff_frequency_entry.grid(row=row, column=1, padx=10, pady=10)
-        row += 1
-
-        # temperature label and entry
-        self.temperature_label = ctk.CTkLabel(self, text="Temperature (K):")
-        self.temperature_label.grid(row=row + 1, column=0, padx=10, pady=10)
-        self.temperature_entry = ctk.CTkEntry(self) 
-        self.temperature_entry.insert(0, 5)
-        self.temperature_entry.grid(row=row + 1, column=1, padx=10, pady=10)
-        row += 1
-
-        # system-bath coupling label and entry
-        self.system_bath_coupling_label = ctk.CTkLabel(self, text="System-bath coupling (GHz):")
-        self.system_bath_coupling_label.grid(row=row, column=0, padx=10, pady=10)
-        self.system_bath_coupling_entry = ctk.CTkEntry(self)
-        self.system_bath_coupling_entry.insert(0, 0.004)
-        self.system_bath_coupling_entry.grid(row=row , column=1, padx=10, pady=10)
         row += 1
 
         # --------------------------------------------------------------
@@ -65,101 +93,74 @@ class MiddleFrame(ctk.CTkFrame):
         self.logo_label2.grid(row=row, column=0, columnspan=2, pady=10, padx=10)
         row += 1
 
+        # initial state label and button to open state editor
+        self.initial_state_label = ctk.CTkLabel(self, text="Initial state:")
+        self.initial_state_label.grid(row=row, column=0, padx=10, pady=10)
+        self.initial_state_button = ctk.CTkButton(
+            self, text="Open State Editor", command=master.open_state_editor
+        )
+        self.initial_state_button.grid(row=row, column=1, padx=10, pady=10)
+        row += 1
+
+        # dtFB label and entry
+        self.dtFB_label = ctk.CTkLabel(self, text="dtFB (ns):")
+        self.dtFB_label.grid(row=row, column=0, padx=10, pady=10)
+        self.dtFB_entry = ctk.CTkEntry(self)
+        self.dtFB_entry.insert(0, 0.001)
+        self.dtFB_entry.grid(row=row, column=1, padx=10, pady=10)
+        row += 1
+
         # timestep label and entry
-        self.timestep_label = ctk.CTkLabel(self, text="Timestep:")
+        self.timestep_label = ctk.CTkLabel(self, text="Timestep (ns):")
         self.timestep_label.grid(row=row, column=0, padx=10, pady=10)
         self.timestep_entry = ctk.CTkEntry(self)
-        self.timestep_entry.insert(0, 0.001)
+        self.timestep_entry.insert(0, 0.01)
         self.timestep_entry.grid(row=row, column=1, padx=10, pady=10)
         row += 1
 
-        # initial state label and entry
-        self.initial_state_label = ctk.CTkLabel(self, text="Initial state:")
-        self.initial_state_label.grid(row=row, column=0, padx=10, pady=10)
-        self.initial_state_entry = ctk.CTkEntry(self)
-        self.initial_state_entry.insert(0, "00")
-        self.initial_state_entry.grid(row=row, column=1, padx=10, pady=10)
+        # RK13 checkbox
+        self.RK13_var = ctk.BooleanVar(value=False)
+        self.RK13_checkbox = ctk.CTkCheckBox(self, text="Use RK13", variable=self.RK13_var)
+        self.RK13_checkbox.grid(row=row, column=0, columnspan=2, padx=10, pady=10)
         row += 1
 
-        # --------------------------------------------------------------
-
-        # label
-        self.logo_label = ctk.CTkLabel(
-            self, text="Drive", font=ctk.CTkFont(size=20, weight="bold")
-        )
-        self.logo_label.grid(row=row, column=0, columnspan=2, pady=10, padx=10)
-        row += 1
-
-        # Rabi frequency label and entry
-        self.rabi_frequency_label = ctk.CTkLabel(self, text="Rabi frequency (GHz):")
-        self.rabi_frequency_label.grid(row=row, column=0, padx=10, pady=10)
-        self.rabi_frequency_entry = ctk.CTkEntry(self)
-        self.rabi_frequency_entry.insert(0, round(10*np.pi, 1) )
-        self.rabi_frequency_entry.grid(row=row, column=1, padx=10, pady=10)
-        row += 1
-
-        # drive frequency label and entry
-        self.drive_frequency_label = ctk.CTkLabel(self, text="Drive frequency (GHz):")
-        self.drive_frequency_label.grid(row=row, column=0, padx=10, pady=10)
-        self.drive_frequency_entry = ctk.CTkEntry(self)
-        self.drive_frequency_entry.insert(0, 1)
-        self.drive_frequency_entry.grid(row=row, column=1, padx=10, pady=10)
-        row += 1
-
-        # qubit coupling label and entry
-        self.qubit_coupling_label = ctk.CTkLabel(self, text="Qubit coupling (GHz):")
-        self.qubit_coupling_label.grid(row=row, column=0, padx=10, pady=10)
-        self.qubit_coupling_entry = ctk.CTkEntry(self)
-        self.qubit_coupling_entry.insert(0, round(10*np.pi, 1) )
-        self.qubit_coupling_entry.grid(row=row, column=1, padx=10, pady=10)
+        # HPC checkbox
+        self.HPC_var = ctk.BooleanVar(value=False)
+        self.HPC_checkbox = ctk.CTkCheckBox(self, text="Use HPC", variable=self.HPC_var)
+        self.HPC_checkbox.grid(row=row, column=0, columnspan=2, padx=10, pady=10)
         row += 1
 
         # --------------------------------------------------------------
 
         # confirm button
-        self.calculate_button = ctk.CTkButton(
-            self, text="Calculate", command=master.calculate
+        self.continue_button = ctk.CTkButton(
+            self, text="Continue", command=master.continue_to_right_frame
         )
-        self.calculate_button.grid(row=row, column=0, columnspan=2, pady=10, padx=10)
+        self.continue_button.grid(row=row, column=1, columnspan=1, pady=10, padx=10)
 
+        # back button
+        self.back_button = ctk.CTkButton(
+            self, text="Back", command=master.back_to_left_frame
+        )
+        self.back_button.grid(row=row, column=0, columnspan=1, pady=10, padx=10)
+
+    # ------------------------------------------------------------------
 
     def get_kwargs(self):
-        init_state_entry = self.initial_state_entry.get()
-        if init_state_entry == "00":
-            init_state = np.array(
-                [[1, 0, 0, 0],
-                [0, 0, 0, 0],
-                [0, 0, 0, 0],
-                [0, 0, 0, 0]], dtype=np.complex128)
-        if init_state_entry == "01":
-            init_state = np.array(
-                [[0, 0, 0, 0],
-                [0, 1, 0, 0],
-                [0, 0, 0, 0],
-                [0, 0, 0, 0]], dtype=np.complex128)
-        if init_state_entry == "10":
-            init_state = np.array(
-                [[0, 0, 0, 0],
-                [0, 0, 0, 0],
-                [0, 0, 1, 0],
-                [0, 0, 0, 0]], dtype=np.complex128)
-        if init_state_entry == "11":
-            init_state = np.array(
-                [[0, 0, 0, 0],
-                [0, 0, 0, 0],
-                [0, 0, 0, 0],
-                [0, 0, 0, 1]], dtype=np.complex128)
         return {
-            's': float(self.exponent_combobox.get()),
-            'omega_c': float(self.cutoff_frequency_entry.get()),
-            'T': float(self.temperature_entry.get()),
-            'kappa': float(self.system_bath_coupling_entry.get()),
-            'dtFB': float(self.timestep_entry.get()),
-            'init_state': init_state,
+            'architecture': self.qubit_architecture_combobox.get(),
+            'omegaQ': [float(self.qubit_frequency_entry.get())] * self.master.num_qubits,
+            'bath': [self.exponent_combobox.get()] * self.master.num_qubits,
+            'strideTime': float(self.timestep_entry.get()),
+            'dtFB': float(self.dtFB_entry.get()),
+            'gate_time': float(self.gate_time_entry.get()),
+            'idlingTime': float(self.idling_time_entry.get()),
+            'isRK13': self.RK13_var.get(),
+            'useHPC': self.HPC_var.get(),
         }
 
     def change_state(self, state):
         change_state_all_widgets(self, state=state)
-        self.calculate_button.configure(state=state)
+        self.continue_button.configure(state=state)
 
 # ----------------------------------------------------------------------

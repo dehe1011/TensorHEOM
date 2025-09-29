@@ -1,7 +1,7 @@
 import customtkinter as ctk
 
-from .gui_utils import change_state_all_widgets
-
+from .gui_utils import change_state_all_widgets, Counter
+   
 # ----------------------------------------------------------------------
 
 
@@ -16,48 +16,60 @@ class LeftFrame(ctk.CTkFrame):
 
         # label
         self.logo_label = ctk.CTkLabel(
-            self, text="System", font=ctk.CTkFont(size=20, weight="bold")
+            self, text="Circuit", font=ctk.CTkFont(size=20, weight="bold")
         )
-        self.logo_label.grid(row=row, column=0, pady=10, padx=10)
+        self.logo_label.grid(row=row, column=0, columnspan=2, pady=10, padx=10)
         row += 1
 
-        #num qubits label and entry
+        # num qubits label and entry
         self.num_qubits_label = ctk.CTkLabel(self, text="Number of qubits:")
         self.num_qubits_label.grid(row=row, column=0, padx=10, pady=10)
         row += 1
 
-        self.num_qubits_entry = ctk.CTkEntry(self)
-        self.num_qubits_entry.insert(0, 2)
-        self.num_qubits_entry.grid(row=row, column=0, padx=10, pady=10)
+        # self.num_qubits_counter = Counter(self, start=1, minimum=1, maximum=3)
+        self.num_qubits_counter = ctk.CTkComboBox(self, values=["1", "2", "3"])
+        self.num_qubits_counter.set("1")
+        self.num_qubits_counter.grid(row=row, column=0, padx=10, pady=10)
         row += 1
 
-        # qubit architecture combobox
-        self.qubit_architecture_label = ctk.CTkLabel(self, text="Qubit architecture:")
-        self.qubit_architecture_label.grid(row=row, column=0, padx=10, pady=10)
+        # --------------------------------------------------------------
+
+        # define circuit label
+        self.define_circuit_label = ctk.CTkLabel(self, text="Define Circuit:")
+        self.define_circuit_label.grid(row=row, column=0, pady=10, padx=10)
         row += 1
 
-        self.qubit_architecture_combobox = ctk.CTkComboBox(
-            self, values=["single chain", "double chain"]
+        # big circuit editor button
+        self.circuit_editor_button = ctk.CTkButton(
+            self, text="Open Circuit Editor", command=master.open_circuit_editor
         )
-        self.qubit_architecture_combobox.set("single chain")
-        self.qubit_architecture_combobox.grid(row=row, column=0, padx=10, pady=10)
+        self.circuit_editor_button.grid(row=row, column=0, columnspan=2, padx=10, pady=20)
         row += 1
 
-        # qubit frequency label and entry
-        self.qubit_frequency_label = ctk.CTkLabel(self, text="Qubit frequency (GHz):")
-        self.qubit_frequency_label.grid(row=row, column=0, padx=10, pady=10)
+        # big circuit upload button
+        self.circuit_upload_button = ctk.CTkButton(
+            self, text="Upload Circuit", command=master.load_circuit
+        )
+        self.circuit_upload_button.grid(row=row, column=0, columnspan=2, padx=10, pady=10)
         row += 1
 
-        self.qubit_frequency_entry = ctk.CTkEntry(self)
-        self.qubit_frequency_entry.insert(0, 5)
-        self.qubit_frequency_entry.grid(row=row, column=0, padx=10, pady=10)
+        # --------------------------------------------------------------
+
+        # empty row for spacing
+        self.grid_rowconfigure(row, weight=1)
+        row += 1
+
+        # continue button
+        self.continue_button = ctk.CTkButton(
+            self, text="Continue", command=master.continue_to_middle_frame
+        )
+        self.continue_button.grid(row=row, column=0, padx=10, pady=20)
+        row += 1
+
+        # --------------------------------------------------------------
 
     def get_kwargs(self):
-        return {
-            'numQ': int(self.num_qubits_entry.get()),
-            'architecture': self.qubit_architecture_combobox.get(),
-            'omegaQ': float(self.qubit_frequency_entry.get()),
-        }
+        return {'numQ': int(self.num_qubits_counter.get()) }
 
     def change_state(self, state):
         change_state_all_widgets(self, state=state)
