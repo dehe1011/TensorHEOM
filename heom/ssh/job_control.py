@@ -11,6 +11,10 @@ def submitJob(submissionParams, qc, idlingTime, gateList, rho,
                 parameters for submissoin
                 submissionParams['hostname'] (str): server name to connect to
                 submissionParams['username'] (str): user name
+                submissionParams['passoword'] (str):
+                    password to connect to server
+                submissionParams['otp'] (str):
+                    one-time password to connect to server
                 submissoinParams['schedulerName'] (str): job scheduler name
                 submissionParams['numNodes'] (int): the number of nodes
                 submissionParams['cpusPerTask'] (int):
@@ -66,7 +70,9 @@ def submitJob(submissionParams, qc, idlingTime, gateList, rho,
 
     # connect to an HPC server
     client = getClient(submissionParams['hostname'],
-                       submissionParams['username'])
+                       submissionParams['username'],
+                       submissionParams['password'],
+                       submissionParams['otp'])
 
     # send parameters to the server
     sftp = client.open_sftp()
@@ -91,6 +97,10 @@ def downloadResult(downloadParams, jobID, fileName):
             parameters for downloading
                 downloadParams['hostname'] (str): server name to connect to
                 downloadParams['username'] (str): user name
+                downloadParams['passoword'] (str):
+                    password to connect to server
+                downloadParams['otp'] (str):
+                    one-time password to connect to server
                 submissoinParams['schedulerName'] (str): job scheduler name
             jobID: job ID of the simulation
             fileName: file name for the local machine
@@ -98,7 +108,9 @@ def downloadResult(downloadParams, jobID, fileName):
 
     # connect to an HPC server
     client = getClient(downloadParams['hostname'],
-                       downloadParams['username'])
+                       downloadParams['username'],
+                       downloadParams['password'],
+                       downloadParams['otp'])
 
     # check whether the simulation is completed
     isCompleted = getStatus(downloadParams['schedulerName'], jobID, client)
