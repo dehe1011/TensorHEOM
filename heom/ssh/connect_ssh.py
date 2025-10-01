@@ -10,10 +10,12 @@ def handlerWithValues(password, otp):
 
         for pr in prompt_list:
             query = pr[0]
-            if query == 'Your OTP:':
+            if 'otp' in query.lower():
                 answers.append(otp)
-            elif query == 'Password:':
+            elif 'password' in query.lower():
                 answers.append(password)
+            else:
+                answers.append("")
 
         return answers
     return handler
