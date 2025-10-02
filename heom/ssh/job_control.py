@@ -11,7 +11,7 @@ def submitJob(submissionParams, qc, idlingTime, gateList, rho,
                 parameters for submissoin
                 submissionParams['hostname'] (str): server name to connect to
                 submissionParams['username'] (str): user name
-                submissionParams['passoword'] (str):
+                submissionParams['password'] (str):
                     password to connect to server
                 submissionParams['otp'] (str):
                     one-time password to connect to server
@@ -97,11 +97,11 @@ def downloadResult(downloadParams, jobID, fileName):
             parameters for downloading
                 downloadParams['hostname'] (str): server name to connect to
                 downloadParams['username'] (str): user name
-                downloadParams['passoword'] (str):
+                downloadParams['password'] (str):
                     password to connect to server
                 downloadParams['otp'] (str):
                     one-time password to connect to server
-                submissoinParams['schedulerName'] (str): job scheduler name
+                downloadParams['schedulerName'] (str): job scheduler name
             jobID: job ID of the simulation
             fileName: file name for the local machine
     """
