@@ -21,6 +21,8 @@ def submitJob(submissionParams, qc, idlingTime, gateList, rho,
                     the number of cpus per task
                 submissionParams['maxTime'] (str):
                     maximum time for calculation in the form 'D-H:MM:SS'
+                submissionParams['emailAddress'] (str):
+                    email address for sending notification
                 submissionParams['others'] (str): user-defined parameters
                 submissionParams['venvPath']:
                     path of venv (virtual environment)

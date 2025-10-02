@@ -12,6 +12,8 @@ def slurmShell(submissionParams, qpyName, scriptName):
                     the number of cpus per task
                 submissionParams['maxTime'] (str):
                     maximum time for calculation in the form 'D-H:MM:SS'
+                submissionParams['emailAddress'] (str):
+                    email address for sending notification
                 submissionParams['others'] (str): user-defined parameters
                 submissionParams['venvPath']:
                     path of venv (virtual environment)
@@ -30,6 +32,8 @@ def slurmShell(submissionParams, qpyName, scriptName):
         f"{submissionParams['tasksPerNode']}\n"
     shell += f"#SBATCH --cpus-per-task={submissionParams['cpusPerTask']}\n"
     shell += '#SBATCH -t ' + submissionParams['maxTime'] + '\n'
+    shell += f"#SBATCH --mail-user={submissionParams['emailAddress']}\n"
+    shell += f"#SBATCH --mail-type=ALL,TIME_LIMIT\n"
     shell += submissionParams['others'] + '\n\n'
 
     venvPath = submissionParams['venvPath']
