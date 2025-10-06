@@ -86,10 +86,12 @@ def submitJob(submissionParams, qc, idlingTime, gateList, rho,
     commands = commandsForSubmission(submissionParams, QPYNAME, REMOTEPATH)
     stdin, stdout, stderr = client.exec_command(commands)
     
-    print(stdout.read().decode())
+    job_id = stdout.read().decode()
+    print(job_id)
     print("Save the job ID! It is used for getting results.")
 
     client.close()
+    return job_id
 
 def downloadResult(downloadParams, jobID, fileName):
     """download a result file (csv file, name: {joID}.csv) from HPC cluster
