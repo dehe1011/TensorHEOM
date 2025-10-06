@@ -40,6 +40,10 @@ class MiddleFrame(ctk.CTkFrame):
         self.qubit_frequency_entry.grid(row=row, column=1, padx=10, pady=10)
         row += 1
 
+        # empty row for spacing
+        self.grid_rowconfigure(row, weight=1)
+        row += 1
+
         # --------------------------------------------------------------
 
         # label
@@ -65,6 +69,10 @@ class MiddleFrame(ctk.CTkFrame):
         self.gate_time_entry.grid(row=row, column=1, padx=10, pady=10)
         row += 1
 
+        # empty row for spacing
+        self.grid_rowconfigure(row, weight=1)
+        row += 1
+
         # --------------------------------------------------------------
 
         # label
@@ -74,14 +82,34 @@ class MiddleFrame(ctk.CTkFrame):
         self.logo_label.grid(row=row, column=0, columnspan=2, pady=10, padx=10)
         row += 1
 
+        # T1 time label and entry
+        self.T1_time_label = ctk.CTkLabel(self, text="T1 time (ns):")
+        self.T1_time_label.grid(row=row, column=0, padx=10, pady=10)
+        self.T1_time_entry = ctk.CTkEntry(self)
+        self.T1_time_entry.insert(0, 0)
+        self.T1_time_entry.grid(row=row, column=1, padx=10, pady=10)
+        row += 1
+
+        # temperature label and entry
+        self.temperature_label = ctk.CTkLabel(self, text="Temperature (K):")
+        self.temperature_label.grid(row=row, column=0, padx=10, pady=10)
+        self.temperature_entry = ctk.CTkEntry(self)
+        self.temperature_entry.insert(0, 0)
+        self.temperature_entry.grid(row=row, column=1, padx=10, pady=10)
+        row += 1
+
         # exponent combobox
-        self.exponent_label = ctk.CTkLabel(self, text="Select bath:")
+        self.exponent_label = ctk.CTkLabel(self, text="Exponent:")
         self.exponent_label.grid(row=row, column=0, padx=10, pady=10)
         self.exponent_combobox = ctk.CTkComboBox(
             self, values=["s=1", "s=1/2", "s=1/8"]
         )
         self.exponent_combobox.set("s=1")
         self.exponent_combobox.grid(row=row, column=1, padx=10, pady=10)
+        row += 1
+
+        # empty row for spacing
+        self.grid_rowconfigure(row, weight=1)
         row += 1
 
         # --------------------------------------------------------------
@@ -128,6 +156,10 @@ class MiddleFrame(ctk.CTkFrame):
         self.HPC_var = ctk.BooleanVar(value=False)
         self.HPC_checkbox = ctk.CTkCheckBox(self, text="Use HPC", variable=self.HPC_var)
         self.HPC_checkbox.grid(row=row, column=0, columnspan=2, padx=10, pady=10)
+        row += 1
+
+        # empty row for spacing
+        self.grid_rowconfigure(row, weight=1)
         row += 1
 
         # --------------------------------------------------------------

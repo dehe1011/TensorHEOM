@@ -25,9 +25,16 @@ class RightFrame(ctk.CTkFrame):
         self.load_result_label = ctk.CTkLabel(self, text="Load result (optional):")
         self.load_result_label.grid(row=row, column=0, padx=10, pady=10)
         self.load_result_button = ctk.CTkButton(
-            self, text="Select file", command=master.load_result
+            self, text="Upload file", command=master.upload_file
         )
         self.load_result_button.grid(row=row, column=1, padx=10, pady=10)
+        row += 1
+
+        # downloadbutton
+        self.download_button = ctk.CTkButton(
+            self, text="Download file", command=master.download_file
+        )
+        self.download_button.grid(row=row, column=1, padx=10, pady=10)
         row += 1
 
         # back and submit button
@@ -82,9 +89,9 @@ class RightFrame(ctk.CTkFrame):
 
         # plot combobox
         self.plot_combobox = ctk.CTkComboBox(
-            self, values=["Full density matrix", "other options"]
+            self, values=["Density matrix", "Fidelity", "Concurrence", "other options"]
         )
-        self.plot_combobox.set("Full density matrix")
+        self.plot_combobox.set("Density matrix")
         self.plot_combobox.grid(row=row, column=0, columnspan=2, padx=10, pady=10)
         row += 1
 
@@ -102,6 +109,7 @@ class RightFrame(ctk.CTkFrame):
 
     def change_state1(self, state):
         self.load_result_button.configure(state=state)
+        self.download_button.configure(state=state)
         self.submit_button.configure(state=state)
         self.back_button.configure(state=state)
     

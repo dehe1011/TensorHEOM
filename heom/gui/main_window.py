@@ -7,11 +7,12 @@ from tkinter import filedialog
 import numpy as np
 import qutip as q
 from scipy.linalg import eigvals
-from qiskit import QuantumCircuit
 from qiskit.quantum_info import Operator
 from qiskit import qpy
 
 from ..main import main
+from ..ssh import submitJob
+
 from .left_frame import LeftFrame
 from .middle_frame import MiddleFrame
 from .right_frame import RightFrame
@@ -21,8 +22,9 @@ from .plotting_window import PlottingWindow
 from .circuit_editor_window import CircuitEditor
 from .state_editor_window import StateEditor
 from .gui_utils import load_density_matrices
+from .help_window import HelpWindow
 
-from .hpc_settings_window import HPCSettings
+from .hpc_settings_window import HPCSettings, HPCDownload
 
 # --------------------------------------------------
 
@@ -46,7 +48,8 @@ class TensorHeomApp(ctk.CTk):
         self.t_list = None
         self.dm_list = None
 
-        self.submissionParams = None
+        self.submissionParams = {}
+        self.job_id = ""
 
         # Configure the grid layout for the root window
         self.grid_columnconfigure(0, weight=1)  # Column 0 takes 1 part
@@ -63,7 +66,7 @@ class TensorHeomApp(ctk.CTk):
         self.left_frame.grid(row=0, column=0, padx=10, pady=10, sticky="nsew")
 
         self.help_frame = HelpFrame(self)
-        self.help_frame.grid(row=2, column=0, padx=10, pady=10, sticky="nsew")
+        self.help_frame.grid(row=1, column=0, padx=10, pady=10, sticky="nsew")
 
         # --------------------------------------------------------------
 
@@ -102,7 +105,6 @@ class TensorHeomApp(ctk.CTk):
     def submit(self): 
         
         if self.t_list is not None and self.dm_list is not None:
-            print(self.t_list)
             print('Info: Results already calculated and loaded.')
 
         elif os.path.exists("result.csv"):
@@ -110,11 +112,15 @@ class TensorHeomApp(ctk.CTk):
             self.t_list, self.dm_list = load_density_matrices("result.csv")
 
         else:
-            t0 = time.time()
-            main(self.fileName, self.qc, self.kwargs['idlingTime'], self.gateList, self.rho, 
-                 self.kwargs['bath'], self.kwargs['V'], self.kwargs['dtFB'], self.kwargs['stride'])
-            self.t_list, self.dm_list = load_density_matrices("result.csv")
-            print(f"Calculation finished in {time.time()-t0}s. Saved as result.csv.")
+            if self.kwargs['useHPC']:
+                self.job_id = submitJob(self.submissionParams, self.qc, self.kwargs['idlingTime'], self.gateList, self.rho,
+                                        self.kwargs['bath'], self.kwargs['V'], self.kwargs['dtFB'], self.kwargs['stride'], isRK13 = self.kwargs['isRK13'])
+            else:
+                t0 = time.time()
+                main(self.fileName, self.qc, self.kwargs['idlingTime'], self.gateList, self.rho, 
+                    self.kwargs['bath'], self.kwargs['V'], self.kwargs['dtFB'], self.kwargs['stride'], isRK13 = self.kwargs['isRK13'])
+                self.t_list, self.dm_list = load_density_matrices("result.csv")
+                print(f"Calculation finished in {time.time()-t0}s. Saved as result.csv.")
 
         self.right_frame.change_state2("normal")
 
@@ -123,15 +129,21 @@ class TensorHeomApp(ctk.CTk):
 
     def open_circuit_editor(self):
         self.num_qubits = self.left_frame.get_kwargs()['numQ']
-        self.continue_to_middle_frame()
         print("Opening circuit editor window...")
         popup = CircuitEditor(self, save_file="circuit.qpy")
         popup.grab_set()
         self.wait_window(popup)
+        self.continue_to_middle_frame()
 
     def open_state_editor(self):
         print("Opening state editor window...")
         popup = StateEditor(self)
+        popup.grab_set()
+        self.wait_window(popup)
+
+    def open_help_window(self):
+        print("Opening help window...")
+        popup = HelpWindow(self)
         popup.grab_set()
         self.wait_window(popup)
 
@@ -145,11 +157,17 @@ class TensorHeomApp(ctk.CTk):
         print(f"Info: Circuit loaded successfully from {filepath}.")
         self.continue_to_middle_frame()
 
-    def load_result(self):
+    def upload_file(self):
         filepath = filedialog.askopenfilename(filetypes=[("CSV files", "*.csv")])
         self.t_list, self.dm_list = load_density_matrices(filepath)
         print(f"Info: Result file loaded successfully from {filepath}.")
         self.right_frame.change_state2("normal")
+
+    def download_file(self):
+        print("Opening HPC Download window...")
+        popup = HPCDownload(self)
+        popup.grab_set()
+        self.wait_window(popup)
 
     def back_to_middle_frame(self):
         self.right_frame.change_state1("disabled")
