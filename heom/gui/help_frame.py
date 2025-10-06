@@ -44,5 +44,12 @@ class HelpFrame(ctk.CTkFrame):
         self.paper_button.grid(row=row, column=0, pady=10, padx=10)
         row += 1
 
+        # help button 
+        self.manual_button = ctk.CTkButton(
+            self, text="Help", command=master.open_help_window
+        )
+        self.manual_button.grid(row=row, column=0, pady=10, padx=10)
+        row += 1
+
 
 # ----------------------------------------------------------------------
