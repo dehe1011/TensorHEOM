@@ -8,7 +8,7 @@ ROOT_DIR = str(pathlib.Path(__file__).absolute().parent.parent)
 DATA_DIR = os.path.join(ROOT_DIR, "heom", "data")
 
 from .utils import *
-from .bath import *
+from .bath.params import *
 
 from .tt import *
 from .TTs import *
