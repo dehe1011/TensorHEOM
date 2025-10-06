@@ -23,7 +23,11 @@ def run1():
     kwargs1Q = {'omega': -rho['omegaQ'][0], 'gateTime': 0.1 * np.pi}
     gateList = [[[0], 'rxyStep', kwargs1Q]]
 
-    bath = ['s=1']
+    bath = [{'type': 'broadband'}]
+    bath[0]['beta'] = 5
+    bath[0]['kappa'] = 0.004 / 2 / np.pi
+    bath[0]['omegaC'] = 50
+    bath[0]['exp'] = 1
 
     V = np.array([
         [[0, 1],
@@ -36,8 +40,10 @@ def run1():
 
     stride = int(strideTime / dtFB)
 
+    depth = [2]
+    bondDim = 20
     main(fileName, qc, idlingTime, gateList, rho,
-         bath, V, dtFB, stride)
+         bath, V, dtFB, stride, depth, bondDim)
     
 if __name__ == '__main__':
     run1()
