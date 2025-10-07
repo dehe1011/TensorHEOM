@@ -3,7 +3,7 @@ from .connect_ssh import getClient
 from .commands import commandsForSubmission, getStatus
 
 def submitJob(submissionParams, qc, idlingTime, gateList, rho,
-              bath, V, dtFB, stride, isRK13=False):
+              bath, V, dtFB, stride, depth, bondDim, isRK13=False):
     """submit a job to an HPC cluster
 
         params:
@@ -53,6 +53,8 @@ def submitJob(submissionParams, qc, idlingTime, gateList, rho,
     params['bath'] = bath
     params['dtFB'] = dtFB
     params['stride'] = stride
+    params['depth'] = depth
+    params['bondDim'] = bondDim
     params['isRK13'] = isRK13
 
     rhoIni = rho.pop('rhoIni')
