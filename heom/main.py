@@ -12,7 +12,8 @@ from .pulse.set_gates import setGates
 from .circuit.pulse_seq import setPulseSeq
 
 def main(fileName, qc, idlingTime, gateList, rho,
-         bath, V, dtFB, stride, depth, bondDim, isRK13=False):
+         bath, V, dtFB, stride, depth, bondDim, isRK13=False,
+         useRFPlus=False):
     """main function for simulation
         Dyanmics of the reduced density operator are written in fileName.
     
@@ -34,6 +35,8 @@ def main(fileName, qc, idlingTime, gateList, rho,
             isRK13 (bool): Runge-Kutta method
                 True: 13-stage 5th-order Runge-Kutta
                 False: 5-stage 4th-order Runge-Kutta
+            useRFPlus (bool): whether Redfield+ method is used (True)
+                or not (False)
     """
 
     nu = []
@@ -45,6 +48,9 @@ def main(fileName, qc, idlingTime, gateList, rho,
         coeff.append(coeffTmp)
     
     pulse, pulseMap = setGates(gateList)
+
+    if useRFPlus:
+        depth  = [1] * len(depth)
 
     if rho['numQ'] == 1:
         TTs = TTs1Q(rho['rhoIni'], bondDim, V, depth, nu, coeff,
