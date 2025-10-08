@@ -15,7 +15,7 @@ class TTs(ABC):
             H (numpy.ndarray): 2d array of tt.zTT (MPO)
             omegaQSeq (numpy.ndarray): time sequence of qubit frequency
             pulse (list[
-                    list[list[qubitIdx], pulse.abstract_pulse.abstractPulse]
+                    list[list[int], pulse.abstract_pulse.abstractPulse]
                 ]):
                 list of class for pulse
             map (dict[tuple[int]: int]): dictionary for a mapping from
@@ -25,9 +25,21 @@ class TTs(ABC):
             localPhase (list[float]): local phase of each qubit
                 for virtual Z gates.
             indices (numpy.ndarray): 2d array of MPS indices
+
+            shapeBathEye2 (list[tuple]):
+                shapes of MPO cores for identity operators acting on baths
+                bond dimension = 2
+            coreBathEye2 (list[numpy.ndarray]):
+                MPO cores for identity operators action on baths
+                bond dimension = 2
     """
 
-    def __init__(self):
+    def __init__(self, depth):
+        """params:
+            depth (list):
+                1d list of depth of hierarchy of FP-HEOM (from 0 to depth)
+        """
+
         self.numQ = None
         self.numCore = None
         self.numH = None
@@ -41,6 +53,16 @@ class TTs(ABC):
         self.map = None
         self.localPhase = None
         self.indices = None
+
+        self.shapeBathEye2 = []
+        self.coreBathEye2 = []
+
+        for i in range(len(depth)):
+            self.shapeBathEye2.append((2, depth[i]+1, depth[i]+1, 2))
+            coreTmp = np.zeros(self.shapeBathEye2[i], dtype=np.complex128)
+            coreTmp[0, :, :, 0] = np.eye(depth[i]+1)
+            coreTmp[1, :, :, 1] = np.eye(depth[i]+1)
+            self.coreBathEye2.append(coreTmp.flatten(order='F'))
 
     def getRhoBondDims(self, rhoBondDims, levels, bondDim):
         """compute bond dimension of rhos
