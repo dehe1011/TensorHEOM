@@ -3,7 +3,7 @@ from scipy.linalg import qr
 import copy
 from .TTs import TTs
 from .tt import zCreMPS, zTT
-from .tdevott import zRightOrth
+from ..tdevott import zRightOrth
 
 class TTs1Q(TTs):
     """ MPS and MPO for 1qubit systems

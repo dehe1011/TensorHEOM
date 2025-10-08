@@ -3,7 +3,7 @@ import numpy as np
 from scipy.linalg import qr
 from .TTs import TTs
 from .tt import zCreMPS, zTT
-from .tdevott import zRightOrth
+from ..tdevott import zRightOrth
 
 class TTs2QId(TTs):
     """MPS and MPO for 2qubit systems (independent reservoir)

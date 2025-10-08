@@ -1,6 +1,6 @@
 import copy
 import numpy as np
-from .TTs import TTs
+from .tt.TTs import TTs
 from .opett import (zGetSegLeftSt, zGetSegLeft, zGetSegRightEn, zGetSegRight, zGetKSt,
                     zGetKEn, zGetK, zGetS, zGetSK, zGetKS, zQRLeft, zQRRight
                     )

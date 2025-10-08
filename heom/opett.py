@@ -2,7 +2,7 @@ import copy
 import numpy as np
 from scipy.linalg import qr
 
-from .tt import zTT
+from .tt.tt import zTT
 
 def zGetSegLeftSt(rhoSt, HSt):
     """

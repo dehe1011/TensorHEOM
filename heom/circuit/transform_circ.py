@@ -2,7 +2,7 @@ from numpy import pi
 from qiskit import QuantumCircuit, transpile
 from qiskit.transpiler import Target
 from qiskit.circuit import Delay, Parameter
-from ..TTs import TTs
+from ..tt.TTs import TTs
 
 def transform(qc: QuantumCircuit, TTs: TTs):
     """transform a quantum circuit into a circuit consisting of

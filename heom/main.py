@@ -3,8 +3,8 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 
-from .TTs1Q import TTs1Q
-from .TTs2QId import TTs2QId
+from .tt.TTs1Q import TTs1Q
+from .tt.TTs2QId import TTs2QId
 from .tdevott import timeEvolution
 from .dynamics import outputCurrentStates, calcDynamics
 from .bath.params import getBathParams
