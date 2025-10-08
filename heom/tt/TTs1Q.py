@@ -152,53 +152,55 @@ class TTs1Q(TTs):
 
         self.setH(coreTmp, self.H[j, i])
         
+        # time-dependent part
+        shapeKet = (1, 2, 2, 2)
+        coreTmp = np.zeros(shapeKet, dtype=np.complex128)
+        coreTmp[0, :, :, 1] = eye
+        
+        coreTmp[0, :, :, 0] =  0.5j * sZ.T
+        coreKetSZ = coreTmp.flatten(order='F')
+
+        coreTmp[0, :, :, 0] =  -0.5j * sX.T
+        coreKetSX = coreTmp.flatten(order='F')
+
+        coreTmp[0, :, :, 0] =  -0.5j * sY.T
+        coreKetSY = coreTmp.flatten(order='F')
+
+        shapeBra = (2, 2, 2, 1)
+        coreTmp = np.zeros(shapeBra, dtype=np.complex128)
+        coreTmp[0, :, :, 0] = eye
+        
+        coreTmp[1, :, :, 0] = -0.5j * sZ
+        coreBraSZ = coreTmp.flatten(order='F')
+
+        coreTmp[1, :, :, 0] = 0.5j * sX
+        coreBraSX = coreTmp.flatten(order='F')
+
+        coreTmp[1, :, :, 0] = 0.5j * sY
+        coreBraSY = coreTmp.flatten(order='F')
         # Zeeman splitting for qubit 1
         j = 1
         i = self.ptrKet[0]
-        coreTmp = np.zeros([1, 2, 2, 2], dtype=np.complex128)
-        coreTmp[0, :, :, 0] =  0.5j * sZ.T
-        coreTmp[0, :, :, 1] = eye
-
-        self.setH(coreTmp, self.H[j, i])
+        self.setRefH(shapeKet, coreKetSZ, self.H[j, i])
 
         i = self.ptrBra[0]
-        coreTmp = np.zeros([2, 2, 2, 1], dtype=np.complex128)
-        coreTmp[0, :, :, 0] = eye
-        coreTmp[1, :, :, 0] = -0.5j * sZ
+        self.setRefH(shapeBra, coreBraSZ, self.H[j, i])
 
-        self.setH(coreTmp, self.H[j, i])
-
-        # drive for qubit 1 (cos)
+        # drive for qubit 0 (cos)
         j = 2
         i = self.ptrKet[0]
-        coreTmp = np.zeros([1, 2, 2, 2], dtype=np.complex128)
-        coreTmp[0, :, :, 0] = -0.5j * sX.T
-        coreTmp[0, :, :, 1] = eye
-
-        self.setH(coreTmp, self.H[j, i])
+        self.setRefH(shapeKet, coreKetSX, self.H[j, i])
 
         i = self.ptrBra[0]
-        coreTmp = np.zeros([2, 2, 2, 1], dtype=np.complex128)
-        coreTmp[0, :, :, 0] = eye
-        coreTmp[1, :, :, 0] = 0.5j * sX
+        self.setRefH(shapeBra, coreBraSX, self.H[j, i])
 
-        self.setH(coreTmp, self.H[j, i])
-
-        # drive for qubit 1 (sin)
+        # drive for qubit 0 (sin)
         j = 3
         i = self.ptrKet[0]
-        coreTmp = np.zeros([1, 2, 2, 2], dtype=np.complex128)
-        coreTmp[0, :, :, 0] = -0.5j * sY.T
-        coreTmp[0, :, :, 1] = eye
-
-        self.setH(coreTmp, self.H[j, i])
+        self.setRefH(shapeKet, coreKetSY, self.H[j, i])
 
         i = self.ptrBra[0]
-        coreTmp = np.zeros([2, 2, 2, 1], dtype=np.complex128)
-        coreTmp[0, :, :, 0] = eye
-        coreTmp[1, :, :, 0] = 0.5j * sY
-
-        self.setH(coreTmp, self.H[j, i])
+        self.setRefH(shapeBra, coreBraSY, self.H[j, i])
 
         # reservoir
         # time-independent part
@@ -208,14 +210,15 @@ class TTs1Q(TTs):
 
         l = 0
         # drive for qubit 1
-        coreTmp = np.zeros([2, depth[l]+1, depth[l]+1, 2],
-                           dtype=np.complex128)
+        bathEyeShape = (2, depth[l]+1, depth[l]+1, 2)
+        coreTmp = np.zeros(bathEyeShape, dtype=np.complex128)
         coreTmp[0, :, :, 0] = np.eye(depth[l]+1)
         coreTmp[1, :, :, 1] = np.eye(depth[l]+1)
+        coreBathEye = coreTmp.flatten(order='F')
 
         for j in range(1, 4):
             for i in range(self.ptrKet[l]+1, self.ptrBra[l]):
-                self.setH(coreTmp, self.H[j, i])
+                self.setRefH(bathEyeShape, coreBathEye, self.H[j, i])
     
     def getIndices(self):
         """compute MPS indices for output

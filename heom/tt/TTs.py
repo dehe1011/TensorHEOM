@@ -133,6 +133,21 @@ class TTs(ABC):
         TTOut.level = coreIn.shape[1]
         TTOut.core = copy.deepcopy(coreIn.flatten(order='F'))
 
+    def setRefH(self, coreShape, coreFlattenIn, TTOut):
+        """set values to MPO cores,
+            by referring to values of coreFlattenIn
+
+            params:
+                coreShape (tuple): shape of core before flattening 
+                coreFlattenIn (numpy.ndarray): MPO core for input
+                TTOut (tt.zTT): MPO for output, overwritten
+        """
+
+        TTOut.bondDimL = coreShape[0]
+        TTOut.bondDimR = coreShape[3]
+        TTOut.level = coreShape[1]
+        TTOut.core = coreFlattenIn
+
 
     @abstractmethod
     def getPrefactors(self, dt: float, time: float, stepNum: int):
