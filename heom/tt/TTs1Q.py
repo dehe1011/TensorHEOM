@@ -210,15 +210,15 @@ class TTs1Q(TTs):
 
         l = 0
         # drive for qubit 1
-        bathEyeShape = (2, depth[l]+1, depth[l]+1, 2)
-        coreTmp = np.zeros(bathEyeShape, dtype=np.complex128)
+        shapeBathEye = (2, depth[l]+1, depth[l]+1, 2)
+        coreTmp = np.zeros(shapeBathEye, dtype=np.complex128)
         coreTmp[0, :, :, 0] = np.eye(depth[l]+1)
         coreTmp[1, :, :, 1] = np.eye(depth[l]+1)
         coreBathEye = coreTmp.flatten(order='F')
 
         for j in range(1, 4):
             for i in range(self.ptrKet[l]+1, self.ptrBra[l]):
-                self.setRefH(bathEyeShape, coreBathEye, self.H[j, i])
+                self.setRefH(shapeBathEye, coreBathEye, self.H[j, i])
     
     def getIndices(self):
         """compute MPS indices for output
