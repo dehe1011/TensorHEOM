@@ -26,12 +26,24 @@ class TTs(ABC):
                 for virtual Z gates.
             indices (numpy.ndarray): 2d array of MPS indices
 
+            shapeBathEye1 (list[tuple]):
+                shapes of MPO cores for identity operators acting on baths
+                bond dimension = 1
+            coreBathEye1 (list[numpy.ndarray]):
+                MPO cores for identity operators action on baths
+                bond dimension = 1
             shapeBathEye2 (list[tuple]):
                 shapes of MPO cores for identity operators acting on baths
                 bond dimension = 2
             coreBathEye2 (list[numpy.ndarray]):
                 MPO cores for identity operators action on baths
                 bond dimension = 2
+            shapeBathEye3 (list[tuple]):
+                shapes of MPO cores for identity operators acting on baths
+                bond dimension = 3
+            coreBathEye3 (list[numpy.ndarray]):
+                MPO cores for identity operators action on baths
+                bond dimension = 3
     """
 
     def __init__(self, depth):
@@ -54,15 +66,31 @@ class TTs(ABC):
         self.localPhase = None
         self.indices = None
 
+        self.shapeBathEye1 = []
+        self.coreBathEye1 = []
         self.shapeBathEye2 = []
         self.coreBathEye2 = []
+        self.shapeBathEye3 = []
+        self.coreBathEye3 = []
 
         for i in range(len(depth)):
+            self.shapeBathEye1.append((1, depth[i]+1, depth[i]+1, 1))
+            coreTmp = np.zeros(self.shapeBathEye1[i], dtype=np.complex128)
+            coreTmp[0, :, :, 0] = np.eye(depth[i]+1)
+            self.coreBathEye1.append(coreTmp.flatten(order='F'))
+
             self.shapeBathEye2.append((2, depth[i]+1, depth[i]+1, 2))
             coreTmp = np.zeros(self.shapeBathEye2[i], dtype=np.complex128)
             coreTmp[0, :, :, 0] = np.eye(depth[i]+1)
             coreTmp[1, :, :, 1] = np.eye(depth[i]+1)
             self.coreBathEye2.append(coreTmp.flatten(order='F'))
+
+            self.shapeBathEye3.append((3, depth[i]+1, depth[i]+1, 3))
+            coreTmp = np.zeros(self.shapeBathEye3[i], dtype=np.complex128)
+            coreTmp[0, :, :, 0] = np.eye(depth[i]+1)
+            coreTmp[1, :, :, 1] = np.eye(depth[i]+1)
+            coreTmp[2, :, :, 2] = np.eye(depth[i]+1)
+            self.coreBathEye3.append(coreTmp.flatten(order='F'))
 
     def getRhoBondDims(self, rhoBondDims, levels, bondDim):
         """compute bond dimension of rhos

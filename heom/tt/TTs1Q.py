@@ -1,11 +1,11 @@
 import numpy as np
 from scipy.linalg import qr
 import copy
-from .TTsTwoLevel import TTsTwoLevel
+from .TTsTwoLevelId import TTsTwoLevelId
 from .tt import zCreMPS, zTT
 from ..tdevott import zRightOrth
 
-class TTs1Q(TTsTwoLevel):
+class TTs1Q(TTsTwoLevelId):
     """ MPS and MPO for 1qubit systems
     """
 
