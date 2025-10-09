@@ -1,11 +1,11 @@
 import copy
 import numpy as np
 from scipy.linalg import qr
-from .TTs import TTs
+from .TTsTwoLevelId import TTsTwoLevelId
 from .tt import zCreMPS, zTT
-from .tdevott import zRightOrth
+from ..tdevott import zRightOrth
 
-class TTs2QId(TTs):
+class TTs2QId(TTsTwoLevelId):
     """MPS and MPO for 2qubit systems (independent reservoir)
     """
 
@@ -34,7 +34,7 @@ class TTs2QId(TTs):
                     values (int): pulse indeces for self.pulse
         """
 
-        super().__init__()
+        super().__init__(depth)
         
         self.dim = [nu[i].shape[0] for i in range(len(nu))]
 
@@ -142,21 +142,6 @@ class TTs2QId(TTs):
                 depth (list):
                     1d list of depth of hierarchy of FP-HEOM (from 0 to depth)
         """
-        # system Hamiltonian
-        sZ = np.array([[1.0,  0.0],
-                    [0.0, -1.0]], dtype=np.complex128)
-
-        sX = np.array([[0.0,  1.0],
-                    [1.0,  0.0]], dtype=np.complex128)
-
-        sY = np.array([[0.0 , -1.0j],
-                    [1.0j,  0.0 ]], dtype=np.complex128)
-
-        sP = np.array([[0.0, 1.0],
-                    [0.0, 0.0]], dtype=np.complex128)
-
-        sM = np.array([[0.0, 0.0],
-                    [1.0, 0.0]], dtype=np.complex128)
 
         # creare array of MPO
         self.H = np.array([[zTT() for _ in range(self.numCore)]
@@ -164,137 +149,100 @@ class TTs2QId(TTs):
 
         # set values for MPO
         # system part
-        eye = np.eye(sZ.shape[0])
         # time-independent part
         j = 0
         i = self.ptrKet[0]
         coreTmp = np.zeros([1, 2, 2, 4], dtype=np.complex128)
-        coreTmp[0, :, :, 1] = eye
+        coreTmp[0, :, :, 1] = self.sysEye
         coreTmp[0, :, :, 3] = V[0].T
 
         self.setH(coreTmp, self.H[j, i])
 
         i = self.ptrBra[0]
         coreTmp = np.zeros([4, 2, 2, 2], dtype=np.complex128)
-        coreTmp[0, :, :, 0] = eye
-        coreTmp[1, :, :, 1] = eye
+        coreTmp[0, :, :, 0] = self.sysEye
+        coreTmp[1, :, :, 1] = self.sysEye
         coreTmp[2, :, :, 0] = V[0]
 
         self.setH(coreTmp, self.H[j, i])
 
         i = self.ptrKet[1]
         coreTmp = np.zeros([2, 2, 2, 4], dtype=np.complex128)
-        coreTmp[0, :, :, 0] = eye
-        coreTmp[1, :, :, 1] = eye
+        coreTmp[0, :, :, 0] = self.sysEye
+        coreTmp[1, :, :, 1] = self.sysEye
         coreTmp[1, :, :, 3] = V[1].T
 
         self.setH(coreTmp, self.H[j, i])
 
         i = self.ptrBra[1]
         coreTmp = np.zeros([4, 2, 2, 1], dtype=np.complex128)
-        coreTmp[0, :, :, 0] = eye
+        coreTmp[0, :, :, 0] = self.sysEye
         coreTmp[2, :, :, 0] = V[1]
 
         self.setH(coreTmp, self.H[j, i])
 
         # System Hamiltonians
         # ket vector with operation
-        coreTmp = np.zeros([1, 2, 2, 2], dtype=np.complex128)
-        coreTmp[0, :, :, 1] = eye
-
         # Zeeman splitting (j = 1, 4)
-        coreTmp[0, :, :, 0] = 0.5j * sZ.T
         for l in range(self.numQ):
             i = self.ptrKet[l]
             j = 3 * l + 1
-            self.setH(coreTmp, self.H[j, i])
+            self.setRefH(self.shapeKet, self.coreKetSZ, self.H[j, i])
 
         # drive (cos, j = 2, 5)
-        coreTmp[0, :, :, 0] = -0.5j * sX.T
         for l in range(self.numQ):
             i = self.ptrKet[l]
             j = 3 * l + 2
-            self.setH(coreTmp, self.H[j, i])
+            self.setRefH(self.shapeKet, self.coreKetSX, self.H[j, i])
 
         # drive (sin, j = 3, 6)
-        coreTmp[0, :, :, 0] = -0.5j * sY.T
         for l in range(self.numQ):
             i = self.ptrKet[l]
             j = 3 * l + 3
-            self.setH(coreTmp, self.H[j, i])
+            self.setRefH(self.shapeKet, self.coreKetSY, self.H[j, i])
 
         # bra vector with operation
-        coreTmp = np.zeros([2, 2, 2, 1], dtype=np.complex128)
-        coreTmp[0, :, :, 0] = eye
-
         # Zeeman splitting (j = 1, 4)
-        coreTmp[1, :, :, 0] = -0.5j * sZ
         for l in range(self.numQ):
             i = self.ptrBra[l]
             j = 3 * l + 1
-            self.setH(coreTmp, self.H[j, i])
+            self.setRefH(self.shapeBra, self.coreBraSZ, self.H[j, i])
 
         # drive (cos, j = 2, 5)        
-        coreTmp[1, :, :, 0] = 0.5j * sX
         for l in range(self.numQ):
             i = self.ptrBra[l]
             j = 3 * l + 2
-            self.setH(coreTmp, self.H[j, i])
+            self.setRefH(self.shapeBra, self.coreBraSX, self.H[j, i])
 
         # drive (sin, j = 3, 6)
-        coreTmp[1, :, :, 0] = 0.5j * sY
         for l in range(self.numQ):
             i = self.ptrBra[l]
             j = 3 * l + 3
-            self.setH(coreTmp, self.H[j, i])
+            self.setRefH(self.shapeBra, self.coreBraSY, self.H[j, i])
 
         # ket and bra vectors without operation
-        coreTmp = np.zeros([1, 2, 2, 1], dtype=np.complex128)
-        coreTmp[0, :, :, 0] = eye
-
         for l in range(self.numQ):
             st = 3 * l + 1
             en = 3 * l + 4
             for k in list(range(l)) + list(range(l+1, self.numQ)):
                 for i in [self.ptrKet[k], self.ptrBra[k]]:
                     for j in range(st, en):
-                        self.setH(coreTmp, self.H[j, i])
+                        self.setRefH(self.shapeSysEye1, self.coreSysEye1,
+                                     self.H[j, i])
 
         # direct coupling
         j = 7
         i = self.ptrKet[0]
-        coreTmp = np.zeros([1, 2, 2, 3], dtype=np.complex128)
-        coreTmp[0, :, :, 0] = eye
-        coreTmp[0, :, :, 1] = -1j * sP.T
-        coreTmp[0, :, :, 2] = -1j * sM.T
-
-        self.setH(coreTmp, self.H[j, i])
+        self.setRefH(self.shapeJKet1, self.coreJKet1, self.H[j, i])
 
         i = self.ptrBra[0]
-        coreTmp = np.zeros([3, 2, 2, 4], dtype=np.complex128)
-        coreTmp[0, :, :, 2] = sP
-        coreTmp[0, :, :, 3] = sM
-        coreTmp[1, :, :, 0] = eye
-        coreTmp[2, :, :, 1] = eye
-
-        self.setH(coreTmp, self.H[j, i])
+        self.setRefH(self.shapeJBra1, self.coreJBra1, self.H[j, i])
 
         i = self.ptrKet[1]
-        coreTmp = np.zeros([4, 2, 2, 3], dtype=np.complex128)
-        coreTmp[0, :, :, 0] = sM.T
-        coreTmp[1, :, :, 0] = sP.T
-        coreTmp[2, :, :, 1] = eye
-        coreTmp[3, :, :, 2] = eye
-
-        self.setH(coreTmp, self.H[j, i])
+        self.setRefH(self.shapeJKet2, self.coreJKet2, self.H[j, i])
 
         i = self.ptrBra[1]
-        coreTmp = np.zeros([3, 2, 2, 1], dtype=np.complex128)
-        coreTmp[0, :, :, 0] = eye
-        coreTmp[1, :, :, 0] = 1j * sM
-        coreTmp[2, :, :, 0] = 1j * sP
-
-        self.setH(coreTmp, self.H[j, i])
+        self.setRefH(self.shapeJBra2, self.coreJBra2, self.H[j, i])
 
         # reservoir
         # time-independent part
@@ -305,16 +253,10 @@ class TTs2QId(TTs):
         # direct coupling
         j = 7
         for l in range(self.numQ):
-            coreTmp = np.zeros([3, depth[l]+1, depth[l]+1, 3],
-                               dtype=np.complex128)
-            coreTmp[0, :, :, 0] = np.eye(depth[l]+1)
-            coreTmp[1, :, :, 1] = np.eye(depth[l]+1)
-            coreTmp[2, :, :, 2] = np.eye(depth[l]+1)
-
             for i in range(self.ptrKet[l]+1, self.ptrBra[l]):
-                self.setH(coreTmp, self.H[j, i])
+                self.setRefH(self.shapeBathEye3[l], self.coreBathEye3[l],
+                             self.H[j, i])
 
-        # reservoir
         # single-qubit operation
         for l in range(self.numQ):
             st = 3 * l + 1
@@ -322,23 +264,16 @@ class TTs2QId(TTs):
 
             # reservoir for qubit without operation
             for k in list(range(l)) + list(range(l+1, self.numQ)):
-                coreTmp = np.zeros([1, depth[k]+1, depth[k]+1, 1],
-                                   dtype=np.complex128)
-                coreTmp[0, :, :, 0] = np.eye(depth[k]+1)
-                
                 for j in range(st, en):
                     for i in range(self.ptrKet[k]+1, self.ptrBra[k]):
-                        self.setH(coreTmp, self.H[j, i])
+                        self.setRefH(self.shapeBathEye1[k],
+                                     self.coreBathEye1[k], self.H[j, i])
 
             # reservoir for qubit with operation
-            coreTmp = np.zeros([2, depth[l]+1, depth[l]+1, 2],
-                               dtype=np.complex128)
-            coreTmp[0, :, :, 0] = np.eye(depth[l]+1)
-            coreTmp[1, :, :, 1] = np.eye(depth[l]+1)
-
             for j in range(st, en):
                 for i in range(self.ptrKet[l]+1, self.ptrBra[l]):
-                    self.setH(coreTmp, self.H[j, i])
+                    self.setRefH(self.shapeBathEye2[l], self.coreBathEye2[l],
+                                 self.H[j, i])
 
     def getIndices(self):
         """compute MPS indices for output

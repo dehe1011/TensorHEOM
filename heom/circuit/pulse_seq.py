@@ -3,7 +3,7 @@ from qiskit import QuantumCircuit, transpile
 from qiskit.circuit import Parameter, Delay, Instruction
 from qiskit.transpiler import Target, InstructionProperties
 from .transform_circ import transform
-from ..TTs import TTs
+from ..tt.TTs import TTs
 
 def setPulseSeq(qc: QuantumCircuit, TTs: TTs, omegaQ: list[float], 
                 dtFB: float, idlingTime: float) -> None:

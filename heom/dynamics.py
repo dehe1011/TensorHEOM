@@ -1,4 +1,4 @@
-from .TTs import TTs
+from .tt.TTs import TTs
 from .tdevott import timeEvolution
 from .opett import zOutMPS
 

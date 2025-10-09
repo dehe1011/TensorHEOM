@@ -30,7 +30,13 @@ def run3():
                 [[1], 'rxyStep', kwargs1Q[1]],
                 [[0, 1], 'directCplStepVarJ', kwargs2Q]]
     
-    bath = ['s=1', 's=1'] # in the order: [qubit 1, qubit 0]
+    bathParams = {'type': 'broadband'}
+    bathParams['beta'] = 5
+    bathParams['kappa'] = 0.004 / 2 / np.pi
+    bathParams['omegaC'] = 50
+    bathParams['exp'] = 1
+    
+    bath = [bathParams, bathParams] # in the order: [qubit 1, qubit 0]
 
     V = np.array([
         [[0, 1],
@@ -46,8 +52,10 @@ def run3():
 
     stride = int(strideTime // dtFB)
 
+    depth = [2, 2]
+    bondDim = 20
     main(fileName, qc, idlingTime, gateList, rho,
-         bath, V, dtFB, stride)
+         bath, V, dtFB, stride, depth, bondDim)
     
 if __name__ == '__main__':
     run3()

@@ -3,16 +3,17 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 
-from .TTs1Q import TTs1Q
-from .TTs2QId import TTs2QId
+from .tt.TTs1Q import TTs1Q
+from .tt.TTs2QId import TTs2QId
 from .tdevott import timeEvolution
 from .dynamics import outputCurrentStates, calcDynamics
-from .bath import getBathParams
+from .bath.params import getBathParams
 from .pulse.set_gates import setGates
 from .circuit.pulse_seq import setPulseSeq
 
 def main(fileName, qc, idlingTime, gateList, rho,
-         bath, V, dtFB, stride, isRK13=False):
+         bath, V, dtFB, stride, depth, bondDim, isRK13=False,
+         useRFPlus=False):
     """main function for simulation
         Dyanmics of the reduced density operator are written in fileName.
     
@@ -26,6 +27,7 @@ def main(fileName, qc, idlingTime, gateList, rho,
                 rho['rhoIni'] (numpy.ndarray): initial reduced density matrix
                 rho['omegaQ'] (list): list of qubit frequency                
             bath (list): list of bath name
+                each element of the list is a dict of bath parameter values
             V (numpy.ndarray): 3d array of system-bath coupling
                 V[j, :, :]: system operator coupled with j th bath
             dtFB (float): step width for forward + backward time integration
@@ -33,23 +35,22 @@ def main(fileName, qc, idlingTime, gateList, rho,
             isRK13 (bool): Runge-Kutta method
                 True: 13-stage 5th-order Runge-Kutta
                 False: 5-stage 4th-order Runge-Kutta
+            useRFPlus (bool): whether Redfield+ method is used (True)
+                or not (False)
     """
 
     nu = []
     coeff = []
-    depth = []
-    bondDim = 0
     for i in range(rho['numQ']):
-        nuTmp, coeffTmp, depthTmp, bondDimTmp, isRK13Tmp = \
-            getBathParams(bath[i])
+        nuTmp, coeffTmp = getBathParams(bath[i])
         
         nu.append(nuTmp)
         coeff.append(coeffTmp)
-        depth.append(depthTmp)
-        bondDim = max(bondDim, bondDimTmp)
-        isRK13 = isRK13 or isRK13Tmp
     
     pulse, pulseMap = setGates(gateList)
+
+    if useRFPlus:
+        depth  = [1] * len(depth)
 
     if rho['numQ'] == 1:
         TTs = TTs1Q(rho['rhoIni'], bondDim, V, depth, nu, coeff,

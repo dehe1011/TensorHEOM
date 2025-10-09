@@ -4,7 +4,8 @@ from .connect_ssh import getClient
 from .commands import commandsForSubmission, getStatus
 
 def submitJob(submissionParams, qc, idlingTime, gateList, rho,
-              bath, V, dtFB, stride, isRK13=False):
+              bath, V, dtFB, stride, depth, bondDim, isRK13=False,
+              useRFPlus=False):
     """submit a job to an HPC cluster
 
         params:
@@ -42,6 +43,8 @@ def submitJob(submissionParams, qc, idlingTime, gateList, rho,
             isRK13 (bool): Runge-Kutta method
                 True: 13-stage 5th-order Runge-Kutta
                 False: 5-stage 4th-order Runge-Kutta
+            useRFPlus (bool): whether Redfield+ method is used (True)
+                or not (False)
     """
 
     QPYNAME = 'qcData'
@@ -54,7 +57,10 @@ def submitJob(submissionParams, qc, idlingTime, gateList, rho,
     params['bath'] = bath
     params['dtFB'] = dtFB
     params['stride'] = stride
+    params['depth'] = depth
+    params['bondDim'] = bondDim
     params['isRK13'] = isRK13
+    params['useRFPlus'] = useRFPlus
 
     rhoIni = rho.pop('rhoIni')
     rho['rhoReal'] = rhoIni.real.tolist()

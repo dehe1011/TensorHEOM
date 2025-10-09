@@ -27,7 +27,10 @@ def run_cui(inputName: str, outputName: str):
     V = np.array(VTmp['real']) + 1j * np.array(VTmp['imag'])
     dtFB = params['dtFB']
     stride = params['stride']
+    depth = params['depth']
+    bondDim = params['bondDim']
     isRK13 = params['isRK13']
+    useRFPlus = params['useRFPlus']
 
     main(outputName, qc, idlingTime, gateList, rho,
-         bath, V, dtFB, stride, isRK13)
+         bath, V, dtFB, stride, depth, bondDim, isRK13, useRFPlus)
