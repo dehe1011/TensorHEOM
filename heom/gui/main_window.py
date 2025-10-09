@@ -168,6 +168,9 @@ class TensorHeomApp(ctk.CTk):
         popup = HPCDownload(self)
         popup.grab_set()
         self.wait_window(popup)
+        self.t_list, self.dm_list = load_density_matrices(self.job_id + ".csv")
+        print(f"Info: Result file downloaded successfully and saved as {self.job_id}.csv.")
+        self.right_frame.change_state2("normal")
 
     def back_to_middle_frame(self):
         self.right_frame.change_state1("disabled")

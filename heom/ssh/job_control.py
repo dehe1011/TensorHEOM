@@ -1,3 +1,4 @@
+import re
 from qiskit import qpy
 from .connect_ssh import getClient
 from .commands import commandsForSubmission, getStatus
@@ -86,8 +87,10 @@ def submitJob(submissionParams, qc, idlingTime, gateList, rho,
     commands = commandsForSubmission(submissionParams, QPYNAME, REMOTEPATH)
     stdin, stdout, stderr = client.exec_command(commands)
     
-    job_id = stdout.read().decode()
-    print(job_id)
+    s = stdout.read().decode()
+    print(s)
+    m = re.search(r'\d+', s)
+    job_id = m.group() if m else None
     print("Save the job ID! It is used for getting results.")
 
     client.close()
