@@ -45,7 +45,7 @@ class HPCSettings(ctk.CTkToplevel):
         self.others_entry = self.add_entry("Other Parameters:", row+5)
         self.others_entry.insert(0, "")
         self.venv_entry = self.add_entry("Virtual Env Path:", row+6)
-        self.venv_entry.insert(0, "$HOME/HEOM/.venv")
+        self.venv_entry.insert(0, "$HOME/python_HEOM/.venv")
         self.email_entry = self.add_entry("Email (optional):", row+7)
         self.email_entry.insert(0, "dennis.herb@uni-ulm.de")
         row += 8

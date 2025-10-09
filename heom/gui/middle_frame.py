@@ -1,4 +1,5 @@
 import customtkinter as ctk
+import numpy as np
 
 from .gui_utils import change_state_all_widgets
 
@@ -10,39 +11,6 @@ class MiddleFrame(ctk.CTkFrame):
         # initialization of the ctk.CTkFrame class
         super().__init__(master)
         row = 0
-
-        # --------------------------------------------------------------
-
-        # label
-        self.logo_label = ctk.CTkLabel(
-            self, text="System", font=ctk.CTkFont(size=20, weight="bold")
-        )
-        self.logo_label.grid(row=row, column=0, columnspan=2, pady=10, padx=10)
-        row += 1
-
-        # qubit architecture combobox
-        self.qubit_architecture_label = ctk.CTkLabel(self, text="Qubit architecture:")
-        self.qubit_architecture_label.grid(row=row, column=0, padx=10, pady=10)
-
-        self.qubit_architecture_combobox = ctk.CTkComboBox(
-            self, values=["chain", "ladder"]
-        )
-        self.qubit_architecture_combobox.set("chain")
-        self.qubit_architecture_combobox.grid(row=row, column=1, padx=10, pady=10)
-        row += 1
-
-        # qubit frequency label and entry
-        self.qubit_frequency_label = ctk.CTkLabel(self, text="Qubit frequency (GHz):")
-        self.qubit_frequency_label.grid(row=row, column=0, padx=10, pady=10)
-
-        self.qubit_frequency_entry = ctk.CTkEntry(self)
-        self.qubit_frequency_entry.insert(0, 1)
-        self.qubit_frequency_entry.grid(row=row, column=1, padx=10, pady=10)
-        row += 1
-
-        # empty row for spacing
-        self.grid_rowconfigure(row, weight=1)
-        row += 1
 
         # --------------------------------------------------------------
 
@@ -94,18 +62,16 @@ class MiddleFrame(ctk.CTkFrame):
         self.temperature_label = ctk.CTkLabel(self, text="Temperature (K):")
         self.temperature_label.grid(row=row, column=0, padx=10, pady=10)
         self.temperature_entry = ctk.CTkEntry(self)
-        self.temperature_entry.insert(0, 0)
+        self.temperature_entry.insert(0, 5)
         self.temperature_entry.grid(row=row, column=1, padx=10, pady=10)
         row += 1
 
-        # exponent combobox
-        self.exponent_label = ctk.CTkLabel(self, text="Exponent:")
+        # exponent label and entry
+        self.exponent_label = ctk.CTkLabel(self, text="Exponent:") 
         self.exponent_label.grid(row=row, column=0, padx=10, pady=10)
-        self.exponent_combobox = ctk.CTkComboBox(
-            self, values=["s=1", "s=1/2", "s=1/8"]
-        )
-        self.exponent_combobox.set("s=1")
-        self.exponent_combobox.grid(row=row, column=1, padx=10, pady=10)
+        self.exponent_entry = ctk.CTkEntry(self)
+        self.exponent_entry.insert(0, "1")
+        self.exponent_entry.grid(row=row, column=1, padx=10, pady=10)
         row += 1
 
         # empty row for spacing
@@ -146,16 +112,32 @@ class MiddleFrame(ctk.CTkFrame):
         self.timestep_entry.grid(row=row, column=1, padx=10, pady=10)
         row += 1
 
+        # depth label and integer entry
+        self.depth_label = ctk.CTkLabel(self, text="Depth:")
+        self.depth_label.grid(row=row, column=0, padx=10, pady=10)
+        self.depth_entry = ctk.CTkEntry(self)   
+        self.depth_entry.insert(0, 2)
+        self.depth_entry.grid(row=row, column=1, padx=10, pady=10)
+        row += 1
+
+        # bond dimension label and integer entry
+        self.bondDim_label = ctk.CTkLabel(self, text="Bond dimension:")
+        self.bondDim_label.grid(row=row, column=0, padx=10, pady=10)
+        self.bondDim_entry = ctk.CTkEntry(self)
+        self.bondDim_entry.insert(0, 20)
+        self.bondDim_entry.grid(row=row, column=1, padx=10, pady=10)
+        row += 1
+
+        # Use RF+ checkbox
+        self.useRFPlus_var = ctk.BooleanVar(value=False)
+        self.useRFPlus_checkbox = ctk.CTkCheckBox(self, text="Use RF+", variable=self.useRFPlus_var)
+        self.useRFPlus_checkbox.grid(row=row, column=0, columnspan=2, padx=10, pady=10)
+        row += 1
+
         # RK13 checkbox
         self.RK13_var = ctk.BooleanVar(value=False)
         self.RK13_checkbox = ctk.CTkCheckBox(self, text="Use RK13", variable=self.RK13_var)
         self.RK13_checkbox.grid(row=row, column=0, columnspan=2, padx=10, pady=10)
-        row += 1
-
-        # HPC checkbox
-        self.HPC_var = ctk.BooleanVar(value=False)
-        self.HPC_checkbox = ctk.CTkCheckBox(self, text="Use HPC", variable=self.HPC_var)
-        self.HPC_checkbox.grid(row=row, column=0, columnspan=2, padx=10, pady=10)
         row += 1
 
         # empty row for spacing
@@ -179,16 +161,22 @@ class MiddleFrame(ctk.CTkFrame):
     # ------------------------------------------------------------------
 
     def get_kwargs(self):
+        beta = float(self.temperature_entry.get())
+        T1 = float(self.T1_time_entry.get())
+        kappa = 0.004 / 2 / np.pi
+        exp = float(self.exponent_entry.get())
+
+        bathParams = {'type': 'broadband', 'exp': exp, 'beta': beta, 'kappa': kappa, 'omegaC': 50.}
         return {
-            'architecture': self.qubit_architecture_combobox.get(),
-            'omegaQ': [float(self.qubit_frequency_entry.get())] * self.master.num_qubits,
-            'bath': [self.exponent_combobox.get()] * self.master.num_qubits,
+            'bath': [bathParams] * self.master.num_qubits,
             'strideTime': float(self.timestep_entry.get()),
             'dtFB': float(self.dtFB_entry.get()),
             'gate_time': float(self.gate_time_entry.get()),
             'idlingTime': float(self.idling_time_entry.get()),
+            'depth': [int(self.depth_entry.get())] * self.master.num_qubits,
+            'bondDim': int(self.bondDim_entry.get()),
+            'useRFPlus': self.useRFPlus_var.get(),
             'isRK13': self.RK13_var.get(),
-            'useHPC': self.HPC_var.get(),
         }
 
     def change_state(self, state):

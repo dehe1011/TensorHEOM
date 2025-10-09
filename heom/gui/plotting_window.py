@@ -1,6 +1,7 @@
 import os
 
 import numpy as np
+import qutip as q
 import customtkinter as ctk
 import matplotlib.pyplot as plt
 from qiskit.quantum_info import Operator
@@ -14,6 +15,7 @@ class PlottingFrame(ctk.CTkFrame):
 
         # initialization of the ctk.CTkFrame class
         super().__init__(master)
+        self.master = master
 
         # widgets
         self.filename_label = ctk.CTkLabel(self, text="Filename:")
@@ -88,7 +90,9 @@ class PlottingWindow(ctk.CTkToplevel):
 
     def plot_fidelity(self):
         U = Operator(self.controller.qc).data
-        target = U @ self.controller.rho['rhoIni'] @ U.conj().T
+        default_rhoIni = q.tensor( [q.fock_dm(2,0) for _ in range(self.master.kwargs['numQ'])] ).full()
+        rhoIni = self.master.kwargs.get('rhoIni', default_rhoIni)
+        target = U @ rhoIni @ U.conj().T
         fids = [np.real(np.trace(rho @ target)) for rho in self.controller.dm_list]
 
         self.fig, self.ax = plt.subplots()
