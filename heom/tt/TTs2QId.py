@@ -66,7 +66,6 @@ class TTs2QId(TTsTwoLevelId):
         """
 
         levels = np.zeros(self.numCore, dtype=int)
-        rhoBondDims = np.zeros([self.numCore, 2], dtype=int)
         
         levels[self.ptrKet[0]] = 2
         levels[self.ptrKet[0] + 1:self.ptrBra[0]] = depth[0] + 1
@@ -75,11 +74,7 @@ class TTs2QId(TTsTwoLevelId):
         levels[self.ptrKet[1] + 1:self.ptrBra[1]] = depth[1] + 1
         levels[self.ptrBra[1]] = 2
 
-        rhoBondDims[:, :] = 0
-        rhoBondDims[0, 0] = 1
-        rhoBondDims[self.numCore - 1, 1] = 1
-
-        rhoBondDims = self.getRhoBondDims(rhoBondDims, levels, bondDim)
+        rhoBondDims = self.getRhoBondDims(levels, bondDim)
 
         self.rho = zCreMPS(self.numCore, rhoBondDims, levels)
 
