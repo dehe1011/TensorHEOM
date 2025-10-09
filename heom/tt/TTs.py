@@ -92,7 +92,7 @@ class TTs(ABC):
             coreTmp[2, :, :, 2] = np.eye(depth[i]+1)
             self.coreBathEye3.append(coreTmp.flatten(order='F'))
 
-    def getRhoBondDims(self, rhoBondDims, levels, bondDim):
+    def getRhoBondDims(self, levels, bondDim):
         """compute bond dimension of rhos
 
             params:
@@ -103,6 +103,12 @@ class TTs(ABC):
             returns:
                 rhoBondDims (numpy.ndarray): 2d array of bond dimensions
         """
+
+        rhoBondDims = np.zeros([self.numCore, 2], dtype=int)
+
+        rhoBondDims[:, :] = 0
+        rhoBondDims[0, 0] = 1
+        rhoBondDims[self.numCore - 1, 1] = 1
 
         for i in range(self.numCore-1):
             row = rhoBondDims[i, 0] * levels[i]
