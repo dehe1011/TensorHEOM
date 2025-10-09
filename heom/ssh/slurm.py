@@ -40,6 +40,7 @@ def slurmShell(submissionParams, qpyName, scriptName):
     if venvPath[-1] == '/':
         venvPath = venvPath[:-1]
 
+    shell += 'module load devel/python/3.11.4\n'
     shell += '. ' + submissionParams['venvPath'] + '/bin/activate\n\n'
     
     shell += 'qpyNew=qc${SLURM_JOB_ID}\n'
