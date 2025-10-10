@@ -6,7 +6,10 @@
 howto/
 fortran/
 TODO.txt
+
 circuit.qpy
+qcData
+*.csv
 
 result.csv
 

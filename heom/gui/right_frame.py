@@ -22,7 +22,7 @@ class RightFrame(ctk.CTkFrame):
         row += 1
 
         # load result label and button
-        self.load_result_label = ctk.CTkLabel(self, text="Load result (optional):")
+        self.load_result_label = ctk.CTkLabel(self, text="Upload result (optional):")
         self.load_result_label.grid(row=row, column=0, padx=10, pady=10)
         self.load_result_button = ctk.CTkButton(
             self, text="Upload file", command=master.upload_file
@@ -30,11 +30,14 @@ class RightFrame(ctk.CTkFrame):
         self.load_result_button.grid(row=row, column=1, padx=10, pady=10)
         row += 1
 
-        # downloadbutton
-        self.download_button = ctk.CTkButton(
-            self, text="Download file", command=master.download_file
-        )
-        self.download_button.grid(row=row, column=1, padx=10, pady=10)
+        # HPC checkbox
+        self.HPC_var = ctk.BooleanVar(value=False)
+        self.HPC_checkbox = ctk.CTkCheckBox(self, text="Use HPC", variable=self.HPC_var)
+        self.HPC_checkbox.grid(row=row, column=0, columnspan=2, padx=10, pady=10)
+        row += 1
+
+        # empty row for spacing
+        self.grid_rowconfigure(row, weight=1)
         row += 1
 
         # back and submit button
@@ -45,6 +48,15 @@ class RightFrame(ctk.CTkFrame):
 
         self.submit_button = ctk.CTkButton(self, text="Submit", command=master.submit)
         self.submit_button.grid(row=row, column=1, pady=10, padx=10)
+        row += 1
+
+        # download label and button
+        self.load_result_label = ctk.CTkLabel(self, text="Download result (optional):")
+        self.load_result_label.grid(row=row, column=0, padx=10, pady=10)
+        self.download_button = ctk.CTkButton(
+            self, text="Download file", command=master.download_file
+        )
+        self.download_button.grid(row=row, column=1, padx=10, pady=10)
         row += 1
 
         # empty row for spacing

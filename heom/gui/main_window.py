@@ -103,8 +103,19 @@ class TensorHeomApp(ctk.CTk):
         webbrowser.open("https://journals.aps.org/prresearch/abstract/10.1103/PhysRevResearch.6.033215")
 
     def submit(self): 
+
+        useHPC = self.right_frame.HPC_var.get()
+        if useHPC:
+            print("Opening HPC settings window...")
+            popup = HPCSettings(self)
+            popup.grab_set()
+            self.wait_window(popup)
+            self.job_id = submitJob(self.submissionParams, self.qc, self.kwargs['idlingTime'], self.gateList, self.rho,
+                                    self.kwargs['bath'], self.kwargs['V'], self.kwargs['dtFB'], self.kwargs['stride'], 
+                                    depth =self.kwargs['depth'], bondDim=self.kwargs['bondDim'], 
+                                    useRFPlus=self.kwargs['useRFPlus'], isRK13 = self.kwargs['isRK13'])
         
-        if self.t_list is not None and self.dm_list is not None:
+        elif self.t_list is not None and self.dm_list is not None:
             print('Info: Results already calculated and loaded.')
 
         elif os.path.exists("result.csv"):
@@ -112,15 +123,14 @@ class TensorHeomApp(ctk.CTk):
             self.t_list, self.dm_list = load_density_matrices("result.csv")
 
         else:
-            if self.kwargs['useHPC']:
-                self.job_id = submitJob(self.submissionParams, self.qc, self.kwargs['idlingTime'], self.gateList, self.rho,
-                                        self.kwargs['bath'], self.kwargs['V'], self.kwargs['dtFB'], self.kwargs['stride'], isRK13 = self.kwargs['isRK13'])
-            else:
-                t0 = time.time()
-                main(self.fileName, self.qc, self.kwargs['idlingTime'], self.gateList, self.rho, 
-                    self.kwargs['bath'], self.kwargs['V'], self.kwargs['dtFB'], self.kwargs['stride'], isRK13 = self.kwargs['isRK13'])
-                self.t_list, self.dm_list = load_density_matrices("result.csv")
-                print(f"Calculation finished in {time.time()-t0}s. Saved as result.csv.")
+            t0 = time.time()
+            main(self.fileName, self.qc, self.kwargs['idlingTime'], self.gateList, self.rho, 
+                    self.kwargs['bath'], self.kwargs['V'], self.kwargs['dtFB'], self.kwargs['stride'], 
+                    depth =self.kwargs['depth'], bondDim=self.kwargs['bondDim'], 
+                    useRFPlus=self.kwargs['useRFPlus'], isRK13 = self.kwargs['isRK13'])
+            
+            self.t_list, self.dm_list = load_density_matrices("result.csv")
+            print(f"Calculation finished in {time.time()-t0}s. Saved as result.csv.")
 
         self.right_frame.change_state2("normal")
 
@@ -154,13 +164,13 @@ class TensorHeomApp(ctk.CTk):
         self.qc = circuits[0]
         self.num_qubits = self.qc.num_qubits
         self.left_frame.num_qubits_counter.set(str(self.num_qubits))
-        print(f"Info: Circuit loaded successfully from {filepath}.")
+        print(f"Info: Circuit loaded successfully.")
         self.continue_to_middle_frame()
 
     def upload_file(self):
         filepath = filedialog.askopenfilename(filetypes=[("CSV files", "*.csv")])
         self.t_list, self.dm_list = load_density_matrices(filepath)
-        print(f"Info: Result file loaded successfully from {filepath}.")
+        print(f"Info: Result file loaded successfully.")
         self.right_frame.change_state2("normal")
 
     def download_file(self):
@@ -168,6 +178,9 @@ class TensorHeomApp(ctk.CTk):
         popup = HPCDownload(self)
         popup.grab_set()
         self.wait_window(popup)
+        self.t_list, self.dm_list = load_density_matrices(self.job_id + ".csv")
+        print(f"Info: Result file downloaded successfully and saved as {self.job_id}.csv.")
+        self.right_frame.change_state2("normal")
 
     def back_to_middle_frame(self):
         self.right_frame.change_state1("disabled")
@@ -224,12 +237,6 @@ class TensorHeomApp(ctk.CTk):
                              [[1], 'rxyStep', kwargs1Q[1]],
                              [[0, 1], 'directCplStepVarJ', kwargs2Q]]  
             
-        if self.kwargs['useHPC']:   
-            print("Opening HPC settings window...")
-            popup = HPCSettings(self)
-            popup.grab_set()
-            self.wait_window(popup)
-            
         if self.kwargs['architecture'] == 'ladder':
             print('Warning: ladder architecture is not yet supported.')
             return
@@ -249,7 +256,9 @@ class TensorHeomApp(ctk.CTk):
         rho = self.dm_list[-1]
 
         U = Operator(self.qc).data
-        target = U @ self.rho['rhoIni'] @ U.conj().T
+        default_rhoIni = q.tensor( [q.fock_dm(2,0) for _ in range(self.kwargs['numQ'])] ).full()
+        rhoIni = self.kwargs.get('rhoIni', default_rhoIni)
+        target = U @ rhoIni @ U.conj().T
 
         F = np.real(np.trace(rho @ target))
         print(f"Fidelity: {F}")

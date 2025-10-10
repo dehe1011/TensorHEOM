@@ -4,3 +4,7 @@ numpy
 scipy
 pandas
 tqdm
+qutip 
+qiskit
+paramiko
+baryrat
