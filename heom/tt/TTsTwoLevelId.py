@@ -129,3 +129,46 @@ class TTsTwoLevelId(TTs):
         coreTmp[0, :, :, 0] = self.sysEye
         self.coreSysEye1 = coreTmp.flatten(order='F')
 
+    def getRDO(self):
+        """compute reduced density matrix
+
+            returns:
+                rhoOut (numpy.ndarray): reduced density matrix,
+                    1D array in row-major order
+        """
+
+        i = 0
+        rhoTmp = np.eye(1)
+
+        for j in range(self.numQ):
+            i = self.ptrKet[j]
+            coreTmp = self.rho[i].core.reshape([self.rho[i].bondDimL, -1],
+                                               order='F')
+            rhoTmp = rhoTmp @ coreTmp
+            rhoTmp = rhoTmp.reshape([-1, self.rho[i].bondDimR], order='F')
+
+            for i in range(self.ptrKet[j]+1, self.ptrBra[j]):
+                coreTmp = self.rho[i].core.reshape(
+                    [self.rho[i].bondDimL,
+                     self.rho[i].level,
+                     self.rho[i].bondDimR],
+                    order='F')
+                rhoTmp = rhoTmp @ coreTmp[:, 0, :]
+                rhoTmp = rhoTmp.reshape([-1, self.rho[i].bondDimR], order='F')
+
+            i = self.ptrBra[j]
+            coreTmp = self.rho[i].core.reshape([self.rho[i].bondDimL, -1],
+                                               order='F')
+            rhoTmp = rhoTmp @ coreTmp
+            rhoTmp = rhoTmp.reshape([-1, self.rho[i].bondDimR], order='F')
+
+        rhoSize = 4**self.numQ
+        rhoOut = np.zeros(rhoSize, dtype=np.complex128)
+
+        formatSpec = f'0{2*self.numQ}b'        
+        for i in range(rhoSize):
+            indexTmp = format(i, formatSpec)
+            index = indexTmp[-1::-2] + indexTmp[-2::-2]
+            rhoOut[int(index, 2)] = rhoTmp[i]
+
+        return rhoOut

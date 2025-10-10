@@ -1,6 +1,5 @@
 from .tt.TTs import TTs
 from .tdevott import timeEvolution
-from .opett import zOutMPS
 
 def calcDynamics(dtFB: float, stride: int,
                  TTs: TTs, timeEvo: timeEvolution, file):
@@ -25,11 +24,11 @@ def calcDynamics(dtFB: float, stride: int,
             time = dtFB * stepNum
             timeEvo.zTTTimeEvo(TTs.rho, TTs.H, time, stepNum)
         
-        outStr = f'{dtFB * (i+1) * stride: .15e}'
-        for idx in TTs.indices:
-            rhoElement = zOutMPS(TTs.rho, idx)
-            outStr += f',{rhoElement.real: .15e},{rhoElement.imag: .15e}'        
-        outStr += '\n'
+        rhoOut = TTs.getRDO()
+        outTime = f'{dtFB * (i+1) * stride: .15e},'
+        outRho = ','.join(f'{elem.real: .15e},{elem.imag: .15e}'
+                          for elem in rhoOut)
+        outStr = outTime + outRho + '\n'
 
         file.write(outStr)
 
@@ -39,11 +38,11 @@ def calcDynamics(dtFB: float, stride: int,
             time = dtFB * stepNum
             timeEvo.zTTTimeEvo(TTs.rho, TTs.H, time, stepNum)
 
-        outStr = f'{dtFB * totalStep: .15e}'
-        for idx in TTs.indices:
-            rhoElement = zOutMPS(TTs.rho, idx)
-            outStr += f',{rhoElement.real: .15e},{rhoElement.imag: .15e}'        
-        outStr += '\n'
+        rhoOut = TTs.getRDO()
+        outTime = f'{dtFB * totalStep: .15e},'
+        outRho = ','.join(f'{elem.real: .15e},{elem.imag: .15e}'
+                          for elem in rhoOut)
+        outStr = outTime + outRho + '\n'
 
         file.write(outStr)        
 
@@ -57,11 +56,10 @@ def outputCurrentStates(currentTime: float, TTs: TTs, file):
             file (file object): file for results
     """
 
-    outStr = f'{currentTime: .15e}'
-
-    for idx in TTs.indices:
-        rhoElement = zOutMPS(TTs.rho, idx)
-        outStr += f',{rhoElement.real: .15e},{rhoElement.imag: .15e}'
-    outStr += '\n'
+    rhoOut = TTs.getRDO()
+    outTime = f'{currentTime: .15e},'
+    outRho = ','.join(f'{elem.real: .15e},{elem.imag: .15e}'
+                          for elem in rhoOut)
+    outStr = outTime + outRho + '\n'
 
     file.write(outStr)

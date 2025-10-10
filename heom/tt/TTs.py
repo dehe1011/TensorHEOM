@@ -204,6 +204,9 @@ class TTs(ABC):
         TTOut.level = coreShape[1]
         TTOut.core = coreFlattenIn
 
+    @abstractmethod
+    def getRDO(self):
+        pass
 
     @abstractmethod
     def getPrefactors(self, dt: float, time: float, stepNum: int):

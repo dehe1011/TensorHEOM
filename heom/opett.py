@@ -400,7 +400,7 @@ def zQRRight(rho):
 
     return rhoOut, S
 
-def zOutMPS(rho, idx):
+def __zOutMPS(rho, idx):
     """output MPS with the index (idx)
 
         params:
