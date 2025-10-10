@@ -16,7 +16,7 @@ class TTs2QId(TTsTwoLevelId):
                 rhoIni (numpy.ndarray): initial reduced density operator
                 bondDim (int): bondDimension of MPS
                 omegaQ (numpy.ndarray): 1d array of qubit frequency
-                J (list):  list of coupling strength (len(J) = 1)
+                J (list): list of coupling strength (len(J) = 1)
                 V (numpy.ndarray):
                     matrices for qubit-reservoir coupling (3d array)
                 nu (list): list of poles for FP-HEOM
