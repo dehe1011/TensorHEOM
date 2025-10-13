@@ -50,7 +50,7 @@ class TTs2QId(TTsTwoLevelId):
         self.numH = 8
         self.zGetMPO(V, depth, nu, coeff)
 
-        self.indices = self.getIndices()
+        # self.indices = self.getIndices()
 
         self.pulse = pulse
         self.map = pulseMap
@@ -270,7 +270,7 @@ class TTs2QId(TTsTwoLevelId):
                     self.setRefH(self.shapeBathEye2[l], self.coreBathEye2[l],
                                  self.H[j, i])
 
-    def getIndices(self):
+    def __getIndices(self):
         """compute MPS indices for output
 
             returns:

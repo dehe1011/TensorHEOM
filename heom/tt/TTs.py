@@ -24,7 +24,6 @@ class TTs(ABC):
                 values (int): pulse indeces for self.pulse
             localPhase (list[float]): local phase of each qubit
                 for virtual Z gates.
-            indices (numpy.ndarray): 2d array of MPS indices
 
             shapeBathEye1 (list[tuple]):
                 shapes of MPO cores for identity operators acting on baths
