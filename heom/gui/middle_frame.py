@@ -166,7 +166,7 @@ class MiddleFrame(ctk.CTkFrame):
 
         beta = c.hbar * self.master.kwargs['omegaQ'][0] * 1e9 / (T * 1e-3 * c.k)  # convert mK to K and use eV
         T1 = float(self.T1_time_entry.get())
-        kappa = 1 / (T1 * 2 * np.pi)
+        kappa = 1 / (self.master.kwargs['omegaQ'][0] * T1 * 2 * np.pi)
         exp = float(self.exponent_entry.get())
 
         bathParams = {'type': 'broadband', 'exp': exp, 'beta': beta, 'kappa': kappa, 'omegaC': 50.}
