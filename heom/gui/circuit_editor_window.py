@@ -24,8 +24,10 @@ class CircuitEditor(ctk.CTkToplevel):
         self.code_box = ctk.CTkTextbox(self, width=400, height=200)
         self.code_box.pack(padx=10, pady=10)
         self.code_box.insert("1.0", "from qiskit import QuantumCircuit\n")
-        self.code_box.insert("2.0", "\n")
-        self.code_box.insert("3.0", f"qc = QuantumCircuit({master.num_qubits})")
+        self.code_box.insert("2.0", "from qiskit.circuit.random import random_circuit\n")
+        self.code_box.insert("3.0", "\n")
+        self.code_box.insert("4.0", f"# qc = QuantumCircuit({master.num_qubits})\n")
+        self.code_box.insert("5.0", f"qc = random_circuit(num_qubits={master.num_qubits}, depth=3, max_operands=2)")
 
         # Run + Save button
         self.run_button = ctk.CTkButton(self, text="Build & Save Circuit", command=self.build_circuit)

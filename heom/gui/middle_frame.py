@@ -1,5 +1,6 @@
 import customtkinter as ctk
 import numpy as np
+import scipy.constants as c
 
 from .gui_utils import change_state_all_widgets
 
@@ -54,15 +55,15 @@ class MiddleFrame(ctk.CTkFrame):
         self.T1_time_label = ctk.CTkLabel(self, text="T1 time (ns):")
         self.T1_time_label.grid(row=row, column=0, padx=10, pady=10)
         self.T1_time_entry = ctk.CTkEntry(self)
-        self.T1_time_entry.insert(0, 0)
+        self.T1_time_entry.insert(0, 250)
         self.T1_time_entry.grid(row=row, column=1, padx=10, pady=10)
         row += 1
 
         # temperature label and entry
-        self.temperature_label = ctk.CTkLabel(self, text="Temperature (K):")
+        self.temperature_label = ctk.CTkLabel(self, text="Temperature (mK):")
         self.temperature_label.grid(row=row, column=0, padx=10, pady=10)
         self.temperature_entry = ctk.CTkEntry(self)
-        self.temperature_entry.insert(0, 5)
+        self.temperature_entry.insert(0, 1.5)
         self.temperature_entry.grid(row=row, column=1, padx=10, pady=10)
         row += 1
 
@@ -161,9 +162,11 @@ class MiddleFrame(ctk.CTkFrame):
     # ------------------------------------------------------------------
 
     def get_kwargs(self):
-        beta = float(self.temperature_entry.get())
+        T = float(self.temperature_entry.get())
+
+        beta = c.hbar * self.master.kwargs['omegaQ'][0] * 1e9 / (T * 1e-3 * c.k)  # convert mK to K and use eV
         T1 = float(self.T1_time_entry.get())
-        kappa = 0.004 / 2 / np.pi
+        kappa = 1 / (T1 * 2 * np.pi)
         exp = float(self.exponent_entry.get())
 
         bathParams = {'type': 'broadband', 'exp': exp, 'beta': beta, 'kappa': kappa, 'omegaC': 50.}
