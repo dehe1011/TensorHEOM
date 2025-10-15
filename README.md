@@ -20,11 +20,21 @@
 
 **Authors: [Kiyoto Nakamura, Dennis Herb](https://github.com/dehe1011)**
 
+<p align="center">
+    <img src="docs/figures/structure.png" width="250">
+</p>
+
+<p align="center">
+    <img src="docs/figures/GUI1.png" width="500">
+</p>
+
+
 ## References
 
-Papers from our group:
+Recent papers from our group:
 
-* [K. Nakamura and J. Ankerhold, A quantum physics layer of epigenetics: a hypothesis deduced from charge transfer and chirality-induced spin selectivity of DNA. *Phys. Rev. Research 6(3)*, 033215 (2024).](https://doi.org/10.1103/PhysRevResearch.6.033215)
+* [K. Nakamura and J. Ankerhold, Impact of time-retarded noise on dynamical decoupling schemes for qubits. *Physical Review B 6(111)*, 064503 (2025).](https://doi.org/10.1103/PhysRevB.111.064503)
+* [K. Nakamura and J. Ankerhold, Entanglement dynamics and performance of two-qubit gates for superconducting qubits under non-Markovian effects. *arxiv:2510.05872* (2025).](http://arxiv.org/abs/2510.05872)
 
 ## Support
 

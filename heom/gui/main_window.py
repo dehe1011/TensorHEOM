@@ -100,7 +100,7 @@ class TensorHeomApp(ctk.CTk):
         webbrowser.open("https://github.com/dehe1011")
 
     def open_paper(self):
-        webbrowser.open("https://journals.aps.org/prresearch/abstract/10.1103/PhysRevResearch.6.033215")
+        webbrowser.open("http://arxiv.org/abs/2510.05872")
 
     def submit(self): 
 
