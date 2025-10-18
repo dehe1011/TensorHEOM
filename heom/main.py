@@ -5,6 +5,7 @@ from tqdm import tqdm
 
 from .tt.TTs1Q import TTs1Q
 from .tt.TTs2QId import TTs2QId
+from .tt.TTsMQChainId import TTsMQChainId
 from .tdevott import timeEvolution
 from .dynamics import outputCurrentStates, calcDynamics
 from .bath.params import getBathParams
@@ -58,6 +59,9 @@ def main(fileName, qc, idlingTime, gateList, rho,
     elif rho['numQ'] == 2:
         TTs = TTs2QId(rho['rhoIni'], bondDim, V, depth, nu, coeff,
                       pulse, pulseMap)
+    elif rho['numQ'] >= 3:
+        TTs = TTsMQChainId(rho['numQ'], rho['rhoIni'], bondDim, V, depth,
+                           nu, coeff, pulse, pulseMap)
     
     setPulseSeq(qc, TTs, rho['omegaQ'], dtFB, idlingTime)
     timeEvo = timeEvolution(TTs, 0.5*dtFB, isRK13)
