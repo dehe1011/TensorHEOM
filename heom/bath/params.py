@@ -8,6 +8,7 @@ def getBathParams(bathParams):
         params:
             params (dict): parameter values for bath
                 bathParams['type'] (str): bath type
+                bathParams['tol'] (float): tolerance for the AAA algorithm
 
         returns:
             nu (list): list of poles for FP-HEOM
@@ -23,7 +24,7 @@ def getBathParams(bathParams):
     if bathParams['type'] == 'broadband':
         y = broadbandNoise(bathParams, x)
 
-    r = aaa(x, y, tol=1e-6)
+    r = aaa(x, y, tol=bathParams['tol'])
 
     pol, res = r.polres()
 

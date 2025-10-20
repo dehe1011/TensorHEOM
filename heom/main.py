@@ -27,7 +27,7 @@ def main(fileName, qc, idlingTime, gateList, rho,
                 rho['numQ']: number of qubits
                 rho['rhoIni'] (numpy.ndarray): initial reduced density matrix
                 rho['omegaQ'] (list): list of qubit frequency                
-            bath (list): list of bath name
+            bath (list): list of bath parameters
                 each element of the list is a dict of bath parameter values
             V (numpy.ndarray): 3d array of system-bath coupling
                 V[j, :, :]: system operator coupled with j th bath

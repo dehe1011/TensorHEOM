@@ -21,8 +21,8 @@ def run3():
     
     rho['omegaQ'] = [1., 1.] # in the order: [qubit 1, qubit 0]
 
-    kwargs1Q = [{'omega': -rho['omegaQ'][0], 'gateTime': 0.1},
-                {'omega': -rho['omegaQ'][1], 'gateTime': 0.1},]
+    kwargs1Q = [{'omega': -rho['omegaQ'][1], 'gateTime': 0.1},
+                {'omega': -rho['omegaQ'][0], 'gateTime': 0.1},]
     
     kwargs2Q = {'gateTime': 0.05}
 
@@ -35,6 +35,7 @@ def run3():
     bathParams['kappa'] = 0.004 / 2 / np.pi
     bathParams['omegaC'] = 50
     bathParams['exp'] = 1
+    bathParams['tol'] = 1e-6
     
     bath = [bathParams, bathParams] # in the order: [qubit 1, qubit 0]
 

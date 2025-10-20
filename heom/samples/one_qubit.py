@@ -28,6 +28,7 @@ def run1():
     bath[0]['kappa'] = 0.004 / 2 / np.pi
     bath[0]['omegaC'] = 50
     bath[0]['exp'] = 1
+    bath[0]['tol'] = 1e-6
 
     V = np.array([
         [[0, 1],
