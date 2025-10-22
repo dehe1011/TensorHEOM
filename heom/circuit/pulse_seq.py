@@ -2,6 +2,7 @@ import numpy as np
 from qiskit import QuantumCircuit, transpile
 from qiskit.circuit import Parameter, Delay, Instruction
 from qiskit.transpiler import Target, InstructionProperties
+from qiskit.quantum_info import Operator
 from .transform_circ import transform
 from ..tt.TTs import TTs
 
@@ -45,7 +46,12 @@ def setPulseSeq(qc: QuantumCircuit, TTs: TTs, omegaQ: list[float],
         qcVZ.append(gateOut, qubitIdx)
     
     qcVZ.global_phase = globalPhase
-    TTs.localPhase = localPhase
+    
+    qcZs = QuantumCircuit(numQubits)
+    for i in range(numQubits):
+        qcZs.rz(localPhase[i], i)
+
+    TTs.matVZ = Operator(qcZs).data
 
     # set gate time for each gate and insert idling
     idlingStep = int(idlingTime / dtFB)

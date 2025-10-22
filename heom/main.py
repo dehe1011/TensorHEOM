@@ -67,7 +67,7 @@ def main(fileName, qc, idlingTime, gateList, rho,
     timeEvo = timeEvolution(TTs, 0.5*dtFB, isRK13)
 
     with open(fileName, 'w') as file:
-        currentTime = 0.0
-        outputCurrentStates(currentTime, TTs, file)
+        stepNum = 0
+        outputCurrentStates(dtFB, stepNum, TTs, file)
 
         calcDynamics(dtFB, stride, TTs, timeEvo, file)

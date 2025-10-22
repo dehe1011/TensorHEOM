@@ -171,4 +171,5 @@ class TTsTwoLevelId(TTs):
             index = indexTmp[-1::-2] + indexTmp[-2::-2]
             rhoOut[int(index, 2)] = rhoTmp[i]
 
+        rhoOut = rhoOut.reshape([2**self.numQ, 2**self.numQ])
         return rhoOut

@@ -22,8 +22,7 @@ class TTs(ABC):
                 qubit indeces to pulse indeces
                 keys (tuple[int]): qubit indedes
                 values (int): pulse indeces for self.pulse
-            localPhase (list[float]): local phase of each qubit
-                for virtual Z gates.
+            matVZ (list[float]): matrix representation of virtual Z gates
 
             shapeBathEye1 (list[tuple]):
                 shapes of MPO cores for identity operators acting on baths
@@ -62,8 +61,7 @@ class TTs(ABC):
         self.omegaQSeq = None
         self.pulse = None
         self.map = None
-        self.localPhase = None
-        self.indices = None
+        self.matVZ = None
 
         self.shapeBathEye1 = []
         self.coreBathEye1 = []
