@@ -22,8 +22,9 @@ class TTs(ABC):
                 qubit indeces to pulse indeces
                 keys (tuple[int]): qubit indedes
                 values (int): pulse indeces for self.pulse
-            matVZ (list[float]): matrix representation of virtual Z gates
-
+            matVZ (numpy.ndarray): matrix representation of virtual Z gates
+            permMat (numpy.ndarray): matrix for permutation of qubits
+            
             shapeBathEye1 (list[tuple]):
                 shapes of MPO cores for identity operators acting on baths
                 bond dimension = 1
@@ -62,6 +63,7 @@ class TTs(ABC):
         self.pulse = None
         self.map = None
         self.matVZ = None
+        self.permMat = None
 
         self.shapeBathEye1 = []
         self.coreBathEye1 = []

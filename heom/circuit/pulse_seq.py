@@ -26,6 +26,25 @@ def setPulseSeq(qc: QuantumCircuit, TTs: TTs, omegaQ: list[float],
     # create a quantum circuit consisting of elemental gates only
     qcTransformed = transform(qc, TTs)
 
+    # permutation matrix
+    matSize = 2**numQubits
+    if qcTransformed.layout is None:
+        permMat = np.eye(matSize, dtype=np.int64)
+    else:
+        qubitMap = qcTransformed.layout.final_index_layout()
+        print(qubitMap)
+        permMat = np.zeros([matSize, matSize], dtype=np.int64)
+        formatSpec = f'0{numQubits}b'
+        for i in range(matSize):
+            row = format(i, formatSpec)
+            clm = ''
+            for j in range(numQubits-1, -1, -1):
+                clm += row[numQubits-1 - qubitMap[j]]
+            permMat[int(row, 2), int(clm, 2)] = 1
+
+    TTs.permMat = permMat
+    print(TTs.permMat)
+
     # apply virtual-Z-gate schemes
     qcVZ = QuantumCircuit(numQubits)
     globalPhase = 0

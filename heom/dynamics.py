@@ -28,7 +28,9 @@ def calcDynamics(dtFB: float, stride: int,
         
         stepNum = (i+1) * stride
         outTime = f'{dtFB * (i+1) * stride: .15e},'
-        rhoOut = getRotatingRDO(dtFB, stepNum, TTs).flatten()
+        rhoOut = getRotatingRDO(dtFB, stepNum, TTs)
+        rhoOut = TTs.permMat @ rhoOut @ TTs.permMat.T
+        rhoOut = rhoOut.flatten()
         outRho = ','.join(f'{elem.real: .15e},{elem.imag: .15e}'
                           for elem in rhoOut)
         outStr = outTime + outRho + '\n'
@@ -43,7 +45,9 @@ def calcDynamics(dtFB: float, stride: int,
 
         stepNum = totalStep
         outTime = f'{dtFB * totalStep: .15e},'
-        rhoOut = getRotatingRDO(dtFB, stepNum, TTs).flatten()
+        rhoOut = getRotatingRDO(dtFB, stepNum, TTs)
+        rhoOut = TTs.permMat @ rhoOut @ TTs.permMat.T
+        rhoOut = rhoOut.flatten()
         outRho = ','.join(f'{elem.real: .15e},{elem.imag: .15e}'
                           for elem in rhoOut)
         outStr = outTime + outRho + '\n'
@@ -55,6 +59,7 @@ def calcDynamics(dtFB: float, stride: int,
     outTime = f'{dtFB * totalStep: .15e},'
     rhoOut = getRotatingRDO(dtFB, stepNum, TTs)
     rhoOut = TTs.matVZ @ rhoOut @ TTs.matVZ.conj().T
+    rhoOut = TTs.permMat @ rhoOut @ TTs.permMat.T
     rhoOut = rhoOut.flatten()
     outRho = ','.join(f'{elem.real: .15e},{elem.imag: .15e}'
                         for elem in rhoOut)
@@ -74,7 +79,9 @@ def outputCurrentStates(dt: float, stepNum: int, TTs: TTs, file):
     """
 
     time = stepNum * dt
-    rhoOut = getRotatingRDO(dt, stepNum, TTs).flatten()
+    rhoOut = getRotatingRDO(dt, stepNum, TTs)
+    rhoOut = TTs.permMat @ rhoOut @ TTs.permMat.T
+    rhoOut = rhoOut.flatten()
     outTime = f'{time: .15e},'
     outRho = ','.join(f'{elem.real: .15e},{elem.imag: .15e}'
                           for elem in rhoOut)
