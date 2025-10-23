@@ -32,7 +32,6 @@ def setPulseSeq(qc: QuantumCircuit, TTs: TTs, omegaQ: list[float],
         permMat = np.eye(matSize, dtype=np.int64)
     else:
         qubitMap = qcTransformed.layout.final_index_layout()
-        print(qubitMap)
         permMat = np.zeros([matSize, matSize], dtype=np.int64)
         formatSpec = f'0{numQubits}b'
         for i in range(matSize):
@@ -43,7 +42,6 @@ def setPulseSeq(qc: QuantumCircuit, TTs: TTs, omegaQ: list[float],
             permMat[int(row, 2), int(clm, 2)] = 1
 
     TTs.permMat = permMat
-    print(TTs.permMat)
 
     # apply virtual-Z-gate schemes
     qcVZ = QuantumCircuit(numQubits)
