@@ -5,7 +5,7 @@ from baryrat import aaa
 def getBathParams(bathParams):
     """return bath parameters
 
-        params:
+        args:
             params (dict): parameter values for bath
                 bathParams['type'] (str): bath type
                 bathParams['tol'] (float): tolerance for the AAA algorithm

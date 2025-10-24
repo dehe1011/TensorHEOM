@@ -7,7 +7,7 @@ def calcDynamics(dtFB: float, stride: int,
                  TTs: TTs, timeEvo: timeEvolution, file):
     """conduct calculation according to params
     
-        params:
+        args:
             dtFB (float): step width for forward + backward time integration
             stride (int): loops per output
             TTs (TTs.TTs): MPS and MPO
@@ -71,7 +71,7 @@ def outputCurrentStates(dt: float, stepNum: int, TTs: TTs, file):
     """output current reduced density operator
         Mainly used for writing initial states
 
-        params:
+        args:
             dt (float): time step of TTs.omegaQSeq
             stepNum (int): current step number
             TTs (TTs.TTs): MPS and MPO
@@ -93,7 +93,7 @@ def getRotatingRDO(dt: float, stepNum: int, TTs: TTs):
     """transform the reduced density operator in the lab frame
         to that in the rorating frame
 
-        params:
+        args:
             dt (float): time step of TTs.omegaQSeq
             stepNum (int): current step number
             TTs (TTs): MPS and MPO
@@ -123,7 +123,7 @@ def getRotatingRDO(dt: float, stepNum: int, TTs: TTs):
 def RZ(theta: float):
     """RZ rotation with the angle theta
 
-        params:
+        args:
             theta (float): angle
 
         returns:

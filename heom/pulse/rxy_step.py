@@ -14,7 +14,7 @@ class rxyStep(U3Pulse):
 
     def __init__(self, **kwargs):
         """
-            params:
+            args:
                 **kwargs: keyward arguments
                     kwargs['gateTime'] (float): gate time of RXGate(pi)
                     kwargs['omega'] (float): drive frequency
@@ -30,7 +30,7 @@ class rxyStep(U3Pulse):
         """get gate time in the unit of dt
             Note: Use this after vzTransform
 
-            params:
+            args:
                 dt (float): time step for integration of HEOM
                 params (list): parameters
                     params[0] (float): rotation angle (theta)
@@ -46,7 +46,7 @@ class rxyStep(U3Pulse):
     def initSeq(self, totalSize: int) -> None:
         """initialize sequences
 
-            params:
+            args:
                 totalSize (int): total size of the sequence
         """
         
@@ -58,7 +58,7 @@ class rxyStep(U3Pulse):
             Corresponding gate is assumed to be U3(theta, phi, -phi)
             after virtual-Z transformation.
 
-            params:
+            args:
                 st (int): starting point of the pulse
                 dur (int): duration of the pulse
                 params (list): parameters
@@ -78,7 +78,7 @@ class rxyStep(U3Pulse):
                      stepNum: int) -> tuple[float, float]:
         """compute prefactor terms for Runge-Kutta update
 
-            params:
+            args:
                 dt (float): step size for Runge-Kutta integration
                 time (float): current time
                 stepNum (int): current step number of the integration
@@ -98,7 +98,7 @@ class rxyStep(U3Pulse):
 def getAngle(angle: float) -> float:
     """return a normalized angle in the range (-pi, pi)
 
-        params:
+        args:
             angle (float): angle
 
         returns:

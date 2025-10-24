@@ -3,7 +3,7 @@ import numpy as np
 def broadbandNoise(bathParams, x):
     """compute broadband spectral noise power
 
-        params:
+        args:
             params (dict): parameter values for bath
                 bathParams['beta'] (float): inverse temperature
                 bathParams['omegaC'] (float): cutoff frequency

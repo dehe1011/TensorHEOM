@@ -18,7 +18,7 @@ def main(fileName, qc, idlingTime, gateList, rho,
     """main function for simulation
         Dyanmics of the reduced density operator are written in fileName.
     
-        params:
+        args:
             fileName (str): file name for output
             qc (qiskit.QuantumCircuit): quantum circuit for simulation
             idlingTime (float): idling time, in the unit of omegaQ[0] 

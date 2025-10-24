@@ -3,7 +3,7 @@ from .slurm import slurmShell, slurmStatus
 def commandsForSubmission(submissionParams, qpyName, path):
     """create commands for job submission
 
-        params:
+        args:
             submissionParams (dict):
                 parameters for submissoin
                 submissoinParams['schedulerName']: job scheduler name
@@ -51,7 +51,7 @@ def commandsForSubmission(submissionParams, qpyName, path):
 def getStatus(schedulerName, jobID, client):
     """return whether the job with jobID is completed
 
-        params:
+        args:
             schedulerName (str): job scheduler name
             jobID: job ID of the simulation
             client (paramiko.client.SSHClient): client for ssh connection

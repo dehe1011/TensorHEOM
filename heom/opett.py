@@ -403,7 +403,7 @@ def zQRRight(rho):
 def __zOutMPS(rho, idx):
     """output MPS with the index (idx)
 
-        params:
+        args:
             rho (numpy.ndarray): 1d list of tt.zTT (MPS)
             idx (list): 1d list of index
 

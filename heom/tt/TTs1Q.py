@@ -12,7 +12,7 @@ class TTs1Q(TTsTwoLevelId):
     def __init__(self, rhoIni, bondDim, V, depth, nu, coeff,
                  pulse, pulseMap):
         """
-            params:
+            args:
                 rhoIni (numpy.ndarray): initial reduced density operator
                 bondDim (int): bondDimension of MPS
                 V (numpy.ndarray):
@@ -56,7 +56,7 @@ class TTs1Q(TTsTwoLevelId):
     def zGetMPS(self, rhoIni, bondDim, depth):
         """create MPS
 
-            params:
+            args:
                 rhoIni (numpy.ndarray): initial reduced density operator
                 bondDim (int): bondDimension of MPS
                 depth (list):
@@ -105,7 +105,7 @@ class TTs1Q(TTsTwoLevelId):
     def zGetMPO(self, V, depth, nu, coeff):
         """create MPO
 
-            params:
+            args:
                 V (numpy.ndarray):
                     matrices for qubit-reservoir coupling (3d array)
                 pol (list): list of poles for FP-HEOM
@@ -194,7 +194,7 @@ class TTs1Q(TTsTwoLevelId):
             -> np.ndarray:
         """compute prefactor terms for Runge-Kutta update
 
-            params:
+            args:
                 dt (float): step size for Runge-Kutta integration
                 time (float): current time
                 stepNum (int): current step number of the integration

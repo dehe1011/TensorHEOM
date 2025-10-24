@@ -59,7 +59,7 @@ class iSwapDPulse(abstractPulse):
         -> tuple[Instruction, float, list[float]]:
         """transform iSwapD by utilizing the virtual Z gate
 
-            params:
+            args:
                 params (list): parameters
                     params[0]: gate name ('iswapd' or 'iswapdskip') 
                 globalPhase (float): global phase
@@ -90,7 +90,7 @@ class iSwapDPulse(abstractPulse):
     def isDelayed(self, name: str) -> bool:
         """returns whether idling should be inserted
 
-            params:
+            args:
                 name (str): gate name ('iswapd' or 'iswapdskip')
             return (bool):
                 True: idling is inserted after this gate

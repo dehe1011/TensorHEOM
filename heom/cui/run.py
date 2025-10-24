@@ -5,7 +5,7 @@ from ..main import main
 def run_cui(inputName: str, outputName: str):
     """run simulation using serialized file
 
-        params:
+        args:
             inputName (str): name of input file
                 The file is in QPY format.
 

@@ -17,7 +17,7 @@ class timeEvolution():
     """
     def __init__(self, TTsIni: TTs, dt: float, isRK13: bool):
         """
-            params:
+            args:
                 TTsIni (TTs.TTs): initialized MPS and MPO
                 dt (float): step witdh for forward/backward time integration
                 isRK13 (bool): Runge-Kutta method
@@ -109,7 +109,7 @@ class timeEvolution():
     def zInitSegment(self, TTsIni: TTs):
         """initialize 
 
-            params:
+            args:
                 TTsIni (TTs.TTs): initialized MPS and MPO
 
             reutrns:
@@ -141,7 +141,7 @@ class timeEvolution():
     def zTTTimeEvo(self, rho, H, time, stepNum):
         """time evolution of rho with H at time
 
-            params:
+            args:
                 rho (numpy.ndarray): 1d array of tt.zTT (MPS)
                             overwritten with output
                 H (numpy.ndarray): 
@@ -221,7 +221,7 @@ class timeEvolution():
     def zKRK4St(self, rho, H, coreIdx, time):
         """RK integration of K at starting point
 
-            params:
+            args:
                 rho (tt.zTT): MPS
                               overwritten with output
                 H (numpy.ndarray): array of MPO
@@ -246,7 +246,7 @@ class timeEvolution():
     def zKRK4En(self, rho, H, coreIdx, time):
         """RK integration of K at ending point
         
-            params:
+            args:
                 rho (tt.zTT): MPS
                               overwritten with output
                 H (numpy.ndarray): array of MPO
@@ -271,7 +271,7 @@ class timeEvolution():
     def zKRK4(self, rho, H, coreIdx, time):
         """RK integration of K (intermediate)
         
-            params:
+            args:
                 rho (tt.zTT): MPS
                               overwritten with output
                 H (numpy.ndarray): array of MPO
@@ -297,7 +297,7 @@ class timeEvolution():
     def zSRK4(self, S, coreIdx, rhoR, HRs, time):
         """RK integration for S
 
-            params:
+            args:
                 S (numpy.ndarray): matrix S
                                    overwritten with output
                 coreIdx (int): core index
@@ -324,7 +324,7 @@ class timeEvolution():
 def zRightOrth(rho):
     """right-orthogonalization of cores (initalization)
 
-        params:
+        args:
             rho (numpy.ndarray): 1d array of tt.zTT
     """
 

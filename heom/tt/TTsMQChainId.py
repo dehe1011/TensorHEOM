@@ -13,7 +13,7 @@ class TTsMQChainId(TTsTwoLevelId):
     def __init__(self, numQ, rhoIni, bondDim, V, depth, nu, coeff,
                  pulse, pulseMap):
         """
-            params:
+            args:
                 numQ (int): the number of qubits
                 rhoIni (numpy.ndarray): initial reduced density operator
                 bondDim (int): bondDimension of MPS
@@ -59,7 +59,7 @@ class TTsMQChainId(TTsTwoLevelId):
     def zGetMPS(self, rhoIni, bondDim, depth):
         """create MPS
 
-            params:
+            args:
                 rhoIni (numpy.ndarray): initial reduced density operator
                 bondDim (int): bondDimension of MPS
                 depth (numpy.ndarray):
@@ -117,7 +117,7 @@ class TTsMQChainId(TTsTwoLevelId):
     def zGetMPO(self, V, depth, nu, coeff):
         """create MPO
 
-            params:
+            args:
                 omegaQ (numpy.ndarray): 1d array of qubit frequency
                 J (list): list of coupling strength between two qubits
                 V (numpy.ndarray):
@@ -264,7 +264,7 @@ class TTsMQChainId(TTsTwoLevelId):
             -> np.ndarray:
         """compute prefactor terms for Runge-Kutta update
 
-            params:
+            args:
                 dt (float): step size for Runge-Kutta integration
                 time (float): current time
                 stepNum (int): current step number of the integration
@@ -299,7 +299,7 @@ class TTsMQChainId(TTsTwoLevelId):
 def SvdTT(numQ, rhoIni, bondDim):
     """Singular value decomposition of initial reduced density operator
 
-        params:
+        args:
             numQ (int): the number of qubits
             rhoIni (numpy.ndarray): 2**numQ x 2**numQ matrix for system
             bondDim (int): maximum bond dimension of MPS

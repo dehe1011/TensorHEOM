@@ -22,7 +22,7 @@ def handler(title, instructions, prompt_list):
 def getClient(hostname, username):
     """get Client of paramiko
 
-        params:
+        args:
             hostname (str): server name to connect to
             username (str): user name
 

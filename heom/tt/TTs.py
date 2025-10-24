@@ -46,7 +46,7 @@ class TTs(ABC):
     """
 
     def __init__(self, depth):
-        """params:
+        """args:
             depth (list):
                 1d list of depth of hierarchy of FP-HEOM (from 0 to depth)
         """
@@ -94,7 +94,7 @@ class TTs(ABC):
     def getRhoBondDims(self, levels, bondDim):
         """compute bond dimension of rhos
 
-            params:
+            args:
                 rhoBondDims (numpy.ndarray): 2d array of bond dimensions
                 levels (numpy.ndarray): 1d array of levels for each MPS
                 bondDim (int): maximum bond dimension of MPS
@@ -125,7 +125,7 @@ class TTs(ABC):
         """compute MPO cores
             set values to self.H
 
-            params:
+            args:
                 depth (int): maximum hierarchy for bath
                 nu (numpy.ndarray): poles for FP-HEOM
                 coeff (numpy.ndarray): residues for FP-HEOM
@@ -178,7 +178,7 @@ class TTs(ABC):
         """set values to MPO cores,
             by copying values from coreIn to TTOut
         
-            params:
+            args:
                 coreIn (numpy.ndarray): MPO core for input
                 TTOut (tt.zTT): MPO for output, overwritten
         """
@@ -192,7 +192,7 @@ class TTs(ABC):
         """set values to MPO cores,
             by referring to values of coreFlattenIn
 
-            params:
+            args:
                 coreShape (tuple): shape of core before flattening 
                 coreFlattenIn (numpy.ndarray): MPO core for input
                 TTOut (tt.zTT): MPO for output, overwritten

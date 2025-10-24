@@ -41,7 +41,7 @@ class TTsTwoLevelId(TTs):
     """
 
     def __init__(self, depth):
-        """params:
+        """args:
             depth (list):
                 1d list of depth of hierarchy of FP-HEOM (from 0 to depth)
         """

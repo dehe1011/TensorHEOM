@@ -12,7 +12,7 @@ class TTs2QId(TTsTwoLevelId):
     def __init__(self, rhoIni, bondDim, V, depth, nu, coeff,
                  pulse, pulseMap):
         """
-            params:
+            args:
                 rhoIni (numpy.ndarray): initial reduced density operator
                 bondDim (int): bondDimension of MPS
                 omegaQ (numpy.ndarray): 1d array of qubit frequency
@@ -58,7 +58,7 @@ class TTs2QId(TTsTwoLevelId):
     def zGetMPS(self, rhoIni, bondDim, depth):
         """create MPS
 
-            params:
+            args:
                 rhoIni (numpy.ndarray): initial reduced density operator
                 bondDim (int): bondDimension of MPS
                 depth (list):
@@ -127,7 +127,7 @@ class TTs2QId(TTsTwoLevelId):
     def zGetMPO(self, V, depth, nu, coeff):
         """create MPO
 
-            params:
+            args:
                 omegaQ (numpy.ndarray): 1d array of qubit frequency
                 J (list): list of coupling strength between two qubits
                 V (numpy.ndarray):
@@ -292,7 +292,7 @@ class TTs2QId(TTsTwoLevelId):
             -> np.ndarray:
         """compute prefactor terms for Runge-Kutta update
 
-            params:
+            args:
                 dt (float): step size for Runge-Kutta integration
                 time (float): current time
                 stepNum (int): current step number of the integration
@@ -325,7 +325,7 @@ class TTs2QId(TTsTwoLevelId):
 def QRTT(rhoIni):
     """QR decomposition of initial reduced density operator
 
-        params:
+        args:
             rhoIni (numpy.ndarray): 4x4 matrix for system
 
         returns:

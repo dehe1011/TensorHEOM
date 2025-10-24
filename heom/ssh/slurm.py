@@ -1,7 +1,7 @@
 def slurmShell(submissionParams, qpyName, scriptName):
     """shell script for Slurm systems
     
-        params:
+        args:
             submissionParams (dict):
                 parameters for submissoin
                 submissoinParams['schedulerName']: job scheduler name
@@ -56,7 +56,7 @@ def slurmStatus(jobID, client):
     """return whether the job with jobID is completed
         For Slurm systems
 
-        params:
+        args:
             jobID: job ID of the simulation
             client (paramiko.client.SSHClient): client for ssh connection
 

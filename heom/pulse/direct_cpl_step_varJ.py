@@ -16,7 +16,7 @@ class directCplStepVarJ(iSwapDPulse):
 
     def __init__(self, **kwargs):
         """
-            params:
+            args:
                 **kwargs: keyword arguments
                     kwargs['gateTime'] (float):
                         gate time of XXPlusYYGate(pi) (= iSwapD)
@@ -29,7 +29,7 @@ class directCplStepVarJ(iSwapDPulse):
     def getGateTime(self, dt: float, params: list) -> int:
         """get gate time in the unit of dt
 
-            params:
+            args:
                 dt (float): time step for integration of HEOM
                 params (list): parameters
 
@@ -42,7 +42,7 @@ class directCplStepVarJ(iSwapDPulse):
     def initSeq(self, totalSize: int) -> None:
         """initialize sequences
 
-            params:
+            args:
                 totalSize (int): total size of the sequence
         """
 
@@ -51,7 +51,7 @@ class directCplStepVarJ(iSwapDPulse):
     def setSeq(self, st: int, dur: int, params: list) -> None:
         """set values for sequences in [st:st+dur]
 
-            params:
+            args:
                 st (int): starting point of the pulse
                 dur (int): duration of the pulse
                 params (list): parameters
@@ -63,7 +63,7 @@ class directCplStepVarJ(iSwapDPulse):
             -> tuple[np.ndarray, np.ndarray]:
         """return time profiles of qubit frequency
 
-            params:
+            args:
                 seqSize (int): sequence size
                 omegaQ (list): 1d list of qubit frequency
 
@@ -87,7 +87,7 @@ class directCplStepVarJ(iSwapDPulse):
     def getPrefactor(self, dt: float, time, stepNum) -> float:
         """compute prefactor terms for Runge-Kutta update
 
-            params:
+            args:
                 dt (float): step size for Runge-Kutta integration
                 time (float): current time
                 stepNum (int): current step number of the integration
@@ -117,7 +117,7 @@ class directCplStepVarJ(iSwapDPulse):
     def cropPulse(self, en) -> None:
         """crop the sequence
 
-            params:
+            args:
                 en (int): end point of the sequence
         """
 

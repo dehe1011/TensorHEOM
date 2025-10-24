@@ -8,7 +8,7 @@ def submitJob(submissionParams, qc, idlingTime, gateList, rho,
               useRFPlus=False):
     """submit a job to an HPC cluster
 
-        params:
+        args:
             submissionParams (dict):
                 parameters for submissoin
                 submissionParams['hostname'] (str): server name to connect to
@@ -105,7 +105,7 @@ def submitJob(submissionParams, qc, idlingTime, gateList, rho,
 def downloadResult(downloadParams, jobID, fileName):
     """download a result file (csv file, name: {joID}.csv) from HPC cluster
 
-        params:
+        args:
             downloadParams (dict):
             parameters for downloading
                 downloadParams['hostname'] (str): server name to connect to

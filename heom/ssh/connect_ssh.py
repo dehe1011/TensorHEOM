@@ -23,7 +23,7 @@ def handlerWithValues(password, otp):
 def getClient(hostname, username, password, otp):
     """get Client of paramiko
 
-        params:
+        args:
             hostname (str): server name to connect to
             username (str): user name
             password (str): password

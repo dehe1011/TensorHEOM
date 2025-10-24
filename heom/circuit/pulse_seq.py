@@ -11,7 +11,7 @@ def setPulseSeq(qc: QuantumCircuit, TTs: TTs, omegaQ: list[float],
     """compute pulse sequence for HEOM calculation
         Obtained sequences are set to properties in TTs
 
-        params:
+        args:
             qc (qiskit.QuantumCircuit): quantum circuit to be simulated
             TTs (TTs.TTs): class for MPS and MPO
             dtFB (float): time step for integration of HEOM,

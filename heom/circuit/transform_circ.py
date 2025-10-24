@@ -8,7 +8,7 @@ def transform(qc: QuantumCircuit, TTs: TTs):
     """transform a quantum circuit into a circuit consisting of
         'rx', 'ry', and 'xx_plus_yy' 
 
-        params:
+        args:
             qc (qiskit.QuantumCircuit): 
                 quantum circuit to be transformed
             TTs (TTs): class for MPS and MPO

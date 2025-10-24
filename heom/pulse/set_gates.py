@@ -6,7 +6,7 @@ import numpy as np
 def setGates(gateList: list) -> tuple[list, dict]:
     """create instances for qubit gates
 
-        params:
+        args:
             gateList (list): input list for qubit gates
                 gateList[:][0] (list[int]): qubit index
                 gateList[:][1] (str): gate name
@@ -35,7 +35,7 @@ def setGates(gateList: list) -> tuple[list, dict]:
 def getGate(pulseName: str, kwargs: dict):
     """create a instance for pulse
 
-        params:
+        args:
             pulseName (str): gate name
             kwargs (dict): arguments for pulse
 
