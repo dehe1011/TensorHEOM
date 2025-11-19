@@ -3,7 +3,7 @@ from qiskit import QuantumCircuit, transpile
 from qiskit.circuit import Parameter, Delay, Instruction
 from qiskit.transpiler import Target, InstructionProperties
 from qiskit.quantum_info import Operator
-from .transform_circ import transform
+from .transform_circ import transform, scheduling
 from ..tt.TTs import TTs
 
 def setPulseSeq(qc: QuantumCircuit, TTs: TTs, omegaQ: list[float], 
@@ -98,11 +98,11 @@ def setPulseSeq(qc: QuantumCircuit, TTs: TTs, omegaQ: list[float],
             
 
             prop = {tuple(qubitIdx): InstructionProperties(duration=dur)}
-            tgt.add_instruction(gateTmp, prop, name)
+            tgt.add_instruction(gateTmp, prop)
         else:
             qcWithDelay.delay(params[0], qubitIdx)
 
-    qcScheduled = transpile(qcWithDelay, target=tgt, scheduling_method='alap')
+    qcScheduled = scheduling(qcWithDelay)
 
     totalSize = qcScheduled.estimate_duration(tgt, 'dt')
     for _, pulse in TTs.pulse:

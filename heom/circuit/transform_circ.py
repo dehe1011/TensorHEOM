@@ -54,3 +54,50 @@ def transform(qc: QuantumCircuit, TTs: TTs):
                 isAdded[key] = True
 
     return transpile(qc, target=tgt, optimization_level=1)
+
+def scheduling(qc:QuantumCircuit):
+    """padding delay for synchronization
+        scheduling method: ALAP
+
+        args:
+            qc (qiskit.QuantumCircuit): 
+                quantum circuit to be transformed
+
+        returns:
+            qcNew (qiskit.QuantumCircuit):
+                quantum circuit with delay
+    """
+
+    # align in reverse order for ALAP
+    lastTimes = [0] * qc.num_qubits
+    qcReverse = QuantumCircuit(qc.num_qubits)
+
+    for ope, qargs, cargs in reversed(qc.data):
+        qubitIdx = [q._index for q in qargs]
+
+        startTime = max([lastTimes[q] for q in qubitIdx])
+        for q in qubitIdx:
+            timeDiff = startTime - lastTimes[q]
+            if timeDiff > 0:
+                qcReverse.delay(timeDiff, q)
+
+        qcReverse.append(ope, qubitIdx)
+
+        dur = int(ope.params[0])
+        for q in qubitIdx:
+            lastTimes[q] = startTime + dur
+
+    timeMax = max(lastTimes)
+    for q in range(qc.num_qubits):
+        timeDiff = timeMax - lastTimes[q]
+        if timeDiff > 0:
+            qcReverse.delay(timeDiff, q)
+
+    # align in original order
+    qcNew = QuantumCircuit(qc.num_qubits)
+    for ope, qargs, cargs in reversed(qcReverse.data):
+        qubitIdx = [q._index for q in qargs]
+
+        qcNew.append(ope, qubitIdx)
+
+    return qcNew
