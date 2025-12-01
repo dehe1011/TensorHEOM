@@ -41,6 +41,7 @@ def slurmShell(submissionParams, qpyName, scriptName):
         venvPath = venvPath[:-1]
 
     shell += 'module load devel/python/3.11.4\n'
+    shell += 'export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK\n'
     shell += '. ' + submissionParams['venvPath'] + '/bin/activate\n\n'
     
     shell += 'qpyNew=qc${SLURM_JOB_ID}\n'
