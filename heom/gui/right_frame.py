@@ -22,7 +22,7 @@ class RightFrame(ctk.CTkFrame):
         row += 1
 
         # load result label and button
-        self.load_result_label = ctk.CTkLabel(self, text="Upload result (optional):")
+        self.load_result_label = ctk.CTkLabel(self, text="1. Upload result:")
         self.load_result_label.grid(row=row, column=0, padx=10, pady=10)
         self.load_result_button = ctk.CTkButton(
             self, text="Upload file", command=master.upload_file
@@ -30,33 +30,32 @@ class RightFrame(ctk.CTkFrame):
         self.load_result_button.grid(row=row, column=1, padx=10, pady=10)
         row += 1
 
-        # HPC checkbox
-        self.HPC_var = ctk.BooleanVar(value=False)
-        self.HPC_checkbox = ctk.CTkCheckBox(self, text="Use HPC", variable=self.HPC_var)
-        self.HPC_checkbox.grid(row=row, column=0, columnspan=2, padx=10, pady=10)
-        row += 1
-
-        # empty row for spacing
-        self.grid_rowconfigure(row, weight=1)
-        row += 1
-
-        # back and submit button
-        self.back_button = ctk.CTkButton(
-            self, text="Back", command=master.back_to_middle_frame
-        )
-        self.back_button.grid(row=row, column=0, pady=10, padx=10)
-
-        self.submit_button = ctk.CTkButton(self, text="Submit", command=master.submit)
+        # submit local button	
+        self.submit_label = ctk.CTkLabel(self, text="2. Calculate locally:")
+        self.submit_label.grid(row=row, column=0, padx=10, pady=10)
+        self.submit_button = ctk.CTkButton(self, text="Submit", command=master.submit_local)
         self.submit_button.grid(row=row, column=1, pady=10, padx=10)
         row += 1
 
+        # submit HPC button
+        self.submit_HPC_label = ctk.CTkLabel(self, text="3. Submit to HPC:")
+        self.submit_HPC_label.grid(row=row, column=0, padx=10, pady=10)
+        self.submit_hpc_button = ctk.CTkButton(self, text="Submit", command=master.submit_hpc)
+        self.submit_hpc_button.grid(row=row, column=1, pady=10, padx=10)
+        row += 1
+
         # download label and button
-        self.load_result_label = ctk.CTkLabel(self, text="Download result (optional):")
-        self.load_result_label.grid(row=row, column=0, padx=10, pady=10)
         self.download_button = ctk.CTkButton(
             self, text="Download file", command=master.download_file
         )
         self.download_button.grid(row=row, column=1, padx=10, pady=10)
+        row += 1
+
+        # back button
+        self.back_button = ctk.CTkButton(
+            self, text="Back", command=master.back_to_middle_frame
+        )
+        self.back_button.grid(row=row, column=0, columnspan=2, pady=10, padx=10)
         row += 1
 
         # empty row for spacing
@@ -76,14 +75,13 @@ class RightFrame(ctk.CTkFrame):
         self.calculate_fidelity_button = ctk.CTkButton(
             self, text="Calculate fidelity", command=master.calculate_fidelity
         )
-        self.calculate_fidelity_button.grid(row=row, column=0, columnspan=2, pady=10, padx=10)
-        row += 1
+        self.calculate_fidelity_button.grid(row=row, column=0, pady=10, padx=10)
 
         # calculate concurrence button
         self.calculate_concurrence_button = ctk.CTkButton(
             self, text="Calculate concurrence", command=master.calculate_concurrence
         )
-        self.calculate_concurrence_button.grid(row=row, column=0, columnspan=2, pady=10, padx=10)
+        self.calculate_concurrence_button.grid(row=row, column=1, pady=10, padx=10)
         row += 1
 
         # empty row for spacing
@@ -123,6 +121,7 @@ class RightFrame(ctk.CTkFrame):
         self.load_result_button.configure(state=state)
         self.download_button.configure(state=state)
         self.submit_button.configure(state=state)
+        self.submit_hpc_button.configure(state=state)
         self.back_button.configure(state=state)
     
     def change_state2(self, state):

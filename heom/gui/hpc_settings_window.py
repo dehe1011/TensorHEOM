@@ -158,7 +158,6 @@ class HPCDownload(ctk.CTkToplevel):
         }
         self.master.job_id = self.job_id_entry.get()
         downloadResult(downloadParams, self.master.job_id, self.master.job_id + ".csv")
-        # print(f"Downloaded result as {self.master.fileName}.")
         self.destroy()
 
 # ----------------------------------------------------------------------

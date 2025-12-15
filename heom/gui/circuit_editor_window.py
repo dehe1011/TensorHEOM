@@ -8,12 +8,12 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 # ----------------------------------------------------------------------
 
 class CircuitEditor(ctk.CTkToplevel):
-    def __init__(self, master=None, save_file="circuit.qpy"):
+    def __init__(self, master=None):
         super().__init__(master)
         self.title("Quantum Circuit Editor")
         self.geometry("400x600")
+        self.master = master
 
-        self.save_file = save_file
         self.master.qc = QuantumCircuit(self.master.num_qubits)
 
         # Instruction label
@@ -54,13 +54,8 @@ class CircuitEditor(ctk.CTkToplevel):
             exec(user_code, {}, local_env)
             self.master.qc = local_env["qc"]
 
-            with open(self.save_file, "wb") as f:
+            with open(self.master.qc_filename, "wb") as f:
                 qpy.dump(self.master.qc, f)
-
-            if self.master.qc.num_qubits != self.master.num_qubits:
-                print(f"Warning: Uploaded circuit has {self.master.qc.num_qubits} qubits, but {self.master.num_qubits} were selected.")
-            else:
-                print(f"Circuit built successfully and saved as {self.save_file}")
 
             # Clear old drawing in frame
             for widget in self.draw_frame.winfo_children():

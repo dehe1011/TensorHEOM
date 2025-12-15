@@ -13,16 +13,15 @@ class StateEditor(ctk.CTkToplevel):
         self.master = master
 
         # Instruction label
-        label = ctk.CTkLabel(self, text=f"Please define an initial state for {master.num_qubits} below.")
+        label = ctk.CTkLabel(self, text=f"Please define an initial density matrix for {master.num_qubits} below.")
         label.pack(pady=10)
-
 
         # Textbox for code
         self.code_box = ctk.CTkTextbox(self, width=400, height=200)
         self.code_box.pack(padx=10, pady=10)
         self.code_box.insert("1.0", "import numpy as np\n")
         self.code_box.insert("2.0", "\n")
-        self.code_box.insert("3.0", f"init_state = np.array({self.master.init_state})\n")
+        self.code_box.insert("3.0", f"init_state = np.array({self.master.kwargs['rhoIni']})\n")
 
         # Run + Save button
         self.run_button = ctk.CTkButton(self, text="Confirm", command=self.confirm)
@@ -44,7 +43,7 @@ class StateEditor(ctk.CTkToplevel):
         try:
             local_env = {}
             exec(user_code, {}, local_env)
-            self.master.init_state = local_env["init_state"]
+            self.master.kwargs['rhoIni'] = local_env["init_state"]
 
             print("Initial state built successfully.")
             print(self.master.init_state)

@@ -1,6 +1,7 @@
 import customtkinter as ctk
 import numpy as np
 import scipy.constants as c
+import ast
 
 from .gui_utils import change_state_all_widgets
 
@@ -22,11 +23,20 @@ class MiddleFrame(ctk.CTkFrame):
         self.logo_label.grid(row=row, column=0, columnspan=2, pady=10, padx=10)
         row += 1
 
+        # qubit frequency label and entry
+        self.qubit_frequency_label = ctk.CTkLabel(self, text="Qubit frequency (GHz):")
+        self.qubit_frequency_label.grid(row=row, column=0, padx=10, pady=10)
+
+        self.qubit_frequency_entry = ctk.CTkEntry(self)
+        self.qubit_frequency_entry.insert(0, str([5] * self.master.num_qubits) ) # omegaQ_max = 5 * 2* np.pi
+        self.qubit_frequency_entry.grid(row=row, column=1, padx=10, pady=10)
+        row += 1
+
         # Idling time label and entry
         self.idling_time_label = ctk.CTkLabel(self, text="Idling time (ns):")
         self.idling_time_label.grid(row=row, column=0, padx=10, pady=10)
         self.idling_time_entry = ctk.CTkEntry(self)
-        self.idling_time_entry.insert(0, 0.1)
+        self.idling_time_entry.insert(0, 1) # omegaQ_max * 1
         self.idling_time_entry.grid(row=row, column=1, padx=10, pady=10)
         row += 1
 
@@ -34,7 +44,7 @@ class MiddleFrame(ctk.CTkFrame):
         self.gate_time_label = ctk.CTkLabel(self, text="Gate time (ns):")
         self.gate_time_label.grid(row=row, column=0, padx=10, pady=10)
         self.gate_time_entry = ctk.CTkEntry(self)
-        self.gate_time_entry.insert(0, 0.1)
+        self.gate_time_entry.insert(0, str([16] * self.master.num_qubits)) # omegaQ_max * 16
         self.gate_time_entry.grid(row=row, column=1, padx=10, pady=10)
         row += 1
 
@@ -52,10 +62,10 @@ class MiddleFrame(ctk.CTkFrame):
         row += 1
 
         # T1 time label and entry
-        self.T1_time_label = ctk.CTkLabel(self, text="T1 time (ns):")
+        self.T1_time_label = ctk.CTkLabel(self, text="T1 time (us):")
         self.T1_time_label.grid(row=row, column=0, padx=10, pady=10)
         self.T1_time_entry = ctk.CTkEntry(self)
-        self.T1_time_entry.insert(0, 250)
+        self.T1_time_entry.insert(0, 32) # kappa/(2*np.pi) = 1 / (omegaQ_max * 1e9 * 32 * 1e-6 * 2*np.pi) 
         self.T1_time_entry.grid(row=row, column=1, padx=10, pady=10)
         row += 1
 
@@ -63,7 +73,7 @@ class MiddleFrame(ctk.CTkFrame):
         self.temperature_label = ctk.CTkLabel(self, text="Temperature (mK):")
         self.temperature_label.grid(row=row, column=0, padx=10, pady=10)
         self.temperature_entry = ctk.CTkEntry(self)
-        self.temperature_entry.insert(0, 1.5)
+        self.temperature_entry.insert(0, 30) # beta = c.hbar * omegaQ_max * 1e9 / (30 * 1e-3 * c.k)
         self.temperature_entry.grid(row=row, column=1, padx=10, pady=10)
         row += 1
 
@@ -98,26 +108,26 @@ class MiddleFrame(ctk.CTkFrame):
         row += 1
 
         # dtFB label and entry
-        self.dtFB_label = ctk.CTkLabel(self, text="dtFB (ns):")
+        self.dtFB_label = ctk.CTkLabel(self, text="Simulation step:")
         self.dtFB_label.grid(row=row, column=0, padx=10, pady=10)
         self.dtFB_entry = ctk.CTkEntry(self)
-        self.dtFB_entry.insert(0, 0.001)
+        self.dtFB_entry.insert(0, 0.005) # 1
         self.dtFB_entry.grid(row=row, column=1, padx=10, pady=10)
         row += 1
 
         # timestep label and entry
-        self.timestep_label = ctk.CTkLabel(self, text="Timestep (ns):")
-        self.timestep_label.grid(row=row, column=0, padx=10, pady=10)
-        self.timestep_entry = ctk.CTkEntry(self)
-        self.timestep_entry.insert(0, 0.01)
-        self.timestep_entry.grid(row=row, column=1, padx=10, pady=10)
+        self.stride_time_label = ctk.CTkLabel(self, text="Timestep:")
+        self.stride_time_label.grid(row=row, column=0, padx=10, pady=10)
+        self.stride_time_entry = ctk.CTkEntry(self)
+        self.stride_time_entry.insert(0, 3)
+        self.stride_time_entry.grid(row=row, column=1, padx=10, pady=10)
         row += 1
 
         # depth label and integer entry
         self.depth_label = ctk.CTkLabel(self, text="Depth:")
         self.depth_label.grid(row=row, column=0, padx=10, pady=10)
         self.depth_entry = ctk.CTkEntry(self)   
-        self.depth_entry.insert(0, 2)
+        self.depth_entry.insert(0, 1)
         self.depth_entry.grid(row=row, column=1, padx=10, pady=10)
         row += 1
 
@@ -125,7 +135,7 @@ class MiddleFrame(ctk.CTkFrame):
         self.bondDim_label = ctk.CTkLabel(self, text="Bond dimension:")
         self.bondDim_label.grid(row=row, column=0, padx=10, pady=10)
         self.bondDim_entry = ctk.CTkEntry(self)
-        self.bondDim_entry.insert(0, 20)
+        self.bondDim_entry.insert(0, 5)
         self.bondDim_entry.grid(row=row, column=1, padx=10, pady=10)
         row += 1
 
@@ -162,24 +172,39 @@ class MiddleFrame(ctk.CTkFrame):
     # ------------------------------------------------------------------
 
     def get_kwargs(self):
+
+        # omegaQ = 1 -> input: 1/(2*np.pi)
+        # gateTime = 0.1*np.pi -> input 
+
+        omegaQ_list = ast.literal_eval(self.qubit_frequency_entry.get())
+        omegaQ_list = np.array(omegaQ_list) * 2 * np.pi  # convert to angular frequency
+        omegaQ_max = max(omegaQ_list)
+        omegaQ_list = np.array(omegaQ_list) / omegaQ_max
+
+        gate_time_list = ast.literal_eval(self.gate_time_entry.get()) 
+        gate_time_list = np.array(gate_time_list) * omegaQ_max # convert to units of omegaQ_max
+        idling_time = float(self.idling_time_entry.get()) * omegaQ_max
+    
+        # bath parameters
         T = float(self.temperature_entry.get())
-
-        beta = c.hbar * self.master.kwargs['omegaQ'][0] * 1e9 / (T * 1e-3 * c.k)  # convert mK to K and use eV
         T1 = float(self.T1_time_entry.get())
-        kappa = 1 / (self.master.kwargs['omegaQ'][0] * T1 * 2 * np.pi)
         exp = float(self.exponent_entry.get())
+        beta = c.hbar * omegaQ_max * 1e9 / (T * 1e-3 * c.k)  # convert mK to K and use eV
+        kappa = 1 / (omegaQ_max * 1e9 * T1 * 1e-6 * 2 * np.pi)
+        bathParams = {'type': 'broadband', 'exp': exp, 'beta': beta, 'kappa': kappa, 'omegaC': 50., 'tol': 1e-6}
+        bathParams_list = [bathParams for _ in range(len(omegaQ_list))]
 
-        bathParams = {'type': 'broadband', 'exp': exp, 'beta': beta, 'kappa': kappa, 'omegaC': 50.}
         return {
-            'bath': [bathParams] * self.master.num_qubits,
-            'strideTime': float(self.timestep_entry.get()),
+            'omegaQ': omegaQ_list,
+            'bath': bathParams_list,
+            'strideTime': float(self.stride_time_entry.get()),
             'dtFB': float(self.dtFB_entry.get()),
-            'gate_time': float(self.gate_time_entry.get()),
-            'idlingTime': float(self.idling_time_entry.get()),
-            'depth': [int(self.depth_entry.get())] * self.master.num_qubits,
+            'gate_time': gate_time_list,
+            'idlingTime': idling_time,
+            'depth': [int(self.depth_entry.get())] * len(omegaQ_list),
             'bondDim': int(self.bondDim_entry.get()),
             'useRFPlus': self.useRFPlus_var.get(),
-            'isRK13': self.RK13_var.get(),
+            'isRK13': self .RK13_var.get(),
         }
 
     def change_state(self, state):

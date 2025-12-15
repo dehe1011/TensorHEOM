@@ -45,7 +45,7 @@ class Counter(ctk.CTkFrame):
     def get(self):
         return self.value
 
-    def set_state(self, state):
+    def configure(self, state):
         """Enable/disable the counter"""
         self.increase_btn.configure(state=state)
         self.decrease_btn.configure(state=state)
