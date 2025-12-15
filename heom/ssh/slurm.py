@@ -39,9 +39,9 @@ def slurmShell(submissionParams, qpyName, scriptName):
     venvPath = submissionParams['venvPath']
     if venvPath[-1] == '/':
         venvPath = venvPath[:-1]
-
-    shell += 'module load devel/python/3.11.4\n'
-    shell += 'export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK\n'
+    
+    shell += 'module load numlib/python_scipy/1.16.0_numpy-1.26.4_python-3.12.11\n'
+    shell += 'export MKL_NUM_THREADS=$SLURM_CPUS_PER_TASK\n'
     shell += '. ' + submissionParams['venvPath'] + '/bin/activate\n\n'
     
     shell += 'qpyNew=qc${SLURM_JOB_ID}\n'
