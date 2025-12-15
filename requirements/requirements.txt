@@ -6,5 +6,6 @@ pandas
 tqdm
 qutip 
 qiskit
+pylatexenc
 paramiko
 baryrat
