@@ -11,6 +11,9 @@ TODO.txt
 circuit.qpy
 qcData
 *.csv
+results/
+script.py
+scripts/
 
 result.csv
 
