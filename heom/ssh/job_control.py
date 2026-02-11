@@ -1,5 +1,5 @@
 import re
-from qiskit import qpy
+from .io_qc import saveQC
 from .connect_ssh import getClient
 from .commands import commandsForSubmission, getStatus
 
@@ -51,31 +51,9 @@ def submitJob(submissionParams, qc, idlingTime, gateList, rho,
     REMOTEPATH = 'python_HEOM'
 
     # output parameters for simulation
-    params = {}
-    params['idlingTime'] = idlingTime
-    params['gateList'] = gateList
-    params['bath'] = bath
-    params['dtFB'] = dtFB
-    params['stride'] = stride
-    params['depth'] = depth
-    params['bondDim'] = bondDim
-    params['isRK13'] = isRK13
-    params['useRFPlus'] = useRFPlus
-
-    rhoIni = rho.pop('rhoIni')
-    rho['rhoReal'] = rhoIni.real.tolist()
-    rho['rhoImag'] = rhoIni.imag.tolist()
-    params['rho'] = rho
-
-    VTmp = {}
-    VTmp['real'] = V.real.tolist()
-    VTmp['imag'] = V.imag.tolist()
-    params['VTmp'] = VTmp
-
-    qc.metadata = params
-
-    with open(QPYNAME, 'wb') as file:
-        qpy.dump(qc, file)
+    filePath = QPYNAME
+    saveQC(filePath, qc, idlingTime, gateList, rho, bath, V, dtFB, stride, 
+           depth, bondDim, isRK13=isRK13, useRFPlus=useRFPlus)
 
     # connect to an HPC server
     client = getClient(submissionParams['hostname'],
