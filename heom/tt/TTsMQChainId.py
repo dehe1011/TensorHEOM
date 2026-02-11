@@ -1,9 +1,9 @@
 import copy
 import numpy as np
 from scipy.linalg import svd
-from .TTsTwoLevelId import TTsTwoLevelId
 from .tt import zCreMPS, zTT
-from ..tdevott import zRightOrth
+from .TTsTwoLevelId import TTsTwoLevelId
+from ..dynamics.tdevott import zRightOrth
 
 class TTsMQChainId(TTsTwoLevelId):
     """MPS and MPO for multi-qubit systems (independent reservoir)
