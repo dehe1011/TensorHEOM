@@ -1,22 +1,14 @@
-import numpy as np
-import pandas as pd
-import matplotlib.pyplot as plt
-from tqdm import tqdm
-
-from .tt.TTs1Q import TTs1Q
-from .tt.TTs2QId import TTs2QId
-from .tt.TTsMQChainId import TTsMQChainId
-from .tdevott import timeEvolution
-from .dynamics import outputCurrentStates, calcDynamics
-from .bath.params import getBathParams
-from .pulse.set_gates import setGates
-from .circuit.pulse_seq import setPulseSeq
+from .bath import getBathParams
+from .pulse import setGates
+from .tt import TTs1Q, TTs2QId, TTsMQChainId
+from .circuit import setPulseSeq
+from .dynamics import timeEvolution, outputCurrentStates, calcDynamics
 
 def main(fileName, qc, idlingTime, gateList, rho,
          bath, V, dtFB, stride, depth, bondDim, isRK13=False,
          useRFPlus=False):
     """main function for simulation
-        Dyanmics of the reduced density operator are written in fileName.
+        Dynamics of the reduced density operator are written in fileName.
     
         args:
             fileName (str): file name for output
@@ -40,6 +32,10 @@ def main(fileName, qc, idlingTime, gateList, rho,
                 or not (False)
     """
 
+    if useRFPlus:
+        depth  = [1] * len(depth)
+
+    # Decomposition of bath correlation functions
     nu = []
     coeff = []
     for i in range(rho['numQ']):
@@ -48,11 +44,10 @@ def main(fileName, qc, idlingTime, gateList, rho,
         nu.append(nuTmp)
         coeff.append(coeffTmp)
     
+    # Connecting quantum gates and pulse sequence
     pulse, pulseMap = setGates(gateList)
 
-    if useRFPlus:
-        depth  = [1] * len(depth)
-
+    # Initialize Tensor Train structure
     if rho['numQ'] == 1:
         TTs = TTs1Q(rho['rhoIni'], bondDim, V, depth, nu, coeff,
                     pulse, pulseMap)
@@ -62,12 +57,18 @@ def main(fileName, qc, idlingTime, gateList, rho,
     elif rho['numQ'] >= 3:
         TTs = TTsMQChainId(rho['numQ'], rho['rhoIni'], bondDim, V, depth,
                            nu, coeff, pulse, pulseMap)
-    
+    else:
+        raise ValueError(
+            f"Invalid number of qubits: expected an integer ≥ 1, got {rho['numQ']}."
+        )
+
+    # Compilation qiskit qc into pulse sequence
     setPulseSeq(qc, TTs, rho['omegaQ'], dtFB, idlingTime)
+
+    # Time evolution
     timeEvo = timeEvolution(TTs, 0.5*dtFB, isRK13)
 
-    with open(fileName, 'w') as file:
+    with open(fileName, 'w', encoding='utf-8') as file:
         stepNum = 0
         outputCurrentStates(dtFB, stepNum, TTs, file)
-
         calcDynamics(dtFB, stride, TTs, timeEvo, file)
