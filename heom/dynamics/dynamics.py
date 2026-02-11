@@ -1,6 +1,7 @@
+from tqdm import tqdm
 import numpy as np
 from scipy.integrate import simpson
-from .tt.TTs import TTs
+from ..tt.TTs import TTs
 from .tdevott import timeEvolution
 
 def calcDynamics(dtFB: float, stride: int,
@@ -20,7 +21,7 @@ def calcDynamics(dtFB: float, stride: int,
     dataSize = int(totalStep / stride)
     mod = int(totalStep % stride)
 
-    for i in range(dataSize):
+    for i in tqdm(range(dataSize)):
         for j in range(stride):
             stepNum = i * stride + j
             time = dtFB * stepNum
