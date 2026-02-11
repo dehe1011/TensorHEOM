@@ -2,7 +2,7 @@ import os
 import customtkinter as ctk
 from PIL import Image
 
-from ..import ROOT_DIR
+from ...import ROOT_DIR
 
 # ----------------------------------------------------------------------
 

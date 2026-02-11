@@ -1,6 +1,6 @@
 import customtkinter as ctk
 
-from ..ssh import downloadResult
+from ...ssh import downloadResult
 
 # ----------------------------------------------------------------------
 

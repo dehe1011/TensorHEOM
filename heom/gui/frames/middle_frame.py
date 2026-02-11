@@ -3,7 +3,7 @@ import numpy as np
 import scipy.constants as c
 import ast
 
-from .gui_utils import change_state_all_widgets
+from ..gui_utils import change_state_all_widgets
 
 # ----------------------------------------------------------------------
 

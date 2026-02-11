@@ -1,7 +1,6 @@
 import customtkinter as ctk
 import sys
 import io
-import qutip as q
 
 # ----------------------------------------------------------------------
 

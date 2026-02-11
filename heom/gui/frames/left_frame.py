@@ -1,6 +1,6 @@
 import customtkinter as ctk
 
-from .gui_utils import change_state_all_widgets, Counter
+from ..gui_utils import change_state_all_widgets, Counter
    
 # ----------------------------------------------------------------------
 

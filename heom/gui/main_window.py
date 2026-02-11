@@ -1,34 +1,31 @@
 import webbrowser
 import time
-import os
 import inspect
 
 import customtkinter as ctk
 from tkinter import filedialog
 import numpy as np
 import qutip as q
-from scipy.linalg import eigvals
 from qiskit.quantum_info import Operator
 from qiskit import qpy
 
 from ..main import main
-from ..utils import getFidelity
+from ..evaluation import getFidelity, getConcurrence, loadResult
 from ..ssh import submitJob
 
-from .left_frame import LeftFrame
-from .middle_frame import MiddleFrame
-from .right_frame import RightFrame
-from .help_frame import HelpFrame
-from .scrollable_console_frame import ScrollableConsoleFrame
-from .plotting_window import PlottingWindow
-from .circuit_editor_window import CircuitEditor
-from .state_editor_window import StateEditor
-from .gui_utils import load_density_matrices
-from .help_window import HelpWindow
+from .frames.left_frame import LeftFrame
+from .frames.middle_frame import MiddleFrame
+from .frames.right_frame import RightFrame
+from .frames.help_frame import HelpFrame
+from .frames.scrollable_console_frame import ScrollableConsoleFrame
 
-from .hpc_settings_window import HPCSettings, HPCDownload
+from .windows.circuit_editor_window import CircuitEditor
+from .windows.help_window import HelpWindow
+from .windows.state_editor_window import StateEditor
+from .windows.hpc_settings_window import HPCSettings, HPCDownload
+from .windows.plotting_window import PlottingWindow
 
-# --------------------------------------------------
+# ----------------------------------------------------------------------
 
 def filter_kwargs(func, kwargs):
     sig = inspect.signature(func)
@@ -225,7 +222,7 @@ class TensorHeomApp(ctk.CTk):
 
         print("Uploading result file...")
         filepath = filedialog.askopenfilename(filetypes=[("CSV files", "*.csv")])
-        self.t_list, self.dm_list = load_density_matrices(filepath)
+        self.t_list, self.dm_list = loadResult(filepath)
         print("Info: Result file uploaded successfully.")
 
         # enable lower right frame
@@ -237,7 +234,7 @@ class TensorHeomApp(ctk.CTk):
         t0 = time.time()
         filtered = filter_kwargs(main, self.kwargs)
         main(self.result_filename, self.qc, **filtered)
-        self.t_list, self.dm_list = load_density_matrices("result.csv")
+        self.t_list, self.dm_list = loadResult(self.result_filename)
         print(f"Calculation finished in {time.time()-t0}s. Saved as {self.result_filename}.")
 
         # enable lower right frame
@@ -265,7 +262,7 @@ class TensorHeomApp(ctk.CTk):
         popup.grab_set()
         self.wait_window(popup)
 
-        self.t_list, self.dm_list = load_density_matrices(self.job_id + ".csv")
+        self.t_list, self.dm_list = loadResult(self.job_id + ".csv")
         print(f"Info: Result file downloaded successfully and saved as {self.job_id}.csv.")
 
         # enable lower right frame
@@ -282,6 +279,8 @@ class TensorHeomApp(ctk.CTk):
         self.middle_frame.change_state("normal")
         self.left_frame.change_state("disabled")
 
+    # ------------------------------------------------------------------
+    # plotting window functions
     # ------------------------------------------------------------------
 
     def calculate_fidelity(self):
@@ -306,13 +305,7 @@ class TensorHeomApp(ctk.CTk):
     
         rho = self.dm_list[-1]
 
-        sigma_y = np.array([[0, -1j], [1j, 0]])
-        Y = np.kron(sigma_y, sigma_y)
-        rho_tilde = Y @ rho.conj() @ Y
-        R = rho @ rho_tilde
-
-        eigenvals = np.sort(np.sqrt(np.abs(eigvals(R))))[::-1]
-        C = max(0, eigenvals[0] - sum(eigenvals[1:]))
+        C = getConcurrence(rho)
         print(f"Concurrence: {C}")
         return C
     

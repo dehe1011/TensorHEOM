@@ -97,6 +97,7 @@ class PlottingWindow(ctk.CTkToplevel):
         self.ax.set_ylim(0, 1.05)
 
     def plot_fidelity(self):
+
         U = Operator(self.master.qc).data
         default_rhoIni = q.tensor( [q.fock_dm(2,0) for _ in range(self.master.kwargs['numQ'])] ).full()
         rhoIni = self.master.kwargs.get('rhoIni', default_rhoIni)
@@ -110,6 +111,7 @@ class PlottingWindow(ctk.CTkToplevel):
         self.ax.set_ylim(0, 1.05)
 
     def plot_dm(self):
+        
         dim = self.master.dm_list[0].shape[0]
         self.fig, self.ax = plt.subplots(dim, dim, figsize=(dim*1.7, dim*1.05), sharex=True, sharey=True)
         for i in range(dim):
