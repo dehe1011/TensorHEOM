@@ -14,23 +14,23 @@ def setGates(gateList: list) -> tuple[list, dict]:
 
         returns:
             pulse (list): list with qubit index and pulse
-            map (dict): dictionary for mapping
+            pulseMap (dict): dictionary for mapping
                 from qubit indeces to pulse indeces
     """
 
     numGates = len(gateList)
 
     pulse = []
-    map = {}
+    pulseMap = {}
 
     for i in range(numGates):
         pulse.append([gateList[i][0],
                       getGate(gateList[i][1], gateList[i][2])])
         
         pulseIdx = tuple(np.sort([j for j in gateList[i][0]]))
-        map[pulseIdx] = i
+        pulseMap[pulseIdx] = i
 
-    return pulse, map
+    return pulse, pulseMap
 
 def getGate(pulseName: str, kwargs: dict):
     """create a instance for pulse
@@ -53,5 +53,8 @@ def getGate(pulseName: str, kwargs: dict):
         module = importlib.import_module(class_map[pulseName],
                                          package=__package__)
         cls = getattr(module, pulseName)
+    
+    else:
+        raise ValueError(f"Unsupported gate type: {pulseName}")
     
     return cls(**kwargs)

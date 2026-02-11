@@ -1,5 +1,5 @@
 import numpy as np
-from qiskit import QuantumCircuit, transpile
+from qiskit import QuantumCircuit
 from qiskit.circuit import Parameter, Delay, Instruction
 from qiskit.transpiler import Target, InstructionProperties
 from qiskit.quantum_info import Operator
