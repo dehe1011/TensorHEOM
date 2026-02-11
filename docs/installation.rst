@@ -127,6 +127,3 @@ To remove the package:
    pip uninstall TensorHEOM
 
 If you cloned the GitHub repository, manually delete the `TensorHEOM` folder from your computer.
-
-
-**Congratulations!** You've successfully installed and set up `TensorHEOM`.

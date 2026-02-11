@@ -1,10 +1,4 @@
-Functions
-=========
-
-This section provides an overview of the available functions in the `TensorHEOM` package.
-
-
-Load Default Parameters
------------------------
+Main Function
+=============
 
 .. autofunction:: heom.main.main
