@@ -1,10 +1,8 @@
 from qiskit import QuantumCircuit
 import numpy as np
-from .. import main
-from ..pulse.rxy_step import rxyStep
-from ..pulse.direct_cpl_step_varJ import directCplStepVarJ
+from heom.main import main
 
-def run3():
+def run_2q_02():
     fileName = 'rdo_2qubit02.csv'
 
     qc = QuantumCircuit(2)
@@ -59,4 +57,4 @@ def run3():
          bath, V, dtFB, stride, depth, bondDim)
     
 if __name__ == '__main__':
-    run3()
+    run_2q_02()

@@ -1,9 +1,10 @@
-import getpass
 from qiskit import QuantumCircuit
 import numpy as np
-from ..ssh.job_control import submitJob
+from heom.main import main
 
-def run1():
+def run_1q_realistic():
+    fileName = 'rdo_1qubit_realistic.csv'
+
     qc = QuantumCircuit(1)
     qc.rx(0.5*np.pi, 0)
     qc.delay(0, 0)
@@ -44,21 +45,8 @@ def run1():
     depth = [1]
     bondDim = 5
 
-    submissionParams = {}
-    submissionParams['hostname'] = 'justus2.uni-ulm.de'
-    submissionParams['schedulerName'] = 'slurm'
-    submissionParams['numNodes'] = 1
-    submissionParams['cpusPerTask'] = 4
-    submissionParams['maxTime'] = '336:00:00'
-    submissionParams['others'] = ''
-    submissionParams['venvPath'] = '$HOME/.heom'
-
-    submissionParams['username'] = input('User Name: ')
-    submissionParams['emailAddress'] = input('Email Address: ')
-    submissionParams['otp'] = getpass.getpass('Your OTP: ')
-    submissionParams['password'] = getpass.getpass('Password: ')
-    submitJob(submissionParams, qc, idlingTime, gateList, rho,
-              bath, V, dtFB, stride, depth, bondDim, useRFPlus=True)
+    main(fileName, qc, idlingTime, gateList, rho,
+         bath, V, dtFB, stride, depth, bondDim, useRFPlus=True)
     
 if __name__ == '__main__':
-    run1()
+    run_1q_realistic()

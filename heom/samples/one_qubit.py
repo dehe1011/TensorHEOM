@@ -1,8 +1,8 @@
 from qiskit import QuantumCircuit
 import numpy as np
-from .. import main
+from heom.main import main
 
-def run1():
+def run_1q():
     fileName = 'rdo_1qubit.csv'
 
     qc = QuantumCircuit(1)
@@ -47,4 +47,4 @@ def run1():
          bath, V, dtFB, stride, depth, bondDim)
     
 if __name__ == '__main__':
-    run1()
+    run_1q()
