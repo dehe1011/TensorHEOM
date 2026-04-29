@@ -48,10 +48,10 @@ def setPulseSeq(qc: QuantumCircuit, TTs: TTs, omegaQ: list[float],
     globalPhase = 0
     localPhase = [0] * numQubits
     for gate in qcTransformed.data:
+        qubitIdx = list(np.sort([q._index for q in gate.qubits]))
         if gate.name != 'delay':
             params = list(gate.operation.params)
             params.append(gate.operation.name)
-            qubitIdx = list(np.sort([q._index for q in gate.qubits]))
             pulseIdx = TTs.map[tuple(qubitIdx)]
             gateOut, globalPhase, localPhase = \
                 TTs.pulse[pulseIdx][1].vzTransform(
