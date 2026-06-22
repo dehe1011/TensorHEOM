@@ -1,5 +1,5 @@
 <p align="center">
-    <img src="docs/figures/logo.png" width="250">
+    <img src="ttheom/figures/logo.png" width="250">
 </p>
 
 <p align="center">
@@ -25,7 +25,7 @@ TensorHEOM is a Python package for simulating quantum circuits in non-Markovian 
 The package is designed for superconducting-qubit simulations and connects circuit-level Qiskit input with microscopic open-system dynamics.
 
 <p align="center">
-    <img src="docs/figures/overview.png" width="800">
+    <img src="ttheom/figures/overview.png" width="800">
 </p>
 
 ## Installation
@@ -113,7 +113,7 @@ TensorHeomApp().mainloop()
 ```
 
 <p align="center">
-    <img src="docs/figures/GUI1.png" width="800">
+    <img src="ttheom/figures/GUI1.png" width="800">
 </p>
 
 ## Documentation and examples

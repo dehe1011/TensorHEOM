@@ -15,4 +15,4 @@ include ttheom/*.mplstyle
 recursive-include ttheom *.py
 
 # Include specific data files
-include ttheom/data/*.json
+include ttheom/figures/*.png
