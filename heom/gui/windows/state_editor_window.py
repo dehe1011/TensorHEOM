@@ -12,7 +12,7 @@ class StateEditor(ctk.CTkToplevel):
         self.master = master
 
         # Instruction label
-        label = ctk.CTkLabel(self, text=f"Please define an initial density matrix for {master.num_qubits} below.")
+        label = ctk.CTkLabel(self, text=f"Please define an initial density matrix for {master.numQ} below.")
         label.pack(pady=10)
 
         # Textbox for code
@@ -45,7 +45,7 @@ class StateEditor(ctk.CTkToplevel):
             self.master.kwargs['rhoIni'] = local_env["init_state"]
 
             print("Initial state built successfully.")
-            print(self.master.init_state)
+            print(self.master.kwargs['rhoIni'])
 
         except Exception as e:
             print(f"Error: {e}")

@@ -1,17 +1,17 @@
+import os
 import webbrowser
 import time
 import inspect
 
 import customtkinter as ctk
 from tkinter import filedialog
-import numpy as np
 import qutip as q
 from qiskit.quantum_info import Operator
-from qiskit import qpy
+from qiskit import QuantumCircuit
 
-from ..main import main
-from ..evaluation import getFidelity, getConcurrence, loadResult
-from ..ssh import submitJob
+from ..main import prepareTTs, prepareArgs, calcTimeEvo
+from ..evaluation import getFidelity, getConcurrence, loadResult, plotPulseSeq
+from ..ssh import submitJob, loadQC
 
 from .frames.left_frame import LeftFrame
 from .frames.middle_frame import MiddleFrame
@@ -22,6 +22,8 @@ from .frames.scrollable_console_frame import ScrollableConsoleFrame
 from .windows.circuit_editor_window import CircuitEditor
 from .windows.help_window import HelpWindow
 from .windows.state_editor_window import StateEditor
+from .windows.plotting_pulse_window import PlottingPulseWindow
+from .windows.plotting_circ_window import PlottingCircWindow
 from .windows.hpc_settings_window import HPCSettings, HPCDownload
 from .windows.plotting_window import PlottingWindow
 
@@ -41,14 +43,19 @@ class TensorHeomApp(ctk.CTk):
         self.title("TensorHEOM")
 
         # parameters
+        self.numQ = 2
+        self.directory = os.getcwd()
+        self.fileName = "some_filename"
         self.kwargs = {}
-        self.num_qubits = 2
-        self.qc = None
-        self.qc_filename = "development/circuit.qpy"
+
+        self.qc = QuantumCircuit(self.numQ)
+        self.qcFilePath = None
+        self.csvFilePath = None
+
+        self.params = {}
 
         # calculation 
         self.submissionParams, self.job_id = {}, "" # with HPC
-        self.result_filename = "development/result.csv" # without HPC
         self.t_list = None
         self.dm_list = None
 
@@ -89,9 +96,9 @@ class TensorHeomApp(ctk.CTk):
 
         # --------------------------------------------------------------
 
-        self.middle_frame.change_state("disabled")
-        self.right_frame.change_state1("disabled")
-        self.right_frame.change_state2("disabled")
+        # self.middle_frame.change_state("disabled")
+        # self.right_frame.change_state1("disabled")
+        # self.right_frame.change_state2("disabled")
 
     # ------------------------------------------------------------------
     # help frame functions
@@ -114,49 +121,48 @@ class TensorHeomApp(ctk.CTk):
     # ------------------------------------------------------------------
 
     def open_circuit_editor(self):
-        self.kwargs = self.left_frame.get_kwargs()
-        self.num_qubits = self.kwargs['numQ']
+
+        # get args from left frame
+        self.directory, self.fileName, self.numQ = self.left_frame.get_args()
+        self.qcFilePath = os.path.join(self.directory, 'qcData_' + self.fileName)
 
         # modifies self.qc
         print("Opening circuit editor window...")
         popup = CircuitEditor(self)
         popup.grab_set()
         self.wait_window(popup)
-        print(f"Circuit built successfully and saved as {self.qc_filename}")
-
-        self.continue_to_middle_frame()
+        print(f"Circuit built successfully and saved as {self.qcFilePath}")
 
     def upload_circuit(self):
-        self.kwargs = self.left_frame.get_kwargs()
-        self.num_qubits = self.kwargs['numQ']
+
+        # get args from left frame
+        self.directory, self.fileName, self.numQ = self.left_frame.get_args()
+        self.qcFilePath = os.path.join(self.directory, 'qcData_' + self.fileName)
 
         # modifies self.qc
         print("Uploading circuit...")
-        filepath = filedialog.askopenfilename(filetypes=[("QPY files", "*.qpy")])
-        with open(filepath, "rb") as f:
-            circuits = qpy.load(f)
-        self.qc = circuits[0]
+        self.qcFilePath = filedialog.askopenfilename(filetypes=[("QPY files", "*.qpy")])
+        self.qc = loadQC(self.qcFilePath)
         print("Info: Circuit uploaded successfully.")
-
-        self.continue_to_middle_frame()
 
     def continue_to_middle_frame(self):
 
-        if self.kwargs['architecture'] == 'ladder':
-            print('Warning: ladder architecture is not yet supported.')
-            return
+        self.qcFilePath = os.path.join(self.directory, 'qcData_' + self.fileName)
+        self.csvFilePath = os.path.join(self.directory, self.fileName + '.csv')
         
         if self.qc is None:
             print("Please define a quantum circuit to continue.")
             return 
         
-        if self.qc.num_qubits != self.num_qubits:
-            print(f"Warning: Uploaded circuit has {self.qc.num_qubits} qubits, but {self.num_qubits} were specified. Using {self.qc.num_qubits} qubits.")
-            self.num_qubits = self.qc.num_qubits
-            self.kwargs['numQ'] = self.num_qubits
+        if self.qc.num_qubits != self.numQ:
+            print(f"Warning: Uploaded circuit has {self.qc.num_qubits} qubits, but {self.numQ} were specified. Using {self.qc.num_qubits} qubits.")
+            self.numQ = self.qc.num_qubits
 
-        # set default initial state
-        self.kwargs['rhoIni'] = q.tensor( [q.fock_dm(2,0) for _ in range(self.num_qubits)] ).full().real
+        # set kwargs
+        self.kwargs['directory'] = self.directory
+        self.kwargs['fileName'] = self.fileName
+        self.kwargs['numQ'] = self.numQ
+        self.kwargs['rhoIni'] = q.tensor( [q.fock_dm(2,0) for _ in range(self.numQ)] ).full().real
 
         # enable middle frame
         self.left_frame = LeftFrame(self)
@@ -189,29 +195,35 @@ class TensorHeomApp(ctk.CTk):
         """ Proceed to right frame and prepare kwargs for calculation. """
 
         # update kwargs
-        self.kwargs.update(self.middle_frame.get_kwargs())
-        self.kwargs['V'] = np.array([[[0, 1],[1, 0]] for _ in range(self.num_qubits)], dtype=np.complex128)
-        self.kwargs['stride'] = int(self.kwargs['strideTime'] / self.kwargs['dtFB']) 
+        freqQ, gateTime, T, T1, omegaC, exp, tol, idlingTime, dtFB, depth, bondDim, useRFPlus, isRK13 = self.middle_frame.get_args()
+        self.kwargs['freqQ'] = freqQ
+        self.kwargs['gateTime'] = gateTime
+        self.kwargs['T'] = T
+        self.kwargs['T1'] = T1
+        self.kwargs['omegaC'] = omegaC
+        self.kwargs['exp'] = exp
+        self.kwargs['tol'] = tol
+        self.kwargs['idlingTime'] = idlingTime
+        self.kwargs['dtFB'] = dtFB
+        self.kwargs['depth'] = depth
+        self.kwargs['bondDim'] = bondDim
+        self.kwargs['useRFPlus'] = useRFPlus
+        self.kwargs['isRK13'] = isRK13
+        self.kwargs['strideTime'] = 0.1 # TODO
 
-        # rho
-        self.kwargs['rho'] = {
-            'numQ': self.kwargs['numQ'], 
-            'rhoIni': self.kwargs['rhoIni'], 
-            'omegaQ': self.kwargs['omegaQ'],
-            }
-
-        # gateList
-        kwargs1Q = [{'omega': -self.kwargs['omegaQ'][i], 'gateTime': self.kwargs['gate_time'][i]} for i in range(self.num_qubits) ]
-        kwargs2Q = {'gateTime': self.kwargs['gate_time'][0]/2}
-        gateList1Q = [[[i], 'rxyStep', kwargs1Q[i]] for i in range(self.num_qubits)]
-        gateList2Q = [[[i, i+1], 'directCplStepVarJ', kwargs2Q] for i in range(self.num_qubits - 1)]
-        self.kwargs['gateList'] = gateList1Q + gateList2Q
-
-        print(self.kwargs)
+        self.kwargs['qc'] = self.qc
 
         # enable right frame
         self.middle_frame.change_state("disabled")
         self.right_frame.change_state1("normal")
+
+    def open_plotting_pulse_window(self):
+        print("Opening pulse sequence plotting window...")
+        PlottingPulseWindow(self)
+        PlottingCircWindow(self)
+        
+    def plot_pulse_seq(self):
+        return plotPulseSeq(**self.kwargs)
 
     # ------------------------------------------------------------------
     # right frame functions
@@ -223,6 +235,7 @@ class TensorHeomApp(ctk.CTk):
         print("Uploading result file...")
         filepath = filedialog.askopenfilename(filetypes=[("CSV files", "*.csv")])
         self.t_list, self.dm_list = loadResult(filepath)
+        self.t_list /= self.params['omegaQmax']
         print("Info: Result file uploaded successfully.")
 
         # enable lower right frame
@@ -232,10 +245,11 @@ class TensorHeomApp(ctk.CTk):
         """Submit local calculation job."""
 
         t0 = time.time()
-        filtered = filter_kwargs(main, self.kwargs)
-        main(self.result_filename, self.qc, **filtered)
-        self.t_list, self.dm_list = loadResult(self.result_filename)
-        print(f"Calculation finished in {time.time()-t0}s. Saved as {self.result_filename}.")
+        calcTimeEvo(**self.kwargs)
+
+        self.t_list, self.dm_list = loadResult(self.csvFilePath)
+        self.t_list /= self.params['omegaQmax']
+        print(f"Calculation finished in {time.time()-t0}s. Saved as {self.csvFilePath}.")
 
         # enable lower right frame
         self.right_frame.change_state2("normal")
@@ -251,8 +265,12 @@ class TensorHeomApp(ctk.CTk):
 
         # submit job
         print("Submitting job to HPC...")
-        filtered = filter_kwargs(submitJob, self.kwargs)
-        self.job_id = submitJob(self.submissionParams, self.qc, **filtered)
+        stride = int(self.kwargs['strideTime'] / self.kwargs['dtFB'])
+        args = prepareArgs(self.kwargs['numQ'], self.kwargs['freqQ'], self.kwargs['gateTime'], self.kwargs['T'], self.kwargs['T1'], self.wargs['omegaC'], 
+            self.kwargs['exp'], self.kwargs['tol'], self.kwargs['rhoIni'], self.kwargs['idlingTime'], self.kwargs['dtFB'], self.kwargs['depth'], self.kwargs['bondDim'])
+        omegaQmax, rho, bondDim, V, depth, bath, gateList, dtFB, idlingTime = args
+        self.job_id = submitJob(self.submissionParams, self.qcFilePath, omegaQmax, self.kwargs['qc'], idlingTime, gateList, rho,
+          bath, V, dtFB, stride, depth, bondDim, useRFPlus=self.wargs['useRFPlus'], isRK13=self.kwargs['isRK13'])
 
     def download_file(self):
         """Download result file from HPC."""
@@ -263,6 +281,7 @@ class TensorHeomApp(ctk.CTk):
         self.wait_window(popup)
 
         self.t_list, self.dm_list = loadResult(self.job_id + ".csv")
+        self.t_list /= self.params['omegaQmax']
         print(f"Info: Result file downloaded successfully and saved as {self.job_id}.csv.")
 
         # enable lower right frame
@@ -299,7 +318,7 @@ class TensorHeomApp(ctk.CTk):
     def calculate_concurrence(self):
         """Concurrence calculation for 2 qubits only."""
 
-        if not self.num_qubits == 2:
+        if not self.numQ == 2:
             print("Concurrence is only defined for 2 qubits.")
             return None
     
@@ -311,7 +330,8 @@ class TensorHeomApp(ctk.CTk):
     
     def plot(self):  
         """Plotting window."""
-        self.plot_kwargs = self.right_frame.get_kwargs()
+        plot_type = self.right_frame.get_args()
+        self.plot_kwargs['plot_type'] = plot_type
         PlottingWindow(self)
 
 # ----------------------------------------------------------------------

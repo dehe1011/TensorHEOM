@@ -1,8 +1,7 @@
 import customtkinter as ctk
 import sys
 import io
-from qiskit import QuantumCircuit
-from qiskit import qpy
+import qiskit.qpy as qpy
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 # ----------------------------------------------------------------------
@@ -14,8 +13,6 @@ class CircuitEditor(ctk.CTkToplevel):
         self.geometry("400x600")
         self.master = master
 
-        self.master.qc = QuantumCircuit(self.master.num_qubits)
-
         # Instruction label
         label = ctk.CTkLabel(self, text="Please define your circuit below.")
         label.pack(pady=10)
@@ -26,8 +23,8 @@ class CircuitEditor(ctk.CTkToplevel):
         self.code_box.insert("1.0", "from qiskit import QuantumCircuit\n")
         self.code_box.insert("2.0", "from qiskit.circuit.random import random_circuit\n")
         self.code_box.insert("3.0", "\n")
-        self.code_box.insert("4.0", f"# qc = QuantumCircuit({master.num_qubits})\n")
-        self.code_box.insert("5.0", f"qc = random_circuit(num_qubits={master.num_qubits}, depth=3, max_operands=2)")
+        self.code_box.insert("4.0", f"# qc = QuantumCircuit({master.numQ})\n")
+        self.code_box.insert("5.0", f"qc = random_circuit(num_qubits={master.numQ}, depth=3, max_operands=2)")
 
         # Run + Save button
         self.run_button = ctk.CTkButton(self, text="Build & Save Circuit", command=self.build_circuit)
@@ -54,12 +51,14 @@ class CircuitEditor(ctk.CTkToplevel):
             exec(user_code, {}, local_env)
             self.master.qc = local_env["qc"]
 
-            with open(self.master.qc_filename, "wb") as f:
-                qpy.dump(self.master.qc, f)
-
             # Clear old drawing in frame
             for widget in self.draw_frame.winfo_children():
                 widget.destroy()
+
+            # save qc 
+            with open(self.master.qcFilePath+'.qpy', 'wb') as file:
+                qpy.dump(self.master.qc, file)
+            print(f"Circuit built successfully and saved as {self.master.qcFilePath}")
 
             # Draw with matplotlib
             fig = self.master.qc.draw(output="mpl")

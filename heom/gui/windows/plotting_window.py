@@ -1,7 +1,6 @@
 import os
 
 import numpy as np
-import qutip as q
 import customtkinter as ctk
 import matplotlib.pyplot as plt
 from qiskit.quantum_info import Operator
@@ -75,7 +74,9 @@ class PlottingWindow(ctk.CTkToplevel):
 
     def plot_concurrence(self):
 
-        if not self.master.num_qubits == 2:
+        self.fig, self.ax = plt.subplots()
+
+        if self.master.numQ != 2:
             print("Concurrence is only defined for 2 qubits.")
             return
                   
@@ -90,17 +91,15 @@ class PlottingWindow(ctk.CTkToplevel):
             C = max(0, eigenvals[0] - sum(eigenvals[1:]))
             concs.append(C)
 
-        self.fig, self.ax = plt.subplots()
         self.ax.plot(self.master.t_list, concs)
         self.ax.set_xlabel("Time [ns]")
         self.ax.set_ylabel("Concurrence")
-        self.ax.set_ylim(0, 1.05)
+        self.ax.set_ylim(-0.02, 1.02)
 
     def plot_fidelity(self):
 
-        U = Operator(self.master.qc).data
-        default_rhoIni = q.tensor( [q.fock_dm(2,0) for _ in range(self.master.kwargs['numQ'])] ).full()
-        rhoIni = self.master.kwargs.get('rhoIni', default_rhoIni)
+        U = Operator(self.master.kwargs['qc']).data
+        rhoIni = self.master.kwargs['rhoIni']
         target = U @ rhoIni @ U.conj().T
         fids = [np.real(np.trace(rho @ target)) for rho in self.master.dm_list]
 
@@ -108,7 +107,7 @@ class PlottingWindow(ctk.CTkToplevel):
         self.ax.plot(self.master.t_list, fids)
         self.ax.set_xlabel("Time [ns]")
         self.ax.set_ylabel("Fidelity")
-        self.ax.set_ylim(0, 1.05)
+        self.ax.set_ylim(-0.02, 1.02)
 
     def plot_dm(self):
         
