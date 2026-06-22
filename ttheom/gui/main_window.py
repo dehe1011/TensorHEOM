@@ -124,7 +124,9 @@ class TensorHeomApp(ctk.CTk):
     def open_circuit_editor(self):
 
         # get args from left frame
-        self.directory, self.fileName, self.numQ = self.left_frame.get_args()
+        self.directory_display, self.fileName, self.numQ = self.left_frame.get_args()
+        self.directory = os.path.join(os.getcwd(), self.directory_display)
+        os.makedirs(self.directory, exist_ok=True)
         self.qcFilePath = os.path.join(self.directory, 'qcData_' + self.fileName)
 
         # modifies self.qc

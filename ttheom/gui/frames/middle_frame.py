@@ -89,12 +89,12 @@ class MiddleFrame(ctk.CTkFrame):
         self.exponent_label = ctk.CTkLabel(self, text="Exponent:") 
         self.exponent_label.grid(row=row, column=0, padx=10, pady=10)
         self.exponent_entry = ctk.CTkEntry(self)
-        self.exponent_entry.insert(0, "1")
+        self.exponent_entry.insert(0, "0.125")
         self.exponent_entry.grid(row=row, column=1, padx=10, pady=10)
         row += 1
         
         # cutoff frequency label and entry
-        self.omegaC_label = ctk.CTkLabel(self, text="Cutoff frequency (GHz):")
+        self.omegaC_label = ctk.CTkLabel(self, text="Cutoff frequency:")
         self.omegaC_label.grid(row=row, column=0, padx=10, pady=10)
         self.omegaC_entry = ctk.CTkEntry(self)
         self.omegaC_entry.insert(0, 20) # omegaC = 20 * 2 * np.pi / omegaQ_max
@@ -135,7 +135,7 @@ class MiddleFrame(ctk.CTkFrame):
         self.dtFB_label = ctk.CTkLabel(self, text="Simulation step (ps):")
         self.dtFB_label.grid(row=row, column=0, padx=10, pady=10)
         self.dtFB_entry = ctk.CTkEntry(self)
-        self.dtFB_entry.insert(0, 1) # 1
+        self.dtFB_entry.insert(0, 3) # 3
         self.dtFB_entry.grid(row=row, column=1, padx=10, pady=10)
         row += 1
 
@@ -193,7 +193,7 @@ class MiddleFrame(ctk.CTkFrame):
             gateTime = gateTimeOneQ + gateTimeTwoQ
             T = float(self.temperature_entry.get())
             T1 = float(self.T1_time_entry.get())
-            omegaC = float(self.omegaC_entry.get()) * 2 * np.pi
+            omegaC = float(self.omegaC_entry.get()) #* 2 * np.pi
             exp = float(self.exponent_entry.get())
             tol = float(self.tol_entry.get())
             idlingTime = float(self.idling_time_entry.get())

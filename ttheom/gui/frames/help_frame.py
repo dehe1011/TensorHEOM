@@ -22,7 +22,7 @@ class HelpFrame(ctk.CTkFrame):
         row += 1
 
         # Load image with PIL
-        img = Image.open(os.path.join(ROOT_DIR, "docs", "figures", "logo.png"))
+        img = Image.open(os.path.join(ROOT_DIR, "ttheom", "figures", "logo.png"))
         width = 150
         aspect_ratio = img.height / img.width
         height = int(width * aspect_ratio)
