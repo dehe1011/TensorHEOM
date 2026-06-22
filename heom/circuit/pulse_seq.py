@@ -150,3 +150,5 @@ def setPulseSeq(qc: QuantumCircuit, TTs: TTs, omegaQ: list[float],
 
     for i in range(numQubits):
         TTs.omegaQSeq[i] = TTs.omegaQSeq[i][0:en]
+    
+    return qcScheduled
