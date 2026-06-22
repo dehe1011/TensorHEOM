@@ -22,8 +22,11 @@ class HelpFrame(ctk.CTkFrame):
         row += 1
 
         # Load image with PIL
-        img = Image.open(os.path.join(ROOT_DIR,"docs", "figures", "entangling_qc.png"))
-        ctk_img = ctk.CTkImage(light_image=img, size=(100, 100/1.3))
+        img = Image.open(os.path.join(ROOT_DIR, "docs", "figures", "logo.png"))
+        width = 150
+        aspect_ratio = img.height / img.width
+        height = int(width * aspect_ratio)
+        ctk_img = ctk.CTkImage(light_image=img, size=(width, height))
 
         # Use in CTkLabel
         label = ctk.CTkLabel(self, image=ctk_img, text="")

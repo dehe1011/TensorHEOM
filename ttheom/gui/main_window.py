@@ -44,8 +44,9 @@ class TensorHeomApp(ctk.CTk):
 
         # parameters
         self.numQ = 2
-        self.directory = os.getcwd()
-        self.fileName = "some_filename"
+        self.directory_display = 'simulations_GUI'
+        self.directory = os.path.join(os.getcwd(), self.directory_display)
+        self.fileName = "package_test"
         self.kwargs = {}
 
         self.qc = QuantumCircuit(self.numQ)

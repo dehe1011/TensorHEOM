@@ -54,7 +54,7 @@ class PlottingWindow(ctk.CTkToplevel):
             row=0, column=0, columnspan=2, padx=10, pady=10, sticky="nsew"
         )
 
-        if self.master.plot_kwargs['plot_type'] == 'Density matrix':
+        if self.master.plot_kwargs['plot_type'] == 'RDO':
             self.plot_dm()
 
         if self.master.plot_kwargs['plot_type'] == 'Fidelity':

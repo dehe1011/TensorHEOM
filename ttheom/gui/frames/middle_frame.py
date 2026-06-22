@@ -36,7 +36,7 @@ class MiddleFrame(ctk.CTkFrame):
         self.idling_time_label = ctk.CTkLabel(self, text="Idling time (ns):")
         self.idling_time_label.grid(row=row, column=0, padx=10, pady=10)
         self.idling_time_entry = ctk.CTkEntry(self)
-        self.idling_time_entry.insert(0, 0.1) # omegaQ_max * 0.1
+        self.idling_time_entry.insert(0, 1) # omegaQ_max * 1
         self.idling_time_entry.grid(row=row, column=1, padx=10, pady=10)
         row += 1
 
@@ -97,7 +97,7 @@ class MiddleFrame(ctk.CTkFrame):
         self.omegaC_label = ctk.CTkLabel(self, text="Cutoff frequency (GHz):")
         self.omegaC_label.grid(row=row, column=0, padx=10, pady=10)
         self.omegaC_entry = ctk.CTkEntry(self)
-        self.omegaC_entry.insert(0, 50) # omegaC = 50 * 2 * np.pi / omegaQ_max
+        self.omegaC_entry.insert(0, 20) # omegaC = 20 * 2 * np.pi / omegaQ_max
         self.omegaC_entry.grid(row=row, column=1, padx=10, pady=10)
         row += 1
 
@@ -132,7 +132,7 @@ class MiddleFrame(ctk.CTkFrame):
         row += 1
 
         # dtFB label and entry
-        self.dtFB_label = ctk.CTkLabel(self, text="Simulation step (fs):")
+        self.dtFB_label = ctk.CTkLabel(self, text="Simulation step (ps):")
         self.dtFB_label.grid(row=row, column=0, padx=10, pady=10)
         self.dtFB_entry = ctk.CTkEntry(self)
         self.dtFB_entry.insert(0, 1) # 1

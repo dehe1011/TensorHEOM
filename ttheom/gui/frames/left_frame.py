@@ -79,7 +79,7 @@ class LeftFrame(ctk.CTkFrame):
         self.directory_label.grid(row=row, column=0, padx=10, pady=10)
         row += 1
         self.directory_entry = ctk.CTkEntry(self)
-        self.directory_entry.insert(0, self.master.directory)
+        self.directory_entry.insert(0, self.master.directory_display)
         self.directory_entry.grid(row=row, column=0, padx=10, pady=10)
         row += 1
 

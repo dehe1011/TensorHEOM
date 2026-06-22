@@ -104,9 +104,9 @@ class RightFrame(ctk.CTkFrame):
 
         # plot combobox
         self.plot_combobox = ctk.CTkComboBox(
-            self, values=["Density matrix", "Fidelity", "Concurrence", "other options"]
+            self, values=["RDO", "Fidelity", "Concurrence"]
         )
-        self.plot_combobox.set("Density matrix")
+        self.plot_combobox.set("RDO")
         self.plot_combobox.grid(row=row, column=0, columnspan=1, padx=10, pady=10)
         # row += 1
 
