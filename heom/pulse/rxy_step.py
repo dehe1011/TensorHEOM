@@ -8,6 +8,7 @@ class rxyStep(U3Pulse):
         attributes:
             amp (float): amplitude of pulse
             omega (float): drive frequency
+            gateTime (float): gate time of RXGate(pi)
             ampSeq (numpy.ndarray): array of amplitude sequence
             phaseSeq (numpy.ndarray): array of phase sequence
     """
@@ -20,11 +21,9 @@ class rxyStep(U3Pulse):
                     kwargs['omega'] (float): drive frequency
         """
 
-        gateTime = kwargs['gateTime']
-        omega = kwargs['omega']
-
-        self.amp = np.pi / gateTime
-        self.omega = omega
+        self.gateTime = kwargs['gateTime']
+        self.omega = kwargs['omega']
+        self.amp = np.pi / self.gateTime
 
     def getGateTime(self, dt: float, params: list) -> int:
         """get gate time in the unit of dt

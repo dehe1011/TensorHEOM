@@ -10,6 +10,7 @@ class directCplStepVarJ(iSwapDPulse):
 
         attributes:
             amp (float): amplitude of pulse
+            gateTime (float): gate time of XXPlusYYGate(pi) (= iSwapD)
             JSeq (numpy.ndarray):
                 sequence of coupling strength between qubits
     """
@@ -23,8 +24,8 @@ class directCplStepVarJ(iSwapDPulse):
         """
         super().__init__(**kwargs)
 
-        gateTime = kwargs['gateTime']
-        self.amp = np.pi / 2 / gateTime
+        self.gateTime = kwargs['gateTime']
+        self.amp = np.pi / 2 / self.gateTime
 
     def getGateTime(self, dt: float, params: list) -> int:
         """get gate time in the unit of dt
