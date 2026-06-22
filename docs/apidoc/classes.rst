@@ -52,17 +52,17 @@ Time evolution
 .. autofunction:: zRightOrth
 .. autofunction:: calcDynamics
 .. autofunction:: outputCurrentStates
-.. autofunction::getRotatingRDO
+.. autofunction:: getRotatingRDO
 
-Running Simulations on HPC 
+Running Simulations on HPC
 --------------------------
 
 .. currentmodule:: ttheom.ssh
 
-.. autofunction::slurmShell # slurm.py
-.. autofunction::slurmStatus # slurm.py
-.. autofunction::commandsForSubmission # commands.py
-.. autofunction::getStatus # commands.py
-.. autofunction::getClient # connect_ssh.py
-.. autofunction::submitJob # job_control.py
-.. autofunction::downloadResult # job_control.py
+.. autofunction:: slurmShell
+.. autofunction:: slurmStatus
+.. autofunction:: commandsForSubmission
+.. autofunction:: getStatus
+.. autofunction:: getClient
+.. autofunction:: submitJob
+.. autofunction:: downloadResult

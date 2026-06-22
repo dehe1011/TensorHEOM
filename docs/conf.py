@@ -1,7 +1,40 @@
 import os
 import sys
+from unittest.mock import MagicMock
 
 sys.path.insert(0, os.path.abspath(".."))
+
+# Mock optional packages that may be unavailable in the docs build environment
+_MOCK_MODULES = [
+    "customtkinter",
+    "tkinter",
+    "tkinter.filedialog",
+    "tkinter.scrolledtext",
+    "PIL",
+    "PIL.Image",
+    "PIL.ImageTk",
+    "matplotlib.backends.backend_tkagg",
+    "baryrat",
+    "paramiko",
+    "tqdm",
+    "qiskit",
+    "qiskit.qpy",
+    "qiskit.circuit",
+    "qiskit.circuit.library",
+    "qiskit.quantum_info",
+    "qiskit.transpiler",
+    "qutip",
+    "scipy",
+    "scipy.constants",
+    "scipy.integrate",
+    "scipy.linalg",
+    "pandas",
+    "matplotlib",
+    "matplotlib.pyplot",
+    "matplotlib.style",
+]
+for _mod in _MOCK_MODULES:
+    sys.modules[_mod] = MagicMock()
 
 import ttheom
 
@@ -17,13 +50,26 @@ extensions = [
     "sphinxcontrib.bibtex",
     "sphinx.ext.autodoc",
     "sphinx.ext.autosummary",
-    "sphinx.ext.autodoc",
     "nbsphinx",
     "sphinx.ext.napoleon",
     "sphinx.ext.mathjax",
     "sphinx.ext.viewcode",
 ]
 autosummary_generate = True
+
+autodoc_mock_imports = [
+    "customtkinter",
+    "tkinter",
+    "PIL",
+    "baryrat",
+    "paramiko",
+    "tqdm",
+    "qiskit",
+    "scipy",
+    "pandas",
+    "matplotlib",
+    "nbsphinx",
+]
 
 # Indicate BibTex file
 bibtex_bibfiles = ["biblio.bib"]
@@ -50,10 +96,9 @@ add_function_parentheses = False
 # Do not add full module names
 add_module_names = False
 
-numpydoc_show_inherited_class_members = False  # Show inherited class members in the documentation
-numpydoc_show_property_with_doc = (
-    False  # Show properties with documentation in the class documentation
-)
+numpydoc_show_class_members = False  # Suppress per-class method autosummary tables (avoids stub-not-found warnings)
+numpydoc_show_inherited_class_members = False
+numpydoc_show_property_with_doc = False
 
 autodoc_default_options = {
     "members": True,  # Include all members of the class/module

@@ -1,13 +1,21 @@
 import numpy as np
 
 def getLogarithmicNegativity(rho, transposeQIdx):
-    """compute logarithmic negativity
+    """Compute the logarithmic negativity of a multi-qubit density matrix.
 
-        args:
-            rho (numpy.ndarray): density martix in the shape of 2^N x 2^N
-                In the order of (N-1)th qubit, (N-2)th qubit, ... 0th qubit
+    Parameters
+    ----------
+    rho : numpy.ndarray
+        Density matrix of shape ``(2**N, 2**N)``.
+        Row/column ordering: qubit ``N-1`` is the most significant index,
+        qubit ``0`` is the least significant.
+    transposeQIdx : list of int
+        Indices of qubits on which the partial transpose is performed.
 
-        returns: logarithmic negativity
+    Returns
+    -------
+    float
+        Logarithmic negativity :math:`E_N(\\rho) = \\log_2 \\|\\rho^{T_A}\\|_1`.
     """
 
     numQ = int(np.log2(rho.shape[0]))

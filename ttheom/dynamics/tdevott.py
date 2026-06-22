@@ -6,23 +6,38 @@ from .opett import (zGetSegLeftSt, zGetSegLeft, zGetSegRightEn, zGetSegRight, zG
                     )
 
 class timeEvolution():
-    """ class for time evolution
+    """Time evolution of the tensor-train density operator via TDVP.
 
-        attributes:
-            dt (float): step width
-            numCore (int): number of cores
-            segArray (list): list of segments used for update of core
-            ZNRK (int): stage number of Runge-Kutta
-            zA, zB, zC (numpy.ndarray): parameters for Runge-Kutta
+    Attributes
+    ----------
+    dt : float
+        Step width.
+    numCore : int
+        Number of cores.
+    segArray : list
+        Segment tensors used for updating each core.
+    ZNRK : int
+        Number of stages in the Runge-Kutta scheme.
+    zA : numpy.ndarray
+        Runge-Kutta coefficient array A.
+    zB : numpy.ndarray
+        Runge-Kutta coefficient array B.
+    zC : numpy.ndarray
+        Runge-Kutta coefficient array C.
     """
     def __init__(self, TTsIni: TTs, dt: float, isRK13: bool):
-        """
-            args:
-                TTsIni (TTs.TTs): initialized MPS and MPO
-                dt (float): step witdh for forward/backward time integration
-                isRK13 (bool): Runge-Kutta method
-                    True: 13-stage 5th-order Runge-Kutta
-                    False: 5-stage 4th-order Runge-Kutta
+        """Initialize the time evolution object.
+
+        Parameters
+        ----------
+        TTsIni : TTs.TTs
+            Initialized MPS and MPO.
+        dt : float
+            Step width for forward/backward time integration.
+        isRK13 : bool
+            Runge-Kutta method selection.
+            ``True``: 13-stage 5th-order Runge-Kutta.
+            ``False``: 5-stage 4th-order Runge-Kutta.
         """
         self.dt = dt
         self.numH = TTsIni.numH
@@ -107,13 +122,17 @@ class timeEvolution():
             ])
 
     def zInitSegment(self, TTsIni: TTs):
-        """initialize 
+        """Initialize the segment tensors from the rightmost core.
 
-            args:
-                TTsIni (TTs.TTs): initialized MPS and MPO
+        Parameters
+        ----------
+        TTsIni : TTs.TTs
+            Initialized MPS and MPO.
 
-            reutrns:
-                segArray (list): list of segments used for update of core
+        Returns
+        -------
+        segArray : list
+            List of segment tensors used for updating each core.
         """
 
         segArray = [[None for _ in range(TTsIni.numCore)]
@@ -123,31 +142,34 @@ class timeEvolution():
         for j in range(self.numH):
             segArray[j][i] = zGetSegRightEn(TTsIni.rho[i],
                                                   TTsIni.H[j, i])
-            
+
         for i in range(TTsIni.numCore-2, 0, -1):
             for j in range(self.numH):
                 segArray[j][i] = zGetSegRight(TTsIni.rho[i],
                                                     TTsIni.H[j, i],
                                                     segArray[j][i+1])
-                
+
         i = 0
         for j in range(self.numH):
             segArray[j][i] = np.zeros(TTsIni.rho[i].bondDimL**2
-                                      * TTsIni.H[j, i].bondDimL, 
+                                      * TTsIni.H[j, i].bondDimL,
                                       dtype = np.complex128)
-            
+
         return segArray
 
     def zTTTimeEvo(self, rho, H, time, stepNum):
-        """time evolution of rho with H at time
+        """Perform one forward-backward TDVP sweep to advance ``rho`` by ``dt``.
 
-            args:
-                rho (numpy.ndarray): 1d array of tt.zTT (MPS)
-                            overwritten with output
-                H (numpy.ndarray): 
-                    2d array of tt.zTT (MPO), Hamiltonian
-                time (float): current time
-                stepNum (int): current step number
+        Parameters
+        ----------
+        rho : numpy.ndarray
+            1-D array of :class:`~ttheom.tt.tt.zTT` (MPS); overwritten in place.
+        H : numpy.ndarray
+            2-D array of :class:`~ttheom.tt.tt.zTT` (MPO) representing the Hamiltonian.
+        time : float
+            Current time.
+        stepNum : int
+            Current step number.
         """
 
         numCore = len(rho)
@@ -168,7 +190,7 @@ class timeEvolution():
             intBonds[j] = H[j, i].bondDimR
 
         self.zSRK4(S, i, rho[i].bondDimR, intBonds, time)
-        
+
         for i in range(1, numCore - 1):
             zGetSK(S, rho[i])
 
@@ -211,7 +233,7 @@ class timeEvolution():
                     rho[i], H[j, i], self.segArray[j][i + 1])
                 intBonds[j] = H[j, i].bondDimL
 
-            self.zSRK4(S, i - 1, rho[i].bondDimL, 
+            self.zSRK4(S, i - 1, rho[i].bondDimL,
                        intBonds, time + self.dt)
 
         i = 0
@@ -219,14 +241,18 @@ class timeEvolution():
         self.zKRK4St(rho[i], H[:, i], i, time + self.dt)
 
     def zKRK4St(self, rho, H, coreIdx, time):
-        """RK integration of K at starting point
+        """Apply the Runge-Kutta update to the first (starting) core.
 
-            args:
-                rho (tt.zTT): MPS
-                              overwritten with output
-                H (numpy.ndarray): array of MPO
-                coreIdx (int): index of the core
-                time (float): current time
+        Parameters
+        ----------
+        rho : tt.zTT
+            MPS core; overwritten in place.
+        H : numpy.ndarray
+            Array of MPO cores.
+        coreIdx : int
+            Index of the current core.
+        time : float
+            Current time.
         """
 
         dumCore1 = np.zeros(rho.core.shape, dtype=np.complex128)
@@ -240,18 +266,22 @@ class timeEvolution():
                 dumCore2 = zGetKSt(rho, H[j],
                                    self.segArray[j][coreIdx+1])
                 dumCore1 += preFact[j] * dumCore2
-            
+
             rho.core += self.zB[i] * dumCore1
 
     def zKRK4En(self, rho, H, coreIdx, time):
-        """RK integration of K at ending point
-        
-            args:
-                rho (tt.zTT): MPS
-                              overwritten with output
-                H (numpy.ndarray): array of MPO
-                coreIdx (int): index of the core
-                time (float): current time
+        """Apply the Runge-Kutta update to the last (ending) core.
+
+        Parameters
+        ----------
+        rho : tt.zTT
+            MPS core; overwritten in place.
+        H : numpy.ndarray
+            Array of MPO cores.
+        coreIdx : int
+            Index of the current core.
+        time : float
+            Current time.
         """
 
         dumCore1 = np.zeros(rho.core.shape, dtype=np.complex128)
@@ -265,18 +295,22 @@ class timeEvolution():
                 dumCore2 = zGetKEn(rho, H[j],
                                          self.segArray[j][coreIdx-1])
                 dumCore1 += preFact[j] * dumCore2
-            
+
             rho.core += self.zB[i] * dumCore1
 
     def zKRK4(self, rho, H, coreIdx, time):
-        """RK integration of K (intermediate)
-        
-            args:
-                rho (tt.zTT): MPS
-                              overwritten with output
-                H (numpy.ndarray): array of MPO
-                coreIdx (int): index of the core
-                time (float): current time
+        """Apply the Runge-Kutta update to an intermediate core.
+
+        Parameters
+        ----------
+        rho : tt.zTT
+            MPS core; overwritten in place.
+        H : numpy.ndarray
+            Array of MPO cores.
+        coreIdx : int
+            Index of the current core.
+        time : float
+            Current time.
         """
 
         dumCore1 = np.zeros(rho.core.shape, dtype=np.complex128)
@@ -291,21 +325,26 @@ class timeEvolution():
                     self.segArray[j][coreIdx-1],
                     self.segArray[j][coreIdx+1])
                 dumCore1 += preFact[j] * dumCore2
-            
+
             rho.core += self.zB[i] * dumCore1
 
     def zSRK4(self, S, coreIdx, rhoR, HRs, time):
-        """RK integration for S
+        """Apply the Runge-Kutta update to the bond matrix S.
 
-            args:
-                S (numpy.ndarray): matrix S
-                                   overwritten with output
-                coreIdx (int): core index
-                rhoR (int): right bond dimension of rho
-                HRs (list): list of right bond dimension of H
-                time (float): current time
+        Parameters
+        ----------
+        S : numpy.ndarray
+            Bond matrix; overwritten in place.
+        coreIdx : int
+            Core index to the left of the bond.
+        rhoR : int
+            Right bond dimension of ``rho``.
+        HRs : list of int
+            Right bond dimensions of each Hamiltonian term.
+        time : float
+            Current time.
         """
-        
+
         dumS1 = np.zeros(S.shape, dtype=np.complex128)
 
         for i in range(self.ZNRK):
@@ -322,14 +361,16 @@ class timeEvolution():
             S += self.zB[i] * dumS1
 
 def zRightOrth(rho):
-    """right-orthogonalization of cores (initalization)
+    """Right-orthogonalize all MPS cores (initialization sweep).
 
-        args:
-            rho (numpy.ndarray): 1d array of tt.zTT
+    Parameters
+    ----------
+    rho : numpy.ndarray
+        1-D array of :class:`~ttheom.tt.tt.zTT` MPS cores; modified in place.
     """
 
     numCore = len(rho)
-    
+
     # Start from the last core
     i = numCore - 1
     rhoTmp, S = zQRRight(rho[i])
