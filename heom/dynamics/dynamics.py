@@ -1,3 +1,4 @@
+from time import time
 from tqdm import tqdm
 import numpy as np
 from scipy.integrate import simpson
@@ -18,14 +19,17 @@ def calcDynamics(dtFB: float, stride: int,
     """
 
     totalStep = len(TTs.omegaQSeq[0])
+    print(f'Total step: {totalStep}')
     dataSize = int(totalStep / stride)
     mod = int(totalStep % stride)
 
     for i in tqdm(range(dataSize)):
+        # t0 = time()
         for j in range(stride):
             stepNum = i * stride + j
-            time = dtFB * stepNum
-            timeEvo.zTTTimeEvo(TTs.rho, TTs.H, time, stepNum)
+            t = dtFB * stepNum
+            timeEvo.zTTTimeEvo(TTs.rho, TTs.H, t, stepNum)
+        # print(f'Time: {(time() - t0)/len(range(stride)):.2f} sec')
         
         stepNum = (i+1) * stride
         outTime = f'{dtFB * (i+1) * stride: .15e},'
@@ -41,8 +45,8 @@ def calcDynamics(dtFB: float, stride: int,
     if mod > 0:
         for i in range(mod):
             stepNum = dataSize*stride + i
-            time = dtFB * stepNum
-            timeEvo.zTTTimeEvo(TTs.rho, TTs.H, time, stepNum)
+            t = dtFB * stepNum
+            timeEvo.zTTTimeEvo(TTs.rho, TTs.H, t, stepNum)
 
         stepNum = totalStep
         outTime = f'{dtFB * totalStep: .15e},'
@@ -79,11 +83,11 @@ def outputCurrentStates(dt: float, stepNum: int, TTs: TTs, file):
             file (file object): file for results
     """
 
-    time = stepNum * dt
+    t = stepNum * dt
     rhoOut = getRotatingRDO(dt, stepNum, TTs)
     rhoOut = TTs.permMat @ rhoOut @ TTs.permMat.T
     rhoOut = rhoOut.flatten()
-    outTime = f'{time: .15e},'
+    outTime = f'{t: .15e},'
     outRho = ','.join(f'{elem.real: .15e},{elem.imag: .15e}'
                           for elem in rhoOut)
     outStr = outTime + outRho + '\n'
