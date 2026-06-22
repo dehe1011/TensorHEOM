@@ -1,6 +1,6 @@
 from qiskit import QuantumCircuit
 import numpy as np
-from heom.main import main
+from ttheom.main import main
 
 def run_2q_02():
     fileName = 'rdo_2qubit02.csv'

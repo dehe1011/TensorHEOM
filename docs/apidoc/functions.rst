@@ -1,4 +1,4 @@
 Main Function
 =============
 
-.. autofunction:: heom.main.main
+.. autofunction:: ttheom.main.main

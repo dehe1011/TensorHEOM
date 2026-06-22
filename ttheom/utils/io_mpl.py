@@ -15,7 +15,7 @@ def load_mpl_style(filepath=None):
     stylelib_dir = os.path.join(config_dir, "stylelib")
     os.makedirs(stylelib_dir, exist_ok=True)
     if filepath is None:
-        filepath = os.path.join(ROOT_DIR, "heom", "heom-default.mplstyle")
+        filepath = os.path.join(ROOT_DIR, "ttheom", "ttheom-default.mplstyle")
     shutil.copy(filepath, stylelib_dir)
     plt.style.reload_library()
 

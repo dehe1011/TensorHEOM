@@ -1,6 +1,6 @@
 from qiskit import QuantumCircuit
 import numpy as np
-from heom.main import main
+from ttheom.main import main
 
 def run_1q_realistic():
     fileName = 'rdo_1qubit_realistic.csv'

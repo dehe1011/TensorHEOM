@@ -1,6 +1,6 @@
 from qiskit import QuantumCircuit
 import numpy as np
-from heom.main import main
+from ttheom.main import main
 
 def run_3q():
     fileName = 'rdo_3qubit.csv'

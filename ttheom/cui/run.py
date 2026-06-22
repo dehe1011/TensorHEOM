@@ -1,6 +1,6 @@
 from qiskit import qpy
 import numpy as np
-from heom.main import main
+from ttheom.main import main
 
 def run_cui(inputName: str, outputName: str):
     """run simulation using serialized file

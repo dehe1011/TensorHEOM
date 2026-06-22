@@ -3,12 +3,12 @@ import sys
 
 sys.path.insert(0, os.path.abspath(".."))
 
-import heom
+import ttheom
 
 project = "TensorHEOM"
-copyright = "2024, Dennis Herb"
+copyright = "2026, Dennis Herb"
 author = "Dennis Herb"
-release = heom.__version__
+release = ttheom.__version__
 
 
 extensions = [

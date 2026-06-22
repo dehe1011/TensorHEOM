@@ -1,5 +1,5 @@
 [project]
-name = "heom_dehe1011"
+name = "TensorHEOM_dehe1011"
 description = "A package to investigate environmental effects on quantum gates."
 readme = { file = "README.md", content-type = "text/markdown" }
 requires-python = ">=3.8"
@@ -16,10 +16,10 @@ authors = [
 dynamic = ["version", "dependencies", "optional-dependencies"]
 
 [tool.setuptools]
-packages = ["heom", "heom.gui"]
+packages = ["ttheom", "ttheom.gui"]
 
 [tool.setuptools.dynamic]
-version = {attr = "heom.__version__"}
+version = {attr = "ttheom.__version__"}
 dependencies = {file = "requirements/requirements.txt"}
 
 [tool.setuptools.dynamic.optional-dependencies]

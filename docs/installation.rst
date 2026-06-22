@@ -40,7 +40,7 @@ Steps
 
    .. code-block:: bash
 
-      pip install TensorHEOM
+      pip install ttheom
 
 
 Installation in editable mode via GitHub
@@ -55,7 +55,7 @@ Steps
 
    .. code-block:: bash
 
-      git clone https://github.com/dehe1011/HEOM.git
+      git clone https://github.com/dehe1011/TensorHEOM.git
 
 2. **Navigate to the Cloned Repository**:
 

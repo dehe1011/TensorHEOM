@@ -6,7 +6,7 @@ This section provides an overview of the available classes and functions contain
 Decomposition of bath auto-correlation functions
 ------------------------------------------------
 
-.. currentmodule:: heom.bath
+.. currentmodule:: ttheom.bath
 
 .. autofunction:: getBathParams
 .. autofunction:: broadbandNoise
@@ -14,7 +14,7 @@ Decomposition of bath auto-correlation functions
 Connection of quantum gates and pulse sequences
 -----------------------------------------------
 
-.. currentmodule:: heom.pulse
+.. currentmodule:: ttheom.pulse
 
 .. autofunction:: setGates
 .. autofunction:: getGate
@@ -26,7 +26,7 @@ Connection of quantum gates and pulse sequences
 Tensor Train representation
 ---------------------------
 
-.. currentmodule:: heom.tt
+.. currentmodule:: ttheom.tt
 
 .. autoclass:: TTs
 .. autoclass:: TTsTwoLevelId
@@ -37,7 +37,7 @@ Tensor Train representation
 Compilation of Qiskit circuits to pulse sequences
 -------------------------------------------------
 
-.. currentmodule:: heom.circuit
+.. currentmodule:: ttheom.circuit
 
 .. autofunction:: setPulseSeq
 .. autofunction:: transform
@@ -46,7 +46,7 @@ Compilation of Qiskit circuits to pulse sequences
 Time evolution
 --------------
 
-.. currentmodule:: heom.dynamics
+.. currentmodule:: ttheom.dynamics
 
 .. autoclass:: timeEvolution
 .. autofunction:: zRightOrth
@@ -57,7 +57,7 @@ Time evolution
 Running Simulations on HPC 
 --------------------------
 
-.. currentmodule:: heom.ssh
+.. currentmodule:: ttheom.ssh
 
 .. autofunction::slurmShell # slurm.py
 .. autofunction::slurmStatus # slurm.py
