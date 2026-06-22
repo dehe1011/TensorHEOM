@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 
-def loadResult(csv_file):
+def loadResult(csvFilePath):
     """
     Load timesteps and density matrices from CSV.
 
@@ -19,7 +19,7 @@ def loadResult(csv_file):
     rhos : list of np.ndarray
         List of density matrices, one per row.
     """
-    df = pd.read_csv(csv_file)
+    df = pd.read_csv(csvFilePath, header=None)
     times = df.iloc[:, 0].to_numpy()
     data = df.iloc[:, 1:].to_numpy()
 
