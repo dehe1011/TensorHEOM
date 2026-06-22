@@ -1,6 +1,6 @@
 [project]
-name = "TensorHEOM_dehe1011"
-description = "A package to investigate environmental effects on quantum gates."
+name = "ttheom_dehe1011"
+description = "A Python package for simulating quantum circuits in non-Markovian environments using free-pole hierarchical equations of motion (FP-HEOM) and tensor-train (TT) compression."
 readme = { file = "README.md", content-type = "text/markdown" }
 requires-python = ">=3.8"
 license = "BSD-3-Clause"
@@ -10,8 +10,8 @@ classifiers = [
 ]
 
 authors = [
-    { name = "Kiyoto Nakamura", email = "kiyoto.nakamura@uni-ulm.de" },
-    { name = "Dennis Herb", email = "dennis.herb@uni-ulm.de" },
+    { name = "Kiyoto Nakamura" },
+    { name = "Dennis Herb" },
 ]
 dynamic = ["version", "dependencies", "optional-dependencies"]
 
@@ -27,7 +27,7 @@ dev = { file = "requirements/dev-requirements.txt" }
 docs = { file = "requirements/doc-requirements.txt" }
 
 [project.urls]
-repository = "https://github.com/dehe1011/HEOM"
+repository = "https://github.com/dehe1011/TensorHEOM"
 
 [build-system]
 requires = ["setuptools>=61.0", "wheel"]

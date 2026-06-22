@@ -47,53 +47,59 @@ A typical workflow is:
 
 ```python
 from qiskit import QuantumCircuit
-from ttheom import *calcTimeEvo*
+from ttheom import *
 
+# Set system parameters
 system_kwargs = {
-    "numQ": 1,
-    "freqQ": [5], # GHz
-    "rhoIni": np.array([[1,0],[0,0]]),
-    "gateTime": [16], # ns
+    "numQ": 2,
+    "freqQ": [5, 5], # GHz
+    "rhoIni": [
+        [1, 0, 0, 0],
+        [0, 0, 0, 0],
+        [0, 0, 0, 0],
+        [0, 0, 0, 0],
+    ],
+    "gateTime": [16, 16, 50], # ns
     "idlingTime": 1, # ns
-}
+} 
+
 omegaQmax, rho = prepareSystemArgs(**system_kwargs)
 
-# set qc
-qc = QuantumCircuit(1)
-qc.rx(0.5*np.pi, 0)
-qc.delay(0, 0)
-qc.ry(0.5*np.pi, 0)
-qc.delay(0, 0)
-qc.ry(-0.5*np.pi, 0)
+# Define input circuit
+qc = QuantumCircuit(2)
+qc.h(0)
+qc.cx(0, 1)
+
 system_kwargs["qc"] = qc
 
-# set bath params
-bath_kwargs = {
+# Set bath parameters
+bath_kwargs = {    
     "T": 30, # mK
     "T1": 32, # us
     "omegaC": 20,
-    "exp": 1,
+    "exp": 1/8,
     "tol": 1e-4,
 }
-bathParams = prepareBathArgs(rho, omegaQmax, **bath_kwargs)[0]
+bathParams = prepareBathArgs(rho, omegaQmax, **bath_kwargs)
 
 # AAA decomposition
-z, d = getBathParams(bathParams)
+z, d = getBathParams(bathParams[0])
 
-# set simulations params
+# Set simulation parameters
 simulation_kwargs= {
-    "directory": ...,
-    "fileName": ...,
-    "dtFB": 1.5, # ps
-    "depth": [1],
+    "dtFB": 3.0, # ps
+    "depth": [1, 1],
     "bondDim": 5,
     "strideTime": 0.1, # ns
     "useRFPlus": False,
     "isRK13": False,
 }
 
-# run the calculation 
-calcTimeEvo(**system_kwargs, **bath_kwargs, **simulation_kwargs) 
+# Run the calculation 
+kwargs = {**system_kwargs, **bath_kwargs, **simulation_kwargs}
+kwargs["directory"] = "results"
+kwargs["fileName"] = "package_test"
+calcTimeEvo(**kwargs) 
 ```
 
 ## Graphical interface

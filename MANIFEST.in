@@ -10,9 +10,9 @@ include MANIFEST.in
 include requirements/*.txt
 
 # Include files in the package's root directory
-include heom/*.mplstyle
+include ttheom/*.mplstyle
 # Include all .py files
-recursive-include heom *.py
+recursive-include ttheom *.py
 
 # Include specific data files
-include heom/data/*.json
+include ttheom/data/*.json
