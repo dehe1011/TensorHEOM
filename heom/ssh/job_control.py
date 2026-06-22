@@ -3,7 +3,7 @@ from .io_qc import saveQC
 from .connect_ssh import getClient
 from .commands import commandsForSubmission, getStatus
 
-def submitJob(submissionParams, qc, idlingTime, gateList, rho,
+def submitJob(submissionParams, qcFilePath, omegaQmax, qc, idlingTime, gateList, rho,
               bath, V, dtFB, stride, depth, bondDim, isRK13=False,
               useRFPlus=False):
     """submit a job to an HPC cluster
@@ -28,6 +28,8 @@ def submitJob(submissionParams, qc, idlingTime, gateList, rho,
                 submissionParams['others'] (str): user-defined parameters
                 submissionParams['venvPath']:
                     path of venv (virtual environment)
+            qcFilePath (str): File path where the quantum circuit data will be saved.
+            omegaQmax (float): Maximum qubit frequency value.
             qc (qiskit.QuantumCircuit): quantum circuit for simulation
             idlingTime (float): idling time, in the unit of omegaQ[0] 
             gateList (list): list for qubit gates
@@ -52,8 +54,8 @@ def submitJob(submissionParams, qc, idlingTime, gateList, rho,
 
     # output parameters for simulation
     filePath = QPYNAME
-    saveQC(filePath, qc, idlingTime, gateList, rho, bath, V, dtFB, stride, 
-           depth, bondDim, isRK13=isRK13, useRFPlus=useRFPlus)
+    saveQC(filePath, omegaQmax, qc, idlingTime, gateList, rho, bath, V, dtFB, 
+           stride, depth, bondDim, isRK13=isRK13, useRFPlus=useRFPlus)
 
     # connect to an HPC server
     client = getClient(submissionParams['hostname'],
@@ -64,7 +66,7 @@ def submitJob(submissionParams, qc, idlingTime, gateList, rho,
     # send parameters to the server
     sftp = client.open_sftp()
     remoteName = REMOTEPATH + '/' + QPYNAME
-    sftp.put(QPYNAME, remoteName)
+    sftp.put(qcFilePath, remoteName)
     sftp.close()
 
     # submit a job
