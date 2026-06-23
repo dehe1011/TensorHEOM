@@ -79,15 +79,25 @@ exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 
 # Options for HTML output
 html_theme = "sphinx_rtd_theme"
-html_static_path = []
+html_static_path = ["_static"]
+html_logo = "figures/logo.png"
+html_theme_options = {
+    "logo_only": False,
+    "prev_next_buttons_location": "bottom",
+    "collapse_navigation": False,
+    "sticky_navigation": True,
+    "navigation_depth": 3,
+}
 
-exclude_patterns = [
-    "_build",
-    "Thumbs.db",
-    ".DS_Store",
-]
+html_context = {
+    "display_github": True,
+    "github_user": "dehe1011",
+    "github_repo": "TensorHEOM",
+    "github_version": "main",
+    "conf_py_path": "/docs/",
+}
 
-# Syntax highlighing for code blocks in the documentation
+# Syntax highlighting for code blocks in the documentation
 pygments_style = "sphinx"
 
 # Do not add parentheses to function names in cross-references like :func:
