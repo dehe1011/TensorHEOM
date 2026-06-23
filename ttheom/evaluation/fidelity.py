@@ -1,14 +1,19 @@
 import numpy as np
 
 def getFidelity(rho, sigma):
-    """compute fidelity
+    """Compute the quantum state fidelity between two density matrices.
 
-        args:
-            rho, sigma (numpy.ndarray): density matrix:
-                Hermitian matrix, positive semidefinite
+    Parameters
+    ----------
+    rho : numpy.ndarray
+        Density matrix; Hermitian, positive semidefinite.
+    sigma : numpy.ndarray
+        Density matrix; Hermitian, positive semidefinite.
 
-        returns:
-            fidelity
+    Returns
+    -------
+    float
+        Fidelity :math:`F(\\rho, \\sigma) = \\left(\\operatorname{tr}\\sqrt{\\sqrt{\\rho}\\,\\sigma\\sqrt{\\rho}}\\right)^2`.
     """
     u, s, v = np.linalg.svd(rho)
     rhoSq = u @ np.diag(np.sqrt(s)) @ v

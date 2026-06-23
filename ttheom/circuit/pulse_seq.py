@@ -6,19 +6,22 @@ from qiskit.quantum_info import Operator
 from .transform_circ import transform, scheduling
 from ..tt.TTs import TTs
 
-def setPulseSeq(qc: QuantumCircuit, TTs: TTs, omegaQ: list[float], 
+def setPulseSeq(qc: QuantumCircuit, TTs: TTs, omegaQ: list[float],
                 dtFB: float, idlingTime: float) -> None:
-    """compute pulse sequence for HEOM calculation
-        Obtained sequences are set to properties in TTs
+    """Compile a quantum circuit into pulse sequences and store them in ``TTs``.
 
-        args:
-            qc (qiskit.QuantumCircuit): quantum circuit to be simulated
-            TTs (TTs.TTs): class for MPS and MPO
-            dtFB (float): time step for integration of HEOM,
-                in the unit of 1/omegaQ[0]
-            omegaQ (list[float]): 1d list of qubit frequency
-                in the unit of omegaQ[0]
-            idlingTime (float): idling time, in the unit of omegaQ[0]
+    Parameters
+    ----------
+    qc : qiskit.QuantumCircuit
+        Quantum circuit to be simulated.
+    TTs : TTs.TTs
+        MPS/MPO object; pulse sequences are written to its attributes.
+    omegaQ : list of float
+        Qubit frequencies in units of the maximum qubit frequency.
+    dtFB : float
+        Time step for HEOM integration in units of ``1/omegaQ[0]``.
+    idlingTime : float
+        Idling time inserted after delayed gates, in units of ``omegaQ[0]``.
     """
 
     numQubits = qc.num_qubits

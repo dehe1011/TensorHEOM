@@ -5,15 +5,21 @@ from scipy.linalg import qr
 from ..tt.tt import zTT
 
 def zGetSegLeftSt(rhoSt, HSt):
-    """
-        args:
-            rhoSt (tt.zTT): MPS [0:level-1, 0:rhoRR-1]
-            HSt (tt.zTT): MPO [0:level-1, 0:level-1, 0:HRR-1]
+    """Compute the left segment tensor at the starting (first) core.
 
-        returns:
-            segLeft (numpy.ndarray): [0:rhoRR-1 (before operation of H),
-                                      0:rhoRR-1 (after operation of H),
-                                      0:HRR-1]
+    Parameters
+    ----------
+    rhoSt : tt.zTT
+        MPS core of shape ``[level, bondDimR]`` (Fortran order).
+    HSt : tt.zTT
+        MPO core of shape ``[level, level, bondDimR]`` (Fortran order).
+
+    Returns
+    -------
+    numpy.ndarray
+        Left segment of shape
+        ``[bondDimR (before H), bondDimR (after H), bondDimR_H]``
+        (flattened, Fortran order).
     """
 
     rhoCore = rhoSt.core.reshape([rhoSt.level, rhoSt.bondDimR], order='F').T
@@ -36,18 +42,25 @@ def zGetSegLeftSt(rhoSt, HSt):
     return segLeft
 
 def zGetSegLeft(rho, H, segLeftIn):
-    """
-        args:
-            rho (tt.zTT): MPS [0:rhoRL-1, 0:level-1, 0:rhoRR-1]
-            H (tt.zTT): MPO [0:HRL-1, 0:level-1, 0:level-1, 0:HRR-1]
-            segLeftIn (numpy.ndarray): [0:rhoRL-1 (before operation of H),
-                                        0:rhoRL-1 (after operation of H),
-                                        0:HRL-1]
+    """Compute the left segment tensor at an intermediate core.
 
-        returns:
-            segLeftOut (numpy.ndarray): [0:rhoRR-1 (before operation of H),
-                                         0:rhoRR-1 (after operation of H),
-                                         0:HRR-1]
+    Parameters
+    ----------
+    rho : tt.zTT
+        MPS core of shape ``[bondDimL, level, bondDimR]`` (Fortran order).
+    H : tt.zTT
+        MPO core of shape ``[bondDimL_H, level, level, bondDimR_H]`` (Fortran order).
+    segLeftIn : numpy.ndarray
+        Input left segment of shape
+        ``[bondDimL (before H), bondDimL (after H), bondDimL_H]``
+        (flattened, Fortran order).
+
+    Returns
+    -------
+    numpy.ndarray
+        Updated left segment of shape
+        ``[bondDimR (before H), bondDimR (after H), bondDimR_H]``
+        (flattened, Fortran order).
     """
 
     rhoCore = rho.core.reshape([rho.bondDimL, rho.level*rho.bondDimR],
@@ -65,7 +78,7 @@ def zGetSegLeft(rho, H, segLeftIn):
 
     HCore = H.core.reshape([H.bondDimL*H.level, H.level*H.bondDimR],
                            order='F').T
-    
+
     tmp2 = np.matmul(HCore, tmp1) # [level*HRR, rhoRR (before)*rhoRL]
 
     tmp2 = tmp2.reshape([rho.level*H.bondDimR*rho.bondDimR, rho.bondDimL],
@@ -88,15 +101,21 @@ def zGetSegLeft(rho, H, segLeftIn):
     return segLeftOut
 
 def zGetSegRightEn(rhoEn, HEn):
-    """
-        args:
-            rhoEn (tt.zTT): MPS [0:rhoRL-1, 0:level-1]
-            HSt (tt.zTT): MPO [0:HRL-1, 0:level-1, 0:level-1]
+    """Compute the right segment tensor at the ending (last) core.
 
-        returns:
-            segRight (numpy.ndarray): [0:rhoRL-1 (after operation of H),
-                                      0:HRL-1
-                                      0:rhoRL-1 (before operation of H)]
+    Parameters
+    ----------
+    rhoEn : tt.zTT
+        MPS core of shape ``[bondDimL, level]`` (Fortran order).
+    HEn : tt.zTT
+        MPO core of shape ``[bondDimL_H, level, level]`` (Fortran order).
+
+    Returns
+    -------
+    numpy.ndarray
+        Right segment of shape
+        ``[bondDimL (after H), bondDimL_H, bondDimL (before H)]``
+        (flattened, Fortran order).
     """
 
     rhoCore = rhoEn.core.conj().reshape([rhoEn.bondDimL, rhoEn.level],
@@ -110,7 +129,7 @@ def zGetSegRightEn(rhoEn, HEn):
     tmp1 = tmp1.reshape([rhoEn.level, rhoEn.bondDimL*HEn.bondDimL], order='F')
 
     rhoCore = rhoEn.core.reshape([rhoEn.bondDimL, rhoEn.level], order='F')
-    
+
     segRight = np.matmul(rhoCore, tmp1) # [rhoRL (before), rhoRL (after)*HRL]
 
     segRight = segRight.T # [rhoRL (after)*HRL, rhoRL(before)]
@@ -119,15 +138,23 @@ def zGetSegRightEn(rhoEn, HEn):
     return segRight
 
 def zGetSegRight(rho, H, segRightIn):
-    """
-        args:
-            rho (tt.zTT): MPS [0:rhoRL-1, 0:level-1, 0:rhoRR-1]
-            H (tt.zTT): MPO [0:HRL-1, 0:level-1, 0:level-1, 0:HRR-1]
+    """Compute the right segment tensor at an intermediate core.
 
-        returns:
-            segRightOut (numpy.ndarray): [0:rhoRL-1 (after operation of H),
-                                          0:HRL-1
-                                          0:rhoRL-1 (before operation of H)]
+    Parameters
+    ----------
+    rho : tt.zTT
+        MPS core of shape ``[bondDimL, level, bondDimR]`` (Fortran order).
+    H : tt.zTT
+        MPO core of shape ``[bondDimL_H, level, level, bondDimR_H]`` (Fortran order).
+    segRightIn : numpy.ndarray
+        Input right segment (from the core to the right).
+
+    Returns
+    -------
+    numpy.ndarray
+        Updated right segment of shape
+        ``[bondDimL (after H), bondDimL_H, bondDimL (before H)]``
+        (flattened, Fortran order).
     """
 
     rhoCore = rho.core.conj().reshape([rho.bondDimL*rho.level, rho.bondDimR],
@@ -165,16 +192,24 @@ def zGetSegRight(rho, H, segRightIn):
     return segRightOut
 
 def zGetKSt(rhoSt, HSt, segRight):
-    """
-        args:
-            rhoSt (tt.zTT): MPS [0:level-1, 0:rhoRR-1]
-            HSt (tt.zTT): MPO [0:level-1, 0:level-1, 0:HRR-1]
-            segRight (numpy.ndarray): [0:rhoRR-1 (after),
-                                       0:HRR-1,
-                                       0:rhoRR-1 (before)]
+    """Apply the effective Hamiltonian to the first (starting) MPS core.
 
-        returns:
-            rhoOut (numpy.ndarray): [0:level-1, 0:rhoRR-1]
+    Parameters
+    ----------
+    rhoSt : tt.zTT
+        MPS core of shape ``[level, bondDimR]`` (Fortran order).
+    HSt : tt.zTT
+        MPO core of shape ``[level, level, bondDimR_H]`` (Fortran order).
+    segRight : numpy.ndarray
+        Right segment of shape
+        ``[bondDimR (after H), bondDimR_H, bondDimR (before H)]``
+        (flattened, Fortran order).
+
+    Returns
+    -------
+    numpy.ndarray
+        Updated MPS core values of shape ``[level, bondDimR]``
+        (flattened, Fortran order).
     """
 
     rhoCore = rhoSt.core.reshape([rhoSt.level, rhoSt.bondDimR], order='F').T
@@ -198,16 +233,24 @@ def zGetKSt(rhoSt, HSt, segRight):
     return rhoOut
 
 def zGetKEn(rhoEn, HEn, segLeft):
-    """
-        args:
-            rhoEn (tt.zTT): MPS [0:rhoRL-1, 0:level-1]
-            HEn (tt.zTT): MPO [0:HRL-1, 0:level-1, 0:level-1]
-            segLeft (numpy.ndarray): [0:rhoRL-1 (before operation of H),
-                                      0:rhoRL-1 (after operation of H),
-                                      0:HRL-1]
+    """Apply the effective Hamiltonian to the last (ending) MPS core.
 
-        returns:
-            rhoOut (numpy.ndarray): [0:rhoRL-1, 0:level-1]
+    Parameters
+    ----------
+    rhoEn : tt.zTT
+        MPS core of shape ``[bondDimL, level]`` (Fortran order).
+    HEn : tt.zTT
+        MPO core of shape ``[bondDimL_H, level, level]`` (Fortran order).
+    segLeft : numpy.ndarray
+        Left segment of shape
+        ``[bondDimL (before H), bondDimL (after H), bondDimL_H]``
+        (flattened, Fortran order).
+
+    Returns
+    -------
+    numpy.ndarray
+        Updated MPS core values of shape ``[bondDimL, level]``
+        (flattened, Fortran order).
     """
 
     rhoCore = rhoEn.core.reshape([rhoEn.bondDimL, rhoEn.level], order='F').T
@@ -228,19 +271,28 @@ def zGetKEn(rhoEn, HEn, segLeft):
     return rhoOut
 
 def zGetK(rho, H, segLeft, segRight):
-    """
-        args:
-            rho (tt.zTT): MPS [0:rhoRL-1, 0:level-1, 0:rhoRR-1]
-            H (tt.zTT): MPO [0:HRL-1, 0:level-1, 0:level-1, 0:rhoRR-1]
-            segLeft (numpy.ndarray): [0:rhoRL-1 (before operation of H),
-                                      0:rhoRL-1 (after operation of H),
-                                      0:HRL-1]
-            segRight (numpy.ndarray): [0:rhoRR-1 (after),
-                                       0:HRR-1,
-                                       0:rhoRR-1 (before)]
+    """Apply the effective Hamiltonian to an intermediate MPS core.
 
-        returns:
-            rhoOut (numpy.ndarray):[0:rhoRL-1, 0:level-1, 0:rhoRR-1]
+    Parameters
+    ----------
+    rho : tt.zTT
+        MPS core of shape ``[bondDimL, level, bondDimR]`` (Fortran order).
+    H : tt.zTT
+        MPO core of shape ``[bondDimL_H, level, level, bondDimR_H]`` (Fortran order).
+    segLeft : numpy.ndarray
+        Left segment of shape
+        ``[bondDimL (before H), bondDimL (after H), bondDimL_H]``
+        (flattened, Fortran order).
+    segRight : numpy.ndarray
+        Right segment of shape
+        ``[bondDimR (after H), bondDimR_H, bondDimR (before H)]``
+        (flattened, Fortran order).
+
+    Returns
+    -------
+    numpy.ndarray
+        Updated MPS core values of shape ``[bondDimL, level, bondDimR]``
+        (flattened, Fortran order).
     """
 
     rhoCore = rho.core.reshape(rho.bondDimL, rho.level*rho.bondDimR,
@@ -279,20 +331,27 @@ def zGetK(rho, H, segLeft, segRight):
     return rhoOut
 
 def zGetS(rhoR, HR, S, segLeft, segRight):
-    """
-        args:
-            rhoR (int): bond dimension of rho
-            HR (int): bond dimension of H
-            S (numpy.ndarray): [0:rhoR-1, 0:rhoR-1]
-            segLeft (numpy.ndarray): [0:rhoRL-1 (before operation of H),
-                                      0:rhoRL-1 (after operation of H),
-                                      0:HRL-1]
-            segRight (numpy.ndarray): [0:rhoRR-1 (after),
-                                       0:HRR-1,
-                                       0:rhoRR-1 (before)]
+    """Apply the effective Hamiltonian to the bond matrix S.
 
-        returns:
-            SOut (numpy.ndarray): [0:rhoR-1, 0:rhoR-1]
+    Parameters
+    ----------
+    rhoR : int
+        Bond dimension of the MPS at this bond.
+    HR : int
+        Bond dimension of the MPO at this bond.
+    S : numpy.ndarray
+        Bond matrix of shape ``[rhoR, rhoR]`` (flattened, Fortran order);
+        used as input.
+    segLeft : numpy.ndarray
+        Left segment tensor (flattened, Fortran order).
+    segRight : numpy.ndarray
+        Right segment tensor (flattened, Fortran order).
+
+    Returns
+    -------
+    numpy.ndarray
+        Updated bond matrix of shape ``[rhoR, rhoR]``
+        (flattened, Fortran order).
     """
 
     STmp = S.reshape([rhoR, rhoR], order='F').T
@@ -312,12 +371,14 @@ def zGetS(rhoR, HR, S, segLeft, segRight):
     return SOut
 
 def zGetSK(S, rho):
-    """compute TT-core times S (matrix obtained from QR decomposition, R)
+    """Left-multiply an MPS core by the bond matrix S (from QR).
 
-        args:
-            S (numpy.ndarray): [0:rhoRL-1, 0:rhoRL-1]
-            rho (tt.zTT): MPS [0:rhoRL-1, 0:level-1, 0:rhoRR-1]
-                          rho.core is overwritten
+    Parameters
+    ----------
+    S : numpy.ndarray
+        Bond matrix of shape ``[bondDimL, bondDimL]`` (flattened, Fortran order).
+    rho : tt.zTT
+        MPS core; ``rho.core`` is overwritten in place.
     """
 
     STmp = S.reshape([rho.bondDimL, rho.bondDimL], order='F')
@@ -329,14 +390,16 @@ def zGetSK(S, rho):
     rho.core = tmp.flatten(order='F')
 
 def zGetKS(rho, S):
-    """compute TT-core times S (matrix obtained from QR decomposition, R)
+    """Right-multiply an MPS core by the bond matrix S (from QR).
 
-        args:
-            rho (tt.zTT): MPS [0:rhoRL-1, 0:level-1, 0:rhoRR-1]
-                          rho.core is overwritten
-            S (numpy.ndarray): [0:rhoRR-1, 0:rhoRR-1]
+    Parameters
+    ----------
+    rho : tt.zTT
+        MPS core; ``rho.core`` is overwritten in place.
+    S : numpy.ndarray
+        Bond matrix of shape ``[bondDimR, bondDimR]`` (flattened, Fortran order).
     """
-    
+
     rhoCore = rho.core.reshape([rho.bondDimL*rho.level, rho.bondDimR],
                                order='F')
     STmp = S.reshape([rho.bondDimR, rho.bondDimR], order='F')
@@ -346,14 +409,20 @@ def zGetKS(rho, S):
     rho.core = tmp.flatten(order='F')
 
 def zQRLeft(rho):
-    """left-orthogonalization of middle cores
+    """Left-orthogonalize an MPS core via QR decomposition.
 
-        args:
-            rho (tt.zTT): MPS [0:rhoRL-1, 0:level-1, 0:rhoRR-1]
-        
-        returns:
-            rhoOut (tt.zTT): left-orthogonalized MPS [0:rhoRL-1, 0:level-1, 0:rhoRR-1]
-            S (numpy.ndarray): [0:rhoRR-1, 0:rhoRR-1]
+    Parameters
+    ----------
+    rho : tt.zTT
+        MPS core of shape ``[bondDimL, level, bondDimR]`` (Fortran order).
+
+    Returns
+    -------
+    rhoOut : tt.zTT
+        Left-orthogonalized MPS core.
+    S : numpy.ndarray
+        Upper-triangular factor R of shape ``[bondDimR, bondDimR]``
+        (flattened, Fortran order).
     """
 
     rhoCore = rho.core.reshape(rho.bondDimL*rho.level, rho.bondDimR,
@@ -372,14 +441,20 @@ def zQRLeft(rho):
     return rhoOut, S
 
 def zQRRight(rho):
-    """right-orthogonalization of middle cores
+    """Right-orthogonalize an MPS core via QR decomposition.
 
-        args:
-            rho (tt.zTT): MPS [0:rhoRL-1, 0:level-1, 0:rhoRR-1]
-        
-        returns:
-            rhoOut (tt.zTT): right-orthogonalized MPS [0:rhoRL-1, 0:level-1, 0:rhoRR-1]
-            S (numpy.ndarray): [0:rhoRL-1, 0:rhoRL-1]
+    Parameters
+    ----------
+    rho : tt.zTT
+        MPS core of shape ``[bondDimL, level, bondDimR]`` (Fortran order).
+
+    Returns
+    -------
+    rhoOut : tt.zTT
+        Right-orthogonalized MPS core.
+    S : numpy.ndarray
+        Upper-triangular factor R (conjugate-transposed) of shape
+        ``[bondDimL, bondDimL]`` (flattened, Fortran order).
     """
 
     rhoCore = rho.core.conj().reshape([rho.bondDimL, rho.level*rho.bondDimR],
@@ -401,14 +476,19 @@ def zQRRight(rho):
     return rhoOut, S
 
 def __zOutMPS(rho, idx):
-    """output MPS with the index (idx)
+    """Evaluate the MPS at a given multi-index.
 
-        args:
-            rho (numpy.ndarray): 1d list of tt.zTT (MPS)
-            idx (list): 1d list of index
+    Parameters
+    ----------
+    rho : list of tt.zTT
+        1-D list of MPS cores.
+    idx : list of int
+        Multi-index specifying the element to extract.
 
-        returns:
-            val (complex): MPS value indicated with idx
+    Returns
+    -------
+    complex
+        MPS value at the given multi-index.
     """
 
     numCore = len(rho)
@@ -418,8 +498,8 @@ def __zOutMPS(rho, idx):
                                   order='F')[idx[i], :]
 
     for i in range(1, numCore-1):
-        coreTmp = rho[i].core.reshape([rho[i].bondDimL, 
-                                      rho[i].level, 
+        coreTmp = rho[i].core.reshape([rho[i].bondDimL,
+                                      rho[i].level,
                                       rho[i].bondDimR],
                                       order='F')[:, idx[i], :]
         coreTmp = coreTmp.reshape([rho[i].bondDimL, rho[i].bondDimR],

@@ -5,12 +5,14 @@ from qiskit.circuit.library import XXPlusYYGate, CXGate, iSwapGate
 from .abstract_pulse import abstractPulse
 
 class iSwapDPulse(abstractPulse):
-    """complex conjugate of iSwap gate (iSwap-dagger, iSwapD)
+    """Pulse implementation for the iSWAP-dagger (complex conjugate of iSWAP) gate.
 
-        attributes:
-            iSwapD (qiskit.circuit.Instruction): iSwapD gate
-            iSwapDSkip (qiskit.circiut.instruction): iSwapD gate
-                without idling
+    Attributes
+    ----------
+    iSwapD : qiskit.circuit.Gate
+        The iSWAP-dagger gate (with idling).
+    iSwapDSkip : qiskit.circuit.Gate
+        The iSWAP-dagger gate (without idling).
     """
 
     def __init__(self, **kwargs):
@@ -46,10 +48,12 @@ class iSwapDPulse(abstractPulse):
         iSwapGate().add_decomposition(qc)
 
     def elementalGates(self) -> list[Instruction]:
-        """return a list of elemental gate
+        """Return the list of elemental gate instructions.
 
-            returns (list[qiskit.circuit.Instruction]):
-                a list of elemental gates
+        Returns
+        -------
+        list of qiskit.circuit.Instruction
+            ``[iSwapD, iSwapDSkip]``.
         """
 
         return [self.iSwapD(), self.iSwapDSkip()]
@@ -57,23 +61,31 @@ class iSwapDPulse(abstractPulse):
     def vzTransform(self, params: list, globalPhase: float,
                     localPhase: list[float], qubitIdx: list[int])\
         -> tuple[Instruction, float, list[float]]:
-        """transform iSwapD by utilizing the virtual Z gate
+        """Apply the virtual-Z transformation to an iSWAP-dagger gate.
 
-            args:
-                params (list): parameters
-                    params[0]: gate name ('iswapd' or 'iswapdskip') 
-                globalPhase (float): global phase
-                localPhase (list[float]): rotation angle of RZGate
-                    before iSwapD
-                qubitIdx (list[int]): qubit indeces
-                    to which the gate is applied
+        The iSWAP-dagger gate swaps the local Z phases of the two qubits.
 
-            returns:
-                gateOut (qiskit.circuit.Instruction):
-                    new gate
-                globalPhase (float): updated global phase
-                localPhase (list[float]): rotation angle of RZGate
-                    after iSwapD gate        
+        Parameters
+        ----------
+        params : list
+            Gate parameters; ``params[0]`` is the gate name
+            (``'iswapd'`` or ``'iswapdskip'``).
+        globalPhase : float
+            Accumulated global phase (unchanged by this gate).
+        localPhase : list of float
+            Per-qubit accumulated local phases; the phases of the two
+            involved qubits are swapped.
+        qubitIdx : list of int
+            Qubit indices to which the gate is applied.
+
+        Returns
+        -------
+        gateOut : qiskit.circuit.Instruction
+            The iSWAP-dagger gate instruction.
+        globalPhase : float
+            Unchanged global phase.
+        localPhase : list of float
+            Updated per-qubit local phases (two entries swapped).
         """
 
         phaseTmp = localPhase[qubitIdx[0]]
@@ -86,15 +98,19 @@ class iSwapDPulse(abstractPulse):
             gateOut = self.iSwapDSkip()
 
         return gateOut, globalPhase, localPhase
-    
-    def isDelayed(self, name: str) -> bool:
-        """returns whether idling should be inserted
 
-            args:
-                name (str): gate name ('iswapd' or 'iswapdskip')
-            return (bool):
-                True: idling is inserted after this gate
-                False: idling is not inserted
+    def isDelayed(self, name: str) -> bool:
+        """Return whether an idling period should follow this gate.
+
+        Parameters
+        ----------
+        name : str
+            Gate name (``'iswapd'`` or ``'iswapdskip'``).
+
+        Returns
+        -------
+        bool
+            ``True`` for ``'iswapd'``, ``False`` for ``'iswapdskip'``.
         """
 
         return True if name == 'iswapd' else False

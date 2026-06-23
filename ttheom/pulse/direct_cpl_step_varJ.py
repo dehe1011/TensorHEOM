@@ -2,25 +2,31 @@ import numpy as np
 from .iswapd import iSwapDPulse
 
 class directCplStepVarJ(iSwapDPulse):
-    """pulse for two-qubit gates with abrupt change
-        direct qubit-qubit coupling
-        variable coupling strength between qubits
+    """Two-qubit pulse with abrupt (step-function) coupling strength changes.
 
-        elemental gate: complex conjugate of iSWAP (iSwapD)
+    Implements direct qubit-qubit coupling with a variable coupling strength,
+    using the iSWAP-dagger gate as the elemental two-qubit operation.
 
-        attributes:
-            amp (float): amplitude of pulse
-            gateTime (float): gate time of XXPlusYYGate(pi) (= iSwapD)
-            JSeq (numpy.ndarray):
-                sequence of coupling strength between qubits
+    Attributes
+    ----------
+    amp : float
+        Pulse amplitude (rad per time unit).
+    gateTime : float
+        Gate time of the :math:`XX+YY(\\pi)` (= iSWAP-dagger) operation.
+    JSeq : numpy.ndarray
+        Time sequence of coupling strengths between qubits.
     """
 
     def __init__(self, **kwargs):
-        """
-            args:
-                **kwargs: keyword arguments
-                    kwargs['gateTime'] (float):
-                        gate time of XXPlusYYGate(pi) (= iSwapD)
+        """Initialize the pulse from keyword arguments.
+
+        Parameters
+        ----------
+        **kwargs
+            Keyword arguments.
+
+            ``gateTime`` : float
+                Gate time of the :math:`XX+YY(\\pi)` (= iSWAP-dagger) operation.
         """
         super().__init__(**kwargs)
 
@@ -28,51 +34,68 @@ class directCplStepVarJ(iSwapDPulse):
         self.amp = np.pi / 2 / self.gateTime
 
     def getGateTime(self, dt: float, params: list) -> int:
-        """get gate time in the unit of dt
+        """Return the gate duration in units of ``dt``.
 
-            args:
-                dt (float): time step for integration of HEOM
-                params (list): parameters
+        Parameters
+        ----------
+        dt : float
+            Time step for HEOM integration.
+        params : list
+            Gate parameters (unused for this gate type).
 
-            returns:
-                int: gate time
+        Returns
+        -------
+        int
+            Gate duration (number of time steps).
         """
 
         return int(np.pi / 2 / self.amp / dt)
-    
-    def initSeq(self, totalSize: int) -> None:
-        """initialize sequences
 
-            args:
-                totalSize (int): total size of the sequence
+    def initSeq(self, totalSize: int) -> None:
+        """Allocate and zero-initialize the coupling-strength sequence.
+
+        Parameters
+        ----------
+        totalSize : int
+            Total number of time steps.
         """
 
         self.JSeq = np.zeros(totalSize)
 
     def setSeq(self, st: int, dur: int, params: list) -> None:
-        """set values for sequences in [st:st+dur]
+        """Set the coupling-strength sequence in the interval ``[st, st+dur)``.
 
-            args:
-                st (int): starting point of the pulse
-                dur (int): duration of the pulse
-                params (list): parameters
+        Parameters
+        ----------
+        st : int
+            Starting time step.
+        dur : int
+            Duration in time steps.
+        params : list
+            Gate parameters (unused for this gate type).
         """
-        
+
         self.JSeq[st:st+dur] = self.amp
-        
+
     def setOmegaQ(self, seqSize: int, omegaQ: list[float])\
             -> tuple[np.ndarray, np.ndarray]:
-        """return time profiles of qubit frequency
+        """Return the qubit-frequency profiles during the two-qubit gate.
 
-            args:
-                seqSize (int): sequence size
-                omegaQ (list): 1d list of qubit frequency
+        Both qubits are tuned to the lower of the two qubit frequencies.
 
-            returns:
-                omegaQSeq0 (numpy.ndarray): 1d array for
-                    time profile of qubit frequency of the first qubit
-                omegaQSeq1 (numpy.ndarray): 1d array for
-                    time profile of qubit frequency of the second qubit
+        Parameters
+        ----------
+        seqSize : int
+            Number of time steps.
+        omegaQ : list of float
+            Qubit frequencies of the two involved qubits.
+
+        Returns
+        -------
+        omegaQSeq0 : numpy.ndarray
+            Frequency profile of the first qubit.
+        omegaQSeq1 : numpy.ndarray
+            Frequency profile of the second qubit.
         """
 
         omegaTmp = min(omegaQ)
@@ -86,23 +109,34 @@ class directCplStepVarJ(iSwapDPulse):
         return omegaQSeq0, omegaQSeq1
 
     def getPrefactor(self, dt: float, time, stepNum) -> float:
-        """compute prefactor terms for Runge-Kutta update
+        """Compute the coupling prefactor for the Runge-Kutta update.
 
-            args:
-                dt (float): step size for Runge-Kutta integration
-                time (float): current time
-                stepNum (int): current step number of the integration
-            
-            returns:
-                preJ (float): prefactor for coupling term
+        Parameters
+        ----------
+        dt : float
+            Integration time step.
+        time : float
+            Current time.
+        stepNum : int
+            Current step number.
+
+        Returns
+        -------
+        float
+            Prefactor for the qubit-qubit coupling term.
         """
 
         return self.JSeq[stepNum]
 
     def getEnPtr(self) -> int:
-        """return end ponit of the pulse
+        """Return the index of the last non-zero element in the coupling sequence.
+
+        Returns
+        -------
+        int
+            End pointer of the active pulse region.
         """
-        
+
         length = len(self.JSeq)
         ptr = length - 1
         for i in range(length-1, -1, -1):
@@ -114,12 +148,14 @@ class directCplStepVarJ(iSwapDPulse):
                 break
 
         return ptr
-    
-    def cropPulse(self, en) -> None:
-        """crop the sequence
 
-            args:
-                en (int): end point of the sequence
+    def cropPulse(self, en) -> None:
+        """Trim the coupling sequence to length ``en``.
+
+        Parameters
+        ----------
+        en : int
+            New end index (exclusive).
         """
 
-        self.JSeq = self.JSeq[0:en]    
+        self.JSeq = self.JSeq[0:en]

@@ -1,30 +1,23 @@
-Classes & Functions
-===================
+Classes & Module Functions
+==========================
 
-This section provides an overview of the available classes and functions contained in the `TensorHEOM` package.
+This section documents TensorHEOM's internal classes and module-level
+functions, grouped by subsystem.
 
-Decomposition of bath auto-correlation functions
-------------------------------------------------
-
-.. currentmodule:: ttheom.bath
-
-.. autofunction:: getBathParams
-.. autofunction:: broadbandNoise
-
-Connection of quantum gates and pulse sequences
------------------------------------------------
+Pulse types and gate specifications
+-------------------------------------
 
 .. currentmodule:: ttheom.pulse
 
 .. autofunction:: setGates
 .. autofunction:: getGate
-.. autoclass:: directCplStepVarJ
-.. autoclass:: iSwapDPulse
 .. autoclass:: rxyStep
 .. autoclass:: U3Pulse
+.. autoclass:: iSwapDPulse
+.. autoclass:: directCplStepVarJ
 
-Tensor Train representation
----------------------------
+Tensor-train representation
+----------------------------
 
 .. currentmodule:: ttheom.tt
 
@@ -34,8 +27,8 @@ Tensor Train representation
 .. autoclass:: TTs2QId
 .. autoclass:: TTsMQChainId
 
-Compilation of Qiskit circuits to pulse sequences
--------------------------------------------------
+Circuit compilation
+-------------------
 
 .. currentmodule:: ttheom.circuit
 
@@ -52,17 +45,17 @@ Time evolution
 .. autofunction:: zRightOrth
 .. autofunction:: calcDynamics
 .. autofunction:: outputCurrentStates
-.. autofunction::getRotatingRDO
+.. autofunction:: getRotatingRDO
 
-Running Simulations on HPC 
---------------------------
+HPC cluster support
+--------------------
 
 .. currentmodule:: ttheom.ssh
 
-.. autofunction::slurmShell # slurm.py
-.. autofunction::slurmStatus # slurm.py
-.. autofunction::commandsForSubmission # commands.py
-.. autofunction::getStatus # commands.py
-.. autofunction::getClient # connect_ssh.py
-.. autofunction::submitJob # job_control.py
-.. autofunction::downloadResult # job_control.py
+.. autofunction:: submitJob
+.. autofunction:: downloadResult
+.. autofunction:: getClient
+.. autofunction:: commandsForSubmission
+.. autofunction:: getStatus
+.. autofunction:: slurmShell
+.. autofunction:: slurmStatus

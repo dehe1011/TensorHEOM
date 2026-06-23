@@ -4,7 +4,20 @@ from dataclasses import dataclass, field
 
 @dataclass
 class zTT:
-    core: np.ndarray = field(default_factory=lambda: np.array([], dtype=np.complex128)) # lexicographic order
+    """Complex-valued tensor-train core.
+
+    Attributes
+    ----------
+    core : numpy.ndarray
+        Flattened core array (Fortran/column-major order, complex128).
+    level : int
+        Local Hilbert-space dimension.
+    bondDimL : int
+        Left bond dimension.
+    bondDimR : int
+        Right bond dimension.
+    """
+    core: np.ndarray = field(default_factory=lambda: np.array([], dtype=np.complex128))
     level: int = 0
     bondDimL: int = 0
     bondDimR: int = 0
@@ -12,8 +25,21 @@ class zTT:
 
 @dataclass
 class dTT:
+    """Real-valued tensor-train core.
+
+    Attributes
+    ----------
+    core : numpy.ndarray
+        Flattened core array (Fortran/column-major order, float64).
+    level : int
+        Local Hilbert-space dimension.
+    bondDimL : int
+        Left bond dimension.
+    bondDimR : int
+        Right bond dimension.
+    """
     core: np.ndarray = field(default_factory=lambda: np.array([], dtype=np.float64))
-    level: int = 0 # lexicographic order
+    level: int = 0
     bondDimL: int = 0
     bondDimR: int = 0
 
@@ -22,6 +48,23 @@ class dTT:
 # Complex-valued TT (zTT)
 # -------------------------------------------
 def zCreMPS(intNumCoreIn: int, intBondDimsIn: np.ndarray, intLevelsIn: np.ndarray) -> list[zTT]:
+    """Allocate a zero-initialized MPS with the given bond dimensions and levels.
+
+    Parameters
+    ----------
+    intNumCoreIn : int
+        Number of MPS cores.
+    intBondDimsIn : numpy.ndarray
+        Array of shape ``(numCore, 2)`` with left and right bond dimensions
+        for each core.
+    intLevelsIn : numpy.ndarray
+        1-D array of local Hilbert-space dimensions, one per core.
+
+    Returns
+    -------
+    list of zTT
+        List of initialized (zero-valued) MPS cores.
+    """
     cmpMPS = [zTT() for _ in range(intNumCoreIn)]
 
     # First core
@@ -48,6 +91,23 @@ def zCreMPS(intNumCoreIn: int, intBondDimsIn: np.ndarray, intLevelsIn: np.ndarra
 
 
 def zCreMPO(intNumCoreIn: int, intBondDimsIn: np.ndarray, intLevelsIn: np.ndarray) -> list[zTT]:
+    """Allocate a zero-initialized MPO with the given bond dimensions and levels.
+
+    Parameters
+    ----------
+    intNumCoreIn : int
+        Number of MPO cores.
+    intBondDimsIn : numpy.ndarray
+        Array of shape ``(numCore, 2)`` with left and right bond dimensions
+        for each core.
+    intLevelsIn : numpy.ndarray
+        1-D array of local Hilbert-space dimensions, one per core.
+
+    Returns
+    -------
+    list of zTT
+        List of initialized (zero-valued) MPO cores.
+    """
     cmpMPO = [zTT() for _ in range(intNumCoreIn)]
 
     # First core

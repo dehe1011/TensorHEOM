@@ -3,15 +3,18 @@ from qiskit.circuit.library import U3Gate
 from .abstract_pulse import abstractPulse
 
 class U3Pulse(abstractPulse):
-    """U3 gate for single-qubit gates
-        -> rotation whose angle is in x-y plan + virtual Z gate
+    """Single-qubit pulse implemented as a U3 gate with virtual-Z transformation.
+
+    Applies a rotation in the x-y plane combined with a virtual Z gate.
     """
 
     def elementalGates(self) -> list[Instruction]:
-        """return a list of elemental gates
+        """Return the elemental gate(s) used for circuit transpilation.
 
-            returns (list[qiskit.circuit.Instruction]):
-                a list of elemental gates
+        Returns
+        -------
+        list of qiskit.circuit.Instruction
+            A single-element list containing a parametric U3 gate.
         """
         theta = Parameter('theta')
         phi = Parameter('phi')
@@ -22,31 +25,36 @@ class U3Pulse(abstractPulse):
     def vzTransform(self, params: list[float], globalPhase: float,
                 localPhase: list[float], qubitIdx: list[int])\
         -> tuple[Instruction, float, float]:
-        """transform U3 gate by utilizing the virtual Z gate
-            U3Gate(theta, phi, lam) RZGate(a)
-                = RZGate(c) U3Gate(theta, -b, b) * exp(1j*globalPhase)
-                b = lam + a
-                c = a + phi + lam
+        """Apply the virtual-Z transformation to a U3 gate.
 
-            params:
-                params (list[float]): parameters
-                    params[0]: theta
-                    params[1]: phi
-                    params[2]: lam
-                    params[4]: gate name ('u3')
-                    for U3Gate(theta, phi, lam)
-                globalPhase (float): global phase
-                localPhase (list[float]): rotation angle of RZGate
-                    before U3Gate
-                qubitIdx (list[int]): qubit indeces 
-                    to which the gate is applied
+        The transformation absorbs Z rotations into the gate phases:
 
-            returns:
-                gateOut (qiskit.circuit.Instruction):
-                    new gate, U3(theta, -k, k)
-                globalPhase (float): updated global phase
-                localPhase (float): rotation angle of RZGate
-                    after the new U3Gate
+        .. math::
+
+            U_3(\\theta, \\phi, \\lambda)\\, R_Z(a)
+            = R_Z(c)\\, U_3(\\theta, -b, b)\\, e^{i\\varphi}
+
+        where :math:`b = \\lambda + a` and :math:`c = a + \\phi + \\lambda`.
+
+        Parameters
+        ----------
+        params : list of float
+            Gate parameters: ``[theta, phi, lam, gate_name]``.
+        globalPhase : float
+            Accumulated global phase.
+        localPhase : list of float
+            Per-qubit accumulated local phases (rotation angles of RZ gates).
+        qubitIdx : list of int
+            Qubit indices to which the gate is applied.
+
+        Returns
+        -------
+        gateOut : qiskit.circuit.Instruction
+            Transformed gate :math:`U_3(\\theta, -b, b)`.
+        globalPhase : float
+            Updated global phase.
+        localPhase : list of float
+            Updated per-qubit local phases.
         """
 
         theta, phi, lam = params[0:3]
@@ -56,26 +64,32 @@ class U3Pulse(abstractPulse):
         localPhase[qubitIdx[0]] += phi + lam
 
         return gateOut, globalPhase, localPhase
-    
-    def isDelayed(self, name: str) -> bool:
-        """returns whether idling should be inserted
 
-            params:
-                name (str): gate name ('u3')
-            return (bool):
-                True: idling is inserted after this gate
-                False: idling is not inserted
+    def isDelayed(self, name: str) -> bool:
+        """Return whether an idling period should follow this gate.
+
+        Parameters
+        ----------
+        name : str
+            Gate name (``'u3'``).
+
+        Returns
+        -------
+        bool
+            Always ``True`` for U3 gates.
         """
 
         return True
-       
-    def getEnPtr(self) -> int:
-        """return end ponit of the pulse sequence
 
-            returns:
-                ptr (int): end point of the sequence
+    def getEnPtr(self) -> int:
+        """Return the index of the last non-zero element in the amplitude sequence.
+
+        Returns
+        -------
+        int
+            End pointer of the active pulse region.
         """
-        
+
         length = len(self.ampSeq)
         ptr = length - 1
         for i in range(length-1, -1, -1):
@@ -87,13 +101,15 @@ class U3Pulse(abstractPulse):
                 break
 
         return ptr
-    
-    def cropPulse(self, en) -> None:
-        """crop the sequence
 
-            params:
-                en (int): end point of the sequence
+    def cropPulse(self, en) -> None:
+        """Trim the pulse sequences to length ``en``.
+
+        Parameters
+        ----------
+        en : int
+            New end index (exclusive).
         """
 
         self.ampSeq = self.ampSeq[0:en]
-        self.phaseSeq = self.phaseSeq[0:en]    
+        self.phaseSeq = self.phaseSeq[0:en]

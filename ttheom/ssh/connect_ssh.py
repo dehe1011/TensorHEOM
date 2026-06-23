@@ -1,10 +1,22 @@
-"""For JUSTUS2
-
-"""
+"""SSH connection utilities for HPC clusters."""
 import socket
 import paramiko
 
 def handlerWithValues(password, otp):
+    """Create an interactive SSH authentication handler.
+
+    Parameters
+    ----------
+    password : str
+        SSH password.
+    otp : str
+        One-time password for two-factor authentication.
+
+    Returns
+    -------
+    callable
+        Handler function compatible with ``paramiko``'s interactive auth.
+    """
     def handler(title, instructions, prompt_list):
         answers = []
 
@@ -21,16 +33,23 @@ def handlerWithValues(password, otp):
     return handler
 
 def getClient(hostname, username, password, otp):
-    """get Client of paramiko
+    """Open an authenticated SSH connection and return the client.
 
-        args:
-            hostname (str): server name to connect to
-            username (str): user name
-            password (str): password
-            otp (str): one-time password
+    Parameters
+    ----------
+    hostname : str
+        Server hostname or IP address.
+    username : str
+        SSH username.
+    password : str
+        SSH password.
+    otp : str
+        One-time password for two-factor authentication.
 
-        returns:
-            client (paramiko.client.SSHClient)
+    Returns
+    -------
+    paramiko.client.SSHClient
+        Authenticated SSH client connected to ``hostname``.
     """
 
     client = paramiko.SSHClient()
