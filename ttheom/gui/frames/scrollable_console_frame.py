@@ -1,75 +1,98 @@
-# pylint: skip-file
-
 import sys
 import customtkinter as ctk
-from tkinter.scrolledtext import ScrolledText
+
+from ..gui_utils import PAD_OUTER, FONT_MONO
 
 # ----------------------------------------------------------------------
 
 
 class RedirectText:
-    def __init__(self, console_output):
-        self.output = console_output
+    """Redirect stdout/stderr to a CTkTextbox."""
 
-    def write(self, string):
-        """Handles both stdout and stderr redirection."""
-        self.output.configure(state="normal")
-        self.output.insert(ctk.END, string.strip() + "\n")  # Ensures new line output
-        self.output.see(ctk.END)
-        self.output.configure(state="disabled")
+    def __init__(self, textbox: ctk.CTkTextbox):
+        self._box = textbox
+
+    def write(self, text: str):
+        self._box.configure(state="normal")
+        self._box.insert("end", text)
+        self._box.see("end")
+        self._box.configure(state="disabled")
 
     def flush(self):
-        pass  # Required for compatibility with sys.stdout and sys.stderr
+        pass
 
 
 class ScrollableConsoleFrame(ctk.CTkFrame):
+    """A read-only console log panel that captures stdout and stderr."""
+
     def __init__(self, master=None, **kwargs):
-        super().__init__(master, **kwargs)
+        super().__init__(master, corner_radius=10, **kwargs)
+        self.grid_columnconfigure(0, weight=1)
+        self.grid_rowconfigure(0, weight=1)
 
-        # Create a ScrolledText widget for the console output
-        self.console_output = ScrolledText(
-            self, wrap="word", state="disabled", height=10, width=35
+        # Header label
+        ctk.CTkLabel(
+            self,
+            text="Console",
+            font=ctk.CTkFont(size=11, weight="bold"),
+            anchor="w",
+        ).grid(row=0, column=0, padx=PAD_OUTER, pady=(6, 0), sticky="w")
+
+        # Monospace textbox for log output
+        self._textbox = ctk.CTkTextbox(
+            self,
+            state="disabled",
+            font=ctk.CTkFont(family="Courier New", size=11),
+            wrap="word",
+            activate_scrollbars=True,
         )
-        self.console_output.grid(row=0, column=0, sticky="nsew", padx=(10, 0), pady=10)
+        self._textbox.grid(
+            row=1, column=0, padx=PAD_OUTER, pady=(2, 2), sticky="nsew"
+        )
+        self.grid_rowconfigure(1, weight=1)
 
-        scrollbar = ctk.CTkScrollbar(self, command=self.console_output.yview)
-        scrollbar.grid(row=0, column=1, sticky="ns", padx=(0, 10), pady=10)
-        self.console_output["yscrollcommand"] = scrollbar.set
+        # Clear button
+        ctk.CTkButton(
+            self,
+            text="Clear",
+            width=60,
+            height=24,
+            font=ctk.CTkFont(size=11),
+            fg_color=("gray75", "gray30"),
+            hover_color=("gray65", "gray40"),
+            command=self._clear,
+        ).grid(row=2, column=0, padx=PAD_OUTER, pady=(0, 6), sticky="e")
 
-        # Redirect both stdout and stderr to the ScrolledText widget
-        self.redirected_output = RedirectText(self.console_output)
-        sys.stdout = self.redirected_output
-        sys.stderr = self.redirected_output
+        # Redirect stdout / stderr
+        redirector = RedirectText(self._textbox)
+        sys.stdout = redirector
+        sys.stderr = redirector
 
-        # Override sys.excepthook to filter AssertionError traceback
-        sys.excepthook = self.handle_exceptions
+        # Custom exception handlers
+        sys.excepthook = self._handle_exception
+        self.master.report_callback_exception = self._handle_tk_exception
 
-        # Override Tkinter's error handling to capture GUI-related assertions
-        self.master.report_callback_exception = self.handle_tkinter_exceptions
+    def _clear(self):
+        self._textbox.configure(state="normal")
+        self._textbox.delete("1.0", "end")
+        self._textbox.configure(state="disabled")
 
-    def handle_exceptions(self, exc_type, exc_value, exc_traceback):
-        """Custom exception handler that filters out assertion tracebacks."""
+    def _handle_exception(self, exc_type, exc_value, exc_tb):
         if issubclass(exc_type, AssertionError):
-            sys.stderr.write(str(exc_value) + "\n")  # Only print the assertion message
+            sys.stderr.write(str(exc_value) + "\n")
         else:
             import traceback
-
             sys.stderr.write(
-                "".join(traceback.format_exception(exc_type, exc_value, exc_traceback))
-            )  # Keep full error
+                "".join(traceback.format_exception(exc_type, exc_value, exc_tb))
+            )
 
-    def handle_tkinter_exceptions(self, exc_type, exc_value, exc_traceback):
-        """Handles Tkinter's internal exceptions to prevent unwanted traceback."""
+    def _handle_tk_exception(self, exc_type, exc_value, exc_tb):
         if issubclass(exc_type, AssertionError):
-            sys.stderr.write(
-                "Warning: " + str(exc_value) + "\n-------------------------------"
-            )  # Print only assertion message
+            sys.stderr.write("Warning: " + str(exc_value) + "\n")
         else:
             import traceback
-
             sys.stderr.write(
-                "".join(traceback.format_exception(exc_type, exc_value, exc_traceback))
-            )  # Full traceback
-
+                "".join(traceback.format_exception(exc_type, exc_value, exc_tb))
+            )
 
 # ----------------------------------------------------------------------

@@ -1,80 +1,116 @@
-import customtkinter as ctk
 import sys
 import io
+import customtkinter as ctk
 import qiskit.qpy as qpy
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
+from ..gui_utils import PAD_OUTER, PAD_Y
+
 # ----------------------------------------------------------------------
+
 
 class CircuitEditor(ctk.CTkToplevel):
     def __init__(self, master=None):
         super().__init__(master)
         self.title("Quantum Circuit Editor")
-        self.geometry("400x600")
+        self.geometry("540x680")
+        self.minsize(480, 580)
         self.master = master
+        self.grid_columnconfigure(0, weight=1)
+        self.grid_rowconfigure(4, weight=1)   # draw_frame expands
 
-        # Instruction label
-        label = ctk.CTkLabel(self, text="Please define your circuit below.")
-        label.pack(pady=10)
+        # ── instruction ──────────────────────────────────────────────────
+        ctk.CTkLabel(
+            self,
+            text="Define your Qiskit circuit in the editor below.\n"
+                 "The variable must be named  qc.",
+            font=ctk.CTkFont(size=12),
+            justify="left",
+            anchor="w",
+        ).grid(row=0, column=0, padx=PAD_OUTER, pady=(PAD_OUTER, 4), sticky="w")
 
-        # Textbox for code
-        self.code_box = ctk.CTkTextbox(self, width=400, height=200)
-        self.code_box.pack(padx=10, pady=10)
-        self.code_box.insert("1.0", "from qiskit import QuantumCircuit\n")
-        self.code_box.insert("2.0", "from qiskit.circuit.random import random_circuit\n")
-        self.code_box.insert("3.0", "\n")
-        self.code_box.insert("4.0", f"# qc = QuantumCircuit({master.numQ})\n")
-        self.code_box.insert("5.0", f"qc = random_circuit(num_qubits={master.numQ}, depth=3, max_operands=2)")
+        # ── code editor ──────────────────────────────────────────────────
+        self.code_box = ctk.CTkTextbox(
+            self,
+            font=ctk.CTkFont(family="Courier New", size=12),
+            wrap="none",
+            height=160,
+        )
+        self.code_box.grid(
+            row=1, column=0, padx=PAD_OUTER, pady=(0, 4), sticky="ew"
+        )
+        default_code = (
+            "from qiskit import QuantumCircuit\n"
+            "from qiskit.circuit.random import random_circuit\n"
+            "\n"
+            f"# qc = QuantumCircuit({master.numQ})\n"
+            f"qc = random_circuit(num_qubits={master.numQ}, depth=3, max_operands=2)\n"
+        )
+        self.code_box.insert("1.0", default_code)
 
-        # Run + Save button
-        self.run_button = ctk.CTkButton(self, text="Build & Save Circuit", command=self.build_circuit)
-        self.run_button.pack(pady=10)
+        # ── run button ───────────────────────────────────────────────────
+        self.run_button = ctk.CTkButton(
+            self,
+            text="Build & Save Circuit",
+            width=200,
+            command=self._build_circuit,
+        )
+        self.run_button.grid(row=2, column=0, pady=(0, 4))
 
-        # Output box
-        self.output_box = ctk.CTkTextbox(self, width=400, height=20)
-        self.output_box.pack(padx=10, pady=10)
+        # ── status box ───────────────────────────────────────────────────
+        self.status_box = ctk.CTkTextbox(
+            self,
+            font=ctk.CTkFont(family="Courier New", size=11),
+            height=36,
+            state="disabled",
+        )
+        self.status_box.grid(
+            row=3, column=0, padx=PAD_OUTER, pady=(0, 4), sticky="ew"
+        )
 
-        # Frame for drawing circuit
-        self.draw_frame = ctk.CTkFrame(self, width=400, height=280)
-        self.draw_frame.pack(padx=10, pady=10, fill="both", expand=True)
+        # ── circuit diagram ───────────────────────────────────────────────
+        self.draw_frame = ctk.CTkFrame(self)
+        self.draw_frame.grid(
+            row=4, column=0, padx=PAD_OUTER, pady=(0, PAD_OUTER),
+            sticky="nsew",
+        )
 
-    def build_circuit(self):
+    # ------------------------------------------------------------------
+
+    def _build_circuit(self):
         user_code = self.code_box.get("1.0", "end-1c")
-
-        # Redirect stdout/stderr
-        old_stdout, old_stderr = sys.stdout, sys.stderr
-        redirected_output = sys.stdout = io.StringIO()
-        redirected_error = sys.stderr = io.StringIO()
+        old_out, old_err = sys.stdout, sys.stderr
+        buf_out, buf_err = io.StringIO(), io.StringIO()
+        sys.stdout, sys.stderr = buf_out, buf_err
 
         try:
             local_env = {}
-            exec(user_code, {}, local_env)
+            exec(user_code, {}, local_env)   # nosec
             self.master.qc = local_env["qc"]
 
-            # Clear old drawing in frame
-            for widget in self.draw_frame.winfo_children():
-                widget.destroy()
+            with open(self.master.qcFilePath + ".qpy", "wb") as f:
+                qpy.dump(self.master.qc, f)
 
-            # save qc 
-            with open(self.master.qcFilePath+'.qpy', 'wb') as file:
-                qpy.dump(self.master.qc, file)
-            print(f"Circuit built successfully and saved as {self.master.qcFilePath}")
+            self._set_status(
+                f"✓ Circuit saved to {self.master.qcFilePath}.qpy", ok=True
+            )
 
-            # Draw with matplotlib
+            for w in self.draw_frame.winfo_children():
+                w.destroy()
             fig = self.master.qc.draw(output="mpl")
             canvas = FigureCanvasTkAgg(fig, master=self.draw_frame)
             canvas.draw()
             canvas.get_tk_widget().pack(fill="both", expand=True)
 
-        except Exception as e:
-            print(f"Error: {e}")
+        except Exception as exc:
+            self._set_status(f"✗ Error: {exc}", ok=False)
+        finally:
+            sys.stdout, sys.stderr = old_out, old_err
 
-        # Restore stdout/stderr
-        sys.stdout, sys.stderr = old_stdout, old_stderr
-        output = redirected_output.getvalue() + redirected_error.getvalue()
-
-        # Display output
-        self.output_box.delete("1.0", "end")
-        self.output_box.insert("end", output)
+    def _set_status(self, msg: str, ok: bool = True):
+        self.status_box.configure(state="normal")
+        self.status_box.delete("1.0", "end")
+        self.status_box.insert("end", msg)
+        self.status_box.configure(state="disabled")
 
 # ----------------------------------------------------------------------

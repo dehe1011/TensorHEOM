@@ -27,6 +27,8 @@ from .windows.plotting_circ_window import PlottingCircWindow
 from .windows.hpc_settings_window import HPCSettings, HPCDownload
 from .windows.plotting_window import PlottingWindow
 
+from .gui_utils import StepIndicator
+
 # ----------------------------------------------------------------------
 
 def filter_kwargs(func, kwargs):
@@ -35,16 +37,20 @@ def filter_kwargs(func, kwargs):
 
 # ----------------------------------------------------------------------
 
+ctk.set_appearance_mode("System")
+ctk.set_default_color_theme("blue")
+
+# ----------------------------------------------------------------------
+
 class TensorHeomApp(ctk.CTk):
     def __init__(self):
-        """ This window is the main window. """
-
         super().__init__()
         self.title("TensorHEOM")
+        self.minsize(900, 600)
 
-        # parameters
+        # ── state ────────────────────────────────────────────────────────
         self.numQ = 2
-        self.directory_display = 'simulations_GUI'
+        self.directory_display = "simulations_GUI"
         self.directory = os.path.join(os.getcwd(), self.directory_display)
         self.fileName = "package_test"
         self.kwargs = {}
@@ -52,61 +58,83 @@ class TensorHeomApp(ctk.CTk):
         self.qc = QuantumCircuit(self.numQ)
         self.qcFilePath = None
         self.csvFilePath = None
-
         self.params = {}
 
-        # calculation 
-        self.submissionParams, self.job_id = {}, "" # with HPC
+        self.submissionParams, self.job_id = {}, ""
         self.t_list = None
         self.dm_list = None
+        self.plot_kwargs = {}
 
-        # plotting
-        self.plot_kwargs = {} 
+        # ── root grid ────────────────────────────────────────────────────
+        self.grid_columnconfigure(0, weight=0, minsize=220)  # left
+        self.grid_columnconfigure(1, weight=1, minsize=320)  # middle
+        self.grid_columnconfigure(2, weight=0, minsize=240)  # right
+        self.grid_rowconfigure(0, weight=0)  # header
+        self.grid_rowconfigure(1, weight=5)  # main content
+        self.grid_rowconfigure(2, weight=1)  # console
 
-        # Configure the grid layout for the root window
-        self.grid_columnconfigure(0, weight=1)
-        self.grid_columnconfigure(1, weight=2)
-        self.grid_columnconfigure(2, weight=1)
+        # ── header ───────────────────────────────────────────────────────
+        self._header = ctk.CTkFrame(self, height=52, corner_radius=0,
+                                    fg_color=("gray90", "gray15"))
+        self._header.grid(row=0, column=0, columnspan=3, sticky="ew")
+        self._header.grid_propagate(False)
+        self._header.grid_columnconfigure(1, weight=1)
 
-        self.grid_rowconfigure(0, weight=5)
-        self.grid_rowconfigure(1, weight=1)
+        self._title_lbl = ctk.CTkLabel(
+            self._header, text="  TensorHEOM",
+            font=ctk.CTkFont(size=17, weight="bold"),
+            text_color=("#1a73e8", "#4fa3f7"),
+        )
+        self._title_lbl.grid(row=0, column=0, padx=(16, 0), pady=8, sticky="w")
 
-        # --------------------------------------------------------------
+        self._step_indicator = StepIndicator(self._header)
+        self._step_indicator.grid(row=0, column=1, pady=8)
 
-        # left frames
+        self._appearance_menu = ctk.CTkOptionMenu(
+            self._header,
+            values=["System", "Light", "Dark"],
+            width=110,
+            command=lambda m: ctk.set_appearance_mode(m),
+        )
+        self._appearance_menu.set("System")
+        self._appearance_menu.grid(row=0, column=2, padx=16, pady=8, sticky="e")
+
+        # ── left column ──────────────────────────────────────────────────
         self.left_frame = LeftFrame(self)
-        self.left_frame.grid(row=0, column=0, padx=10, pady=10, sticky="nsew")
+        self.left_frame.grid(row=1, column=0, padx=(10, 5), pady=(10, 5),
+                             sticky="nsew")
 
         self.help_frame = HelpFrame(self)
-        self.help_frame.grid(row=1, column=0, padx=10, pady=10, sticky="nsew")
+        self.help_frame.grid(row=2, column=0, padx=(10, 5), pady=(5, 10),
+                             sticky="nsew")
 
-        # --------------------------------------------------------------
-
-        # middle frames
+        # ── middle column ────────────────────────────────────────────────
         self.middle_frame = MiddleFrame(self)
-        self.middle_frame.grid(row=0, column=1, rowspan=3, padx=10, pady=10, sticky="nsew")
+        self.middle_frame.grid(row=1, column=1, rowspan=2, padx=5, pady=10,
+                               sticky="nsew")
 
-        # --------------------------------------------------------------
-
-        # right frames
+        # ── right column ─────────────────────────────────────────────────
         self.right_frame = RightFrame(self)
-        self.right_frame.grid(row=0, column=2, padx=10, pady=10, sticky="nsew")
+        self.right_frame.grid(row=1, column=2, padx=(5, 10), pady=(10, 5),
+                              sticky="nsew")
 
         self.console_frame = ScrollableConsoleFrame(self)
-        self.console_frame.grid(row=1, column=2, padx=10, pady=10, rowspan=2, sticky="nsew")
-
-        # --------------------------------------------------------------
-
-        # self.middle_frame.change_state("disabled")
-        # self.right_frame.change_state1("disabled")
-        # self.right_frame.change_state2("disabled")
+        self.console_frame.grid(row=2, column=2, padx=(5, 10), pady=(5, 10),
+                                sticky="nsew")
 
     # ------------------------------------------------------------------
-    # help frame functions
+    # Internal helpers
+    # ------------------------------------------------------------------
+
+    def _set_step(self, step: int):
+        self._step_indicator.set_step(step)
+
+    # ------------------------------------------------------------------
+    # Help frame functions
     # ------------------------------------------------------------------
 
     def open_github(self):
-        webbrowser.open("https://github.com/dehe1011")
+        webbrowser.open("https://github.com/dehe1011/TensorHEOM")
 
     def open_paper(self):
         webbrowser.open("http://arxiv.org/abs/2510.05872")
@@ -118,71 +146,72 @@ class TensorHeomApp(ctk.CTk):
         self.wait_window(popup)
 
     # ------------------------------------------------------------------
-    # left frame functions
+    # Left frame functions
     # ------------------------------------------------------------------
 
     def open_circuit_editor(self):
-
-        # get args from left frame
         self.directory_display, self.fileName, self.numQ = self.left_frame.get_args()
         self.directory = os.path.join(os.getcwd(), self.directory_display)
         os.makedirs(self.directory, exist_ok=True)
-        self.qcFilePath = os.path.join(self.directory, 'qcData_' + self.fileName)
+        self.qcFilePath = os.path.join(self.directory, "qcData_" + self.fileName)
 
-        # modifies self.qc
         print("Opening circuit editor window...")
         popup = CircuitEditor(self)
         popup.grab_set()
         self.wait_window(popup)
-        print(f"Circuit built successfully and saved as {self.qcFilePath}")
+        print(f"Circuit built and saved as {self.qcFilePath}")
 
     def upload_circuit(self):
+        self.directory_display, self.fileName, self.numQ = self.left_frame.get_args()
+        self.directory = os.path.join(os.getcwd(), self.directory_display)
+        self.qcFilePath = os.path.join(self.directory, "qcData_" + self.fileName)
 
-        # get args from left frame
-        self.directory, self.fileName, self.numQ = self.left_frame.get_args()
-        self.qcFilePath = os.path.join(self.directory, 'qcData_' + self.fileName)
-
-        # modifies self.qc
         print("Uploading circuit...")
-        self.qcFilePath = filedialog.askopenfilename(filetypes=[("QPY files", "*.qpy")])
-        self.qc = loadQC(self.qcFilePath)
-        print("Info: Circuit uploaded successfully.")
+        path = filedialog.askopenfilename(filetypes=[("QPY files", "*.qpy")])
+        if path:
+            self.qcFilePath = path
+            self.qc = loadQC(self.qcFilePath)
+            print("Circuit uploaded successfully.")
 
     def continue_to_middle_frame(self):
+        self.directory_display, self.fileName, self.numQ = self.left_frame.get_args()
+        self.directory = os.path.join(os.getcwd(), self.directory_display)
+        self.qcFilePath = os.path.join(self.directory, "qcData_" + self.fileName)
+        self.csvFilePath = os.path.join(self.directory, self.fileName + ".csv")
 
-        self.qcFilePath = os.path.join(self.directory, 'qcData_' + self.fileName)
-        self.csvFilePath = os.path.join(self.directory, self.fileName + '.csv')
-        
         if self.qc is None:
-            print("Please define a quantum circuit to continue.")
-            return 
-        
+            print("Please define a quantum circuit first.")
+            return
+
         if self.qc.num_qubits != self.numQ:
-            print(f"Warning: Uploaded circuit has {self.qc.num_qubits} qubits, but {self.numQ} were specified. Using {self.qc.num_qubits} qubits.")
+            print(
+                f"Warning: circuit has {self.qc.num_qubits} qubit(s) but "
+                f"{self.numQ} were specified. Using {self.qc.num_qubits}."
+            )
             self.numQ = self.qc.num_qubits
 
-        # set kwargs
-        self.kwargs['directory'] = self.directory
-        self.kwargs['fileName'] = self.fileName
-        self.kwargs['numQ'] = self.numQ
-        self.kwargs['rhoIni'] = q.tensor( [q.fock_dm(2,0) for _ in range(self.numQ)] ).full().real
-
-        # enable middle frame
-        self.left_frame = LeftFrame(self)
-        self.left_frame.grid(row=0, column=0, padx=10, pady=10, sticky="nsew")
-        self.left_frame.change_state("disabled")
-        self.middle_frame = MiddleFrame(self)
-        self.middle_frame.grid(
-            row=0, column=1, rowspan=3, padx=10, pady=10, sticky="nsew"
+        self.kwargs["directory"] = self.directory
+        self.kwargs["fileName"] = self.fileName
+        self.kwargs["numQ"] = self.numQ
+        self.kwargs["rhoIni"] = (
+            q.tensor([q.fock_dm(2, 0) for _ in range(self.numQ)]).full().real
         )
 
+        self.left_frame = LeftFrame(self)
+        self.left_frame.grid(row=1, column=0, padx=(10, 5), pady=(10, 5),
+                             sticky="nsew")
+        self.left_frame.change_state("disabled")
+
+        self.middle_frame = MiddleFrame(self)
+        self.middle_frame.grid(row=1, column=1, rowspan=2, padx=5, pady=10,
+                               sticky="nsew")
+        self._set_step(1)
+
     # ------------------------------------------------------------------
-    # middle frame functions
+    # Middle frame functions
     # ------------------------------------------------------------------
 
     def open_state_editor(self):
-
-        # modifies self.init_state
         print("Opening state editor window...")
         popup = StateEditor(self)
         popup.grab_set()
@@ -193,148 +222,132 @@ class TensorHeomApp(ctk.CTk):
         self.right_frame.change_state2("disabled")
         self.middle_frame.change_state("disabled")
         self.left_frame.change_state("normal")
+        self._set_step(0)
 
     def continue_to_right_frame(self):
-        """ Proceed to right frame and prepare kwargs for calculation. """
+        (
+            freqQ, gateTime, T, T1, omegaC, exp, tol,
+            idlingTime, dtFB, depth, bondDim, strideTime, useRFPlus, isRK13,
+        ) = self.middle_frame.get_args()
 
-        # update kwargs
-        freqQ, gateTime, T, T1, omegaC, exp, tol, idlingTime, dtFB, depth, bondDim, useRFPlus, isRK13 = self.middle_frame.get_args()
-        self.kwargs['freqQ'] = freqQ
-        self.kwargs['gateTime'] = gateTime
-        self.kwargs['T'] = T
-        self.kwargs['T1'] = T1
-        self.kwargs['omegaC'] = omegaC
-        self.kwargs['exp'] = exp
-        self.kwargs['tol'] = tol
-        self.kwargs['idlingTime'] = idlingTime
-        self.kwargs['dtFB'] = dtFB
-        self.kwargs['depth'] = depth
-        self.kwargs['bondDim'] = bondDim
-        self.kwargs['useRFPlus'] = useRFPlus
-        self.kwargs['isRK13'] = isRK13
-        self.kwargs['strideTime'] = 0.1 # TODO
+        self.kwargs.update(
+            freqQ=freqQ, gateTime=gateTime, T=T, T1=T1,
+            omegaC=omegaC, exp=exp, tol=tol, idlingTime=idlingTime,
+            dtFB=dtFB, depth=depth, bondDim=bondDim, strideTime=strideTime,
+            useRFPlus=useRFPlus, isRK13=isRK13, qc=self.qc,
+        )
 
-        self.kwargs['qc'] = self.qc
-
-        # enable right frame
         self.middle_frame.change_state("disabled")
         self.right_frame.change_state1("normal")
+        self._set_step(2)
 
     def open_plotting_pulse_window(self):
         print("Opening pulse sequence plotting window...")
         PlottingPulseWindow(self)
         PlottingCircWindow(self)
-        
+
     def plot_pulse_seq(self):
         return plotPulseSeq(**self.kwargs)
 
     # ------------------------------------------------------------------
-    # right frame functions
+    # Right frame functions
     # ------------------------------------------------------------------
 
     def upload_file(self):
-        """Upload result file (calculation either on HPC or locally)."""
-
         print("Uploading result file...")
         filepath = filedialog.askopenfilename(filetypes=[("CSV files", "*.csv")])
+        if not filepath:
+            return
         self.t_list, self.dm_list = loadResult(filepath)
-        self.t_list /= self.params['omegaQmax']
-        print("Info: Result file uploaded successfully.")
-
-        # enable lower right frame
+        self.t_list /= self.params.get("omegaQmax", 1.0)
+        print("Result file uploaded successfully.")
         self.right_frame.change_state2("normal")
+        self._set_step(3)
 
     def submit_local(self):
-        """Submit local calculation job."""
-
+        print("Running simulation locally…")
         t0 = time.time()
         calcTimeEvo(**self.kwargs)
-
         self.t_list, self.dm_list = loadResult(self.csvFilePath)
-        self.t_list /= self.params['omegaQmax']
-        print(f"Calculation finished in {time.time()-t0}s. Saved as {self.csvFilePath}.")
-
-        # enable lower right frame
+        self.t_list /= self.params.get("omegaQmax", 1.0)
+        elapsed = time.time() - t0
+        print(f"Simulation finished in {elapsed:.1f} s. Saved to {self.csvFilePath}.")
         self.right_frame.change_state2("normal")
+        self._set_step(3)
 
     def submit_hpc(self):
-        """Submit calculation job to HPC."""
-
-        # modify submissionParams
         print("Opening HPC Settings window...")
         popup = HPCSettings(self)
         popup.grab_set()
         self.wait_window(popup)
 
-        # submit job
+        if not self.submissionParams:
+            print("HPC submission cancelled.")
+            return
+
         print("Submitting job to HPC...")
-        stride = int(self.kwargs['strideTime'] / self.kwargs['dtFB'])
-        args = prepareArgs(self.kwargs['numQ'], self.kwargs['freqQ'], self.kwargs['gateTime'], self.kwargs['T'], self.kwargs['T1'], self.wargs['omegaC'], 
-            self.kwargs['exp'], self.kwargs['tol'], self.kwargs['rhoIni'], self.kwargs['idlingTime'], self.kwargs['dtFB'], self.kwargs['depth'], self.kwargs['bondDim'])
+        stride = int(self.kwargs["strideTime"] / self.kwargs["dtFB"])
+        args = prepareArgs(
+            self.kwargs["numQ"], self.kwargs["freqQ"], self.kwargs["gateTime"],
+            self.kwargs["T"], self.kwargs["T1"], self.kwargs["omegaC"],
+            self.kwargs["exp"], self.kwargs["tol"], self.kwargs["rhoIni"],
+            self.kwargs["idlingTime"], self.kwargs["dtFB"],
+            self.kwargs["depth"], self.kwargs["bondDim"],
+        )
         omegaQmax, rho, bondDim, V, depth, bath, gateList, dtFB, idlingTime = args
-        self.job_id = submitJob(self.submissionParams, self.qcFilePath, omegaQmax, self.kwargs['qc'], idlingTime, gateList, rho,
-          bath, V, dtFB, stride, depth, bondDim, useRFPlus=self.wargs['useRFPlus'], isRK13=self.kwargs['isRK13'])
+        self.job_id = submitJob(
+            self.submissionParams, self.qcFilePath, omegaQmax,
+            self.kwargs["qc"], idlingTime, gateList, rho, bath, V,
+            dtFB, stride, depth, bondDim,
+            useRFPlus=self.kwargs["useRFPlus"],
+            isRK13=self.kwargs["isRK13"],
+        )
 
     def download_file(self):
-        """Download result file from HPC."""
-
         print("Opening HPC Download window...")
         popup = HPCDownload(self)
         popup.grab_set()
         self.wait_window(popup)
 
         self.t_list, self.dm_list = loadResult(self.job_id + ".csv")
-        self.t_list /= self.params['omegaQmax']
-        print(f"Info: Result file downloaded successfully and saved as {self.job_id}.csv.")
-
-        # enable lower right frame
+        self.t_list /= self.params.get("omegaQmax", 1.0)
+        print(f"Result downloaded and saved as {self.job_id}.csv.")
         self.right_frame.change_state2("normal")
+        self._set_step(3)
 
     def back_to_middle_frame(self):
-        """Go back to middle frame."""
-
         self.t_list = None
         self.dm_list = None
-    
         self.right_frame.change_state1("disabled")
         self.right_frame.change_state2("disabled")
         self.middle_frame.change_state("normal")
         self.left_frame.change_state("disabled")
+        self._set_step(1)
 
     # ------------------------------------------------------------------
-    # plotting window functions
+    # Plotting / evaluation functions
     # ------------------------------------------------------------------
 
     def calculate_fidelity(self):
-        """Fidelity calculation."""
-
         rho = self.dm_list[-1]
-
         U = Operator(self.qc).data
-        rhoIni = self.kwargs['rhoIni']
-        target = U @ rhoIni @ U.conj().T
-
+        target = U @ self.kwargs["rhoIni"] @ U.conj().T
         F = getFidelity(rho, target)
-        print(f"Fidelity: {F}")
+        print(f"Fidelity: {F:.6f}")
         return F
 
     def calculate_concurrence(self):
-        """Concurrence calculation for 2 qubits only."""
-
-        if not self.numQ == 2:
+        if self.numQ != 2:
             print("Concurrence is only defined for 2 qubits.")
             return None
-    
         rho = self.dm_list[-1]
-
         C = getConcurrence(rho)
-        print(f"Concurrence: {C}")
+        print(f"Concurrence: {C:.6f}")
         return C
-    
-    def plot(self):  
-        """Plotting window."""
+
+    def plot(self):
         plot_type = self.right_frame.get_args()
-        self.plot_kwargs['plot_type'] = plot_type
+        self.plot_kwargs["plot_type"] = plot_type
         PlottingWindow(self)
 
 # ----------------------------------------------------------------------
