@@ -454,7 +454,7 @@ def calcTimeEvo(fileName, qc, numQ, freqQ, gateTime, T, T1, omegaC, exp, tol, rh
     idlingTime : float
         Idling time in ns.
     dtFB : float
-        Integration time step in fs.
+        Integration time step in ps.
     depth : list of int
         FP-HEOM hierarchy depths, one per qubit.
     bondDim : int

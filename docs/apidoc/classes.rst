@@ -1,30 +1,23 @@
-Classes & Functions
-===================
+Classes & Module Functions
+==========================
 
-This section provides an overview of the available classes and functions contained in the `TensorHEOM` package.
+This section documents TensorHEOM's internal classes and module-level
+functions, grouped by subsystem.
 
-Decomposition of bath auto-correlation functions
-------------------------------------------------
-
-.. currentmodule:: ttheom.bath
-
-.. autofunction:: getBathParams
-.. autofunction:: broadbandNoise
-
-Connection of quantum gates and pulse sequences
------------------------------------------------
+Pulse types and gate specifications
+-------------------------------------
 
 .. currentmodule:: ttheom.pulse
 
 .. autofunction:: setGates
 .. autofunction:: getGate
-.. autoclass:: directCplStepVarJ
-.. autoclass:: iSwapDPulse
 .. autoclass:: rxyStep
 .. autoclass:: U3Pulse
+.. autoclass:: iSwapDPulse
+.. autoclass:: directCplStepVarJ
 
-Tensor Train representation
----------------------------
+Tensor-train representation
+----------------------------
 
 .. currentmodule:: ttheom.tt
 
@@ -34,8 +27,8 @@ Tensor Train representation
 .. autoclass:: TTs2QId
 .. autoclass:: TTsMQChainId
 
-Compilation of Qiskit circuits to pulse sequences
--------------------------------------------------
+Circuit compilation
+-------------------
 
 .. currentmodule:: ttheom.circuit
 
@@ -54,15 +47,15 @@ Time evolution
 .. autofunction:: outputCurrentStates
 .. autofunction:: getRotatingRDO
 
-Running Simulations on HPC
---------------------------
+HPC cluster support
+--------------------
 
 .. currentmodule:: ttheom.ssh
 
-.. autofunction:: slurmShell
-.. autofunction:: slurmStatus
-.. autofunction:: commandsForSubmission
-.. autofunction:: getStatus
-.. autofunction:: getClient
 .. autofunction:: submitJob
 .. autofunction:: downloadResult
+.. autofunction:: getClient
+.. autofunction:: commandsForSubmission
+.. autofunction:: getStatus
+.. autofunction:: slurmShell
+.. autofunction:: slurmStatus
