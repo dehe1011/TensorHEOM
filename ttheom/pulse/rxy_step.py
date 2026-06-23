@@ -2,23 +2,37 @@ import numpy as np
 from .u3 import U3Pulse
 
 class rxyStep(U3Pulse):
-    """pulse for single-qubit gates with abrupt change
-        elemental gate: U3 gate
+    """Single-qubit pulse with abrupt (step-function) amplitude changes.
 
-        attributes:
-            amp (float): amplitude of pulse
-            omega (float): drive frequency
-            gateTime (float): gate time of RXGate(pi)
-            ampSeq (numpy.ndarray): array of amplitude sequence
-            phaseSeq (numpy.ndarray): array of phase sequence
+    Implements the :class:`~ttheom.pulse.abstract_pulse.abstractPulse`
+    interface using a U3-gate decomposition.
+
+    Attributes
+    ----------
+    amp : float
+        Pulse amplitude (rad per time unit).
+    omega : float
+        Drive frequency (rad per time unit).
+    gateTime : float
+        Gate time for an :math:`R_x(\\pi)` rotation.
+    ampSeq : numpy.ndarray
+        Time sequence of pulse amplitudes.
+    phaseSeq : numpy.ndarray
+        Time sequence of pulse phases.
     """
 
     def __init__(self, **kwargs):
-        """
-            args:
-                **kwargs: keyward arguments
-                    kwargs['gateTime'] (float): gate time of RXGate(pi)
-                    kwargs['omega'] (float): drive frequency
+        """Initialize the pulse from keyword arguments.
+
+        Parameters
+        ----------
+        **kwargs
+            Keyword arguments.
+
+            ``gateTime`` : float
+                Gate time for an :math:`R_x(\\pi)` rotation.
+            ``omega`` : float
+                Drive frequency.
         """
 
         self.gateTime = kwargs['gateTime']
@@ -26,47 +40,59 @@ class rxyStep(U3Pulse):
         self.amp = np.pi / self.gateTime
 
     def getGateTime(self, dt: float, params: list) -> int:
-        """get gate time in the unit of dt
-            Note: Use this after vzTransform
+        """Return the gate duration in units of ``dt``.
 
-            args:
-                dt (float): time step for integration of HEOM
-                params (list): parameters
-                    params[0] (float): rotation angle (theta)
-                    
-            returns:
-                int: gate time
+        .. note::
+            Call this method only after :meth:`vzTransform` has been applied.
+
+        Parameters
+        ----------
+        dt : float
+            Time step for HEOM integration.
+        params : list
+            Gate parameters; ``params[0]`` is the rotation angle theta.
+
+        Returns
+        -------
+        int
+            Gate duration (number of time steps).
         """
 
         angle = getAngle(params[0])
 
         return int(np.abs(angle) / self.amp / dt)
-    
-    def initSeq(self, totalSize: int) -> None:
-        """initialize sequences
 
-            args:
-                totalSize (int): total size of the sequence
+    def initSeq(self, totalSize: int) -> None:
+        """Allocate and zero-initialize the amplitude and phase sequences.
+
+        Parameters
+        ----------
+        totalSize : int
+            Total number of time steps.
         """
-        
+
         self.ampSeq = np.zeros(totalSize)
         self.phaseSeq = np.zeros(totalSize)
 
-    def setSeq(self, st: int, dur:int, params: list) -> None:
-        """set values for sequences in [st:st+dur]
-            Corresponding gate is assumed to be U3(theta, phi, -phi)
-            after virtual-Z transformation.
+    def setSeq(self, st: int, dur: int, params: list) -> None:
+        """Set pulse values in the interval ``[st, st+dur)``.
 
-            args:
-                st (int): starting point of the pulse
-                dur (int): duration of the pulse
-                params (list): parameters
-                    params[0] (float): theta of U3Gate
-                    params[1] (float): phi of U3Gate
+        The corresponding gate is assumed to be :math:`U_3(\\theta, \\phi, -\\phi)`
+        after virtual-Z transformation.
+
+        Parameters
+        ----------
+        st : int
+            Starting time step.
+        dur : int
+            Duration in time steps.
+        params : list
+            Gate parameters; ``params[0]`` is theta and ``params[1]`` is phi
+            of the U3 gate.
         """
 
         self.ampSeq[st:st+dur] = self.amp
-        
+
         angle = getAngle(params[0])
         phase = params[1] + 0.5*np.pi
         if angle < 0:
@@ -75,33 +101,44 @@ class rxyStep(U3Pulse):
 
     def getPrefactor(self, dt: float, time: float,
                      stepNum: int) -> tuple[float, float]:
-        """compute prefactor terms for Runge-Kutta update
+        """Compute the :math:`\\sigma_x` and :math:`\\sigma_y` prefactors.
 
-            args:
-                dt (float): step size for Runge-Kutta integration
-                time (float): current time
-                stepNum (int): current step number of the integration
-            
-            returns:
-                preSX (float): prefactor for sigma_x term
-                preSY (float): prefactor for sigma_y term
+        Parameters
+        ----------
+        dt : float
+            Integration time step.
+        time : float
+            Current time.
+        stepNum : int
+            Current step number.
+
+        Returns
+        -------
+        preSX : float
+            Prefactor for the :math:`\\sigma_x` term.
+        preSY : float
+            Prefactor for the :math:`\\sigma_y` term.
         """
 
         preSX = self.ampSeq[stepNum]\
             * np.cos(self.omega * time + self.phaseSeq[stepNum])
         preSY = self.ampSeq[stepNum]\
             * np.sin(self.omega * time + self.phaseSeq[stepNum])
-        
+
         return preSX, preSY
 
 def getAngle(angle: float) -> float:
-    """return a normalized angle in the range (-pi, pi)
+    """Normalize an angle to the range :math:`(-\\pi, \\pi]`.
 
-        args:
-            angle (float): angle
+    Parameters
+    ----------
+    angle : float
+        Input angle in radians.
 
-        returns:
-            angle (float): normalized angle
+    Returns
+    -------
+    float
+        Normalized angle in :math:`(-\\pi, \\pi]`.
     """
 
     angle = angle % (2 * np.pi)

@@ -2,22 +2,21 @@ import numpy as np
 import pandas as pd
 
 def loadResult(csvFilePath):
-    """
-    Load timesteps and density matrices from CSV.
+    """Load timesteps and density matrices from a CSV file.
 
     Parameters
     ----------
-    csv_file : str
-        Path to the CSV file. The first column is time,
-        then real and imaginary parts of the density matrix
-        entries in row-major order.
+    csvFilePath : str
+        Path to the CSV file. The first column is time; the remaining columns
+        hold real and imaginary parts of the density-matrix entries in
+        row-major order (alternating real, imaginary).
 
     Returns
     -------
-    times : np.ndarray
-        1D array of time points.
-    rhos : list of np.ndarray
-        List of density matrices, one per row.
+    times : numpy.ndarray
+        1-D array of time points.
+    rhos : list of numpy.ndarray
+        List of density matrices, one per time step.
     """
     df = pd.read_csv(csvFilePath, header=None)
     times = df.iloc[:, 0].to_numpy()

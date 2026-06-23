@@ -4,21 +4,26 @@ import matplotlib.pyplot as plt
 from ..main import prepareTTs
 
 def plotPulseSeq(fig=None, ax=None, **kwargs):
-    """
-    Plot the pulse sequences including Rabi frequency, phase and interaction 
-    strength for the transpiled quantum circuit.
+    """Plot the pulse sequences for the transpiled quantum circuit.
+
+    Displays Rabi frequency, phase, and interaction strength for each qubit
+    (and each qubit pair for multi-qubit systems).
 
     Parameters
     ----------
-    TTs : TTs.TTs
-        Class for MPS and MPO
+    fig : matplotlib.figure.Figure, optional
+        Existing figure to draw into. If ``None``, a new figure is created.
+    ax : matplotlib.axes.Axes or numpy.ndarray of Axes, optional
+        Existing axes to draw into. If ``None``, new axes are created.
+    **kwargs
+        Keyword arguments forwarded to :func:`~ttheom.main.prepareTTs`.
 
     Returns
     -------
     fig : matplotlib.figure.Figure
-        The figure object
-    ax : matplotlib.axes.Axes or numpy.ndarray of Axes
-        The axes objects for the subplots
+        The figure object.
+    ax : numpy.ndarray of matplotlib.axes.Axes
+        The axes objects for the subplots.
     """
 
     # setup tensor trains
@@ -29,8 +34,6 @@ def plotPulseSeq(fig=None, ax=None, **kwargs):
     gateTime = [TTs.pulse[i][1].gateTime for i in range(2*TTs.numQ-1)]
 
     numQ = TTs.numQ
-    # maxTime = len(TTs.omegaQSeq[0]) * dtFB / (10 * np.pi)
-    # x_size = min(3*3.4, 3.4 * maxTime/300) + 0.4
     x_size = 3.4
     if fig is None or ax is None:
         fig, ax = plt.subplots(2*numQ-1, 1, figsize=(x_size, (2*numQ-1) * 2.1/3 + 0.2), sharex=True)
@@ -40,14 +43,14 @@ def plotPulseSeq(fig=None, ax=None, **kwargs):
         a.spines["top"].set_visible(True)
         a.spines["right"].set_visible(True)
         a.grid(True, which="both", ls="--", lw=0.5, alpha=0.7)
-     
+
     for i in range(numQ):
         pulseIdx = i
         ampSeq = TTs.pulse[pulseIdx][1].ampSeq
         phaseSeq = TTs.pulse[pulseIdx][1].phaseSeq
-    
+
         t = np.arange(len(phaseSeq)) * dtFB / omegaQmax
-    
+
         # --- left axis: amplitude ---
         ax_amp = ax[i]
         ax_amp.plot(t, ampSeq, color="#459DD9")
@@ -56,7 +59,7 @@ def plotPulseSeq(fig=None, ax=None, **kwargs):
         ax_amp.set_yticks([0, np.pi/gateTime[i]], [r'0', r'$\frac{\pi}{\omega t_G}$'])
         amp_diff = np.max(ampSeq) - np.min(ampSeq)
         ax_amp.set_ylim(np.min(ampSeq) - 0.1*amp_diff, np.max(ampSeq) + 0.1*amp_diff)
-    
+
         # --- right axis: phase ---
         ax_phase = ax_amp.twinx()
         ax_phase.plot(t, phaseSeq, color="#B74244")
@@ -79,7 +82,7 @@ def plotPulseSeq(fig=None, ax=None, **kwargs):
         for i in range(numQ-1):
             pulseIdx = i + numQ
             JSeq = TTs.pulse[pulseIdx][1].JSeq
-        
+
             ax_J = ax[i + numQ]
             ax_J.plot(t, JSeq, color="#A546BD")
             ax_J.set_ylabel(rf"$J_{{{i+1}{i+2}}}$", color="#6C0B8D")
@@ -87,6 +90,6 @@ def plotPulseSeq(fig=None, ax=None, **kwargs):
             ax_J.set_yticks([0, np.pi/2/gateTime[numQ+i] ], [r'0', r'$\frac{\pi}{2\omega t_G}$'])
             J_diff = np.max(JSeq) - np.min(JSeq)
             ax_J.set_ylim(np.min(JSeq) - 0.1*J_diff, np.max(JSeq) + 0.1*J_diff)
-    
+
     ax[-1].set_xlabel(r"$t$ [ns]")
     return fig, ax

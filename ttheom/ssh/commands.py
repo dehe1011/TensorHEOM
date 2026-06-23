@@ -1,25 +1,35 @@
 from .slurm import slurmShell, slurmStatus
 
 def commandsForSubmission(submissionParams, qpyName, path):
-    """create commands for job submission
+    """Build the shell commands needed to submit a job to an HPC cluster.
 
-        args:
-            submissionParams (dict):
-                parameters for submissoin
-                submissoinParams['schedulerName']: job scheduler name
-                submissionParams['numNodes'] (int): the number of nodes
-                submissionParams['cpusPerTask'] (int):
-                    the number of cpus per task
-                submissionParams['maxTime'] (str):
-                    maximum time for calculation in the form 'D-H:MM:SS'
-                submissionParams['others'] (str): user-defined parameters
-                submissionParams['venvPath']:
-                    path of venv (virtual environment)
-            qpyName (str): name of input file (QPY format)
-            path (str): path for files to submit
-                
-        returns:
-            commands (str): commands for submission
+    Parameters
+    ----------
+    submissionParams : dict
+        Submission parameters with the following keys:
+
+        ``'schedulerName'`` : str
+            Job scheduler name (e.g. ``'slurm'``).
+        ``'numNodes'`` : int
+            Number of compute nodes.
+        ``'cpusPerTask'`` : int
+            Number of CPU cores per task.
+        ``'maxTime'`` : str
+            Wall-clock time limit in the form ``'D-H:MM:SS'``.
+        ``'others'`` : str
+            Additional scheduler directives.
+        ``'venvPath'`` : str
+            Path to the Python virtual environment.
+
+    qpyName : str
+        Name of the input QPY file.
+    path : str
+        Remote directory where the files will be placed.
+
+    Returns
+    -------
+    commands : str
+        Shell command string to be executed on the remote host.
     """
     SCRIPTNAME = 'run.py'
     SHELLNAME = 'job.sh'
@@ -35,7 +45,7 @@ def commandsForSubmission(submissionParams, qpyName, path):
     if submissionParams['schedulerName'] == 'slurm':
         shell, submissionCommand = \
             slurmShell(submissionParams, qpyName, SCRIPTNAME)
-    
+
     shell += 'EOF2'
 
 
@@ -49,15 +59,21 @@ def commandsForSubmission(submissionParams, qpyName, path):
     return commands
 
 def getStatus(schedulerName, jobID, client):
-    """return whether the job with jobID is completed
+    """Check whether an HPC job has completed.
 
-        args:
-            schedulerName (str): job scheduler name
-            jobID: job ID of the simulation
-            client (paramiko.client.SSHClient): client for ssh connection
+    Parameters
+    ----------
+    schedulerName : str
+        Job scheduler name (e.g. ``'slurm'``).
+    jobID : int or str
+        Job ID of the simulation.
+    client : paramiko.client.SSHClient
+        Active SSH client connected to the HPC cluster.
 
-        returns:
-            bool: whether the job is completed
+    Returns
+    -------
+    bool
+        ``True`` if the job has completed, ``False`` if it is still running.
     """
 
     if schedulerName == 'slurm':

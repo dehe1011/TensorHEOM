@@ -7,15 +7,20 @@ from .tdevott import timeEvolution
 
 def calcDynamics(dtFB: float, stride: int,
                  TTs: TTs, timeEvo: timeEvolution, file):
-    """conduct calculation according to params
-    
-        args:
-            dtFB (float): step width for forward + backward time integration
-            stride (int): loops per output
-            TTs (TTs.TTs): MPS and MPO
-                MPS: already right-orthogonalized
-            timeEvo (tdevott.timeEvolution): class for time evolution
-            file (file object): file for results
+    """Run the time evolution and write the reduced density operator to a file.
+
+    Parameters
+    ----------
+    dtFB : float
+        Step width for forward + backward time integration.
+    stride : int
+        Number of integration steps between successive outputs.
+    TTs : TTs.TTs
+        MPS and MPO; the MPS must already be right-orthogonalized.
+    timeEvo : tdevott.timeEvolution
+        Time evolution object.
+    file : file object
+        Open file for writing results.
     """
 
     totalStep = len(TTs.omegaQSeq[0])
@@ -24,13 +29,11 @@ def calcDynamics(dtFB: float, stride: int,
     mod = int(totalStep % stride)
 
     for i in tqdm(range(dataSize)):
-        # t0 = time()
         for j in range(stride):
             stepNum = i * stride + j
             t = dtFB * stepNum
             timeEvo.zTTTimeEvo(TTs.rho, TTs.H, t, stepNum)
-        # print(f'Time: {(time() - t0)/len(range(stride)):.2f} sec')
-        
+
         stepNum = (i+1) * stride
         outTime = f'{dtFB * (i+1) * stride: .15e},'
         rhoOut = getRotatingRDO(dtFB, stepNum, TTs)
@@ -58,7 +61,7 @@ def calcDynamics(dtFB: float, stride: int,
         outStr = outTime + outRho + '\n'
 
         file.write(outStr)
-    
+
     # apply virtual Z gates
     stepNum = totalStep
     outTime = f'{dtFB * totalStep: .15e},'
@@ -73,14 +76,20 @@ def calcDynamics(dtFB: float, stride: int,
     file.write(outStr)
 
 def outputCurrentStates(dt: float, stepNum: int, TTs: TTs, file):
-    """output current reduced density operator
-        Mainly used for writing initial states
+    """Write the current reduced density operator to a file.
 
-        args:
-            dt (float): time step of TTs.omegaQSeq
-            stepNum (int): current step number
-            TTs (TTs.TTs): MPS and MPO
-            file (file object): file for results
+    Mainly used for recording the initial state.
+
+    Parameters
+    ----------
+    dt : float
+        Time step of ``TTs.omegaQSeq``.
+    stepNum : int
+        Current step number.
+    TTs : TTs.TTs
+        MPS and MPO.
+    file : file object
+        Open file for writing results.
     """
 
     t = stepNum * dt
@@ -95,16 +104,21 @@ def outputCurrentStates(dt: float, stepNum: int, TTs: TTs, file):
     file.write(outStr)
 
 def getRotatingRDO(dt: float, stepNum: int, TTs: TTs):
-    """transform the reduced density operator in the lab frame
-        to that in the rorating frame
+    """Transform the reduced density operator from the lab frame to the rotating frame.
 
-        args:
-            dt (float): time step of TTs.omegaQSeq
-            stepNum (int): current step number
-            TTs (TTs): MPS and MPO
-        
-        returns:
-            numpy.ndarray: RDO in the rorating frame
+    Parameters
+    ----------
+    dt : float
+        Time step of ``TTs.omegaQSeq``.
+    stepNum : int
+        Current step number.
+    TTs : TTs.TTs
+        MPS and MPO.
+
+    Returns
+    -------
+    numpy.ndarray
+        Reduced density operator in the rotating frame.
     """
 
     rdo = TTs.getRDO()
@@ -126,13 +140,18 @@ def getRotatingRDO(dt: float, stepNum: int, TTs: TTs):
     return rdo
 
 def RZ(theta: float):
-    """RZ rotation with the angle theta
+    """Compute the single-qubit Z-rotation matrix.
 
-        args:
-            theta (float): angle
+    Parameters
+    ----------
+    theta : float
+        Rotation angle in radians.
 
-        returns:
-            numpy.ndarray: roration matrix
+    Returns
+    -------
+    numpy.ndarray
+        :math:`2 \\times 2` rotation matrix
+        :math:`\\operatorname{diag}(e^{-i\\theta/2},\\, e^{i\\theta/2})`.
     """
 
     return np.array([[np.exp(-0.5j*theta), 0],

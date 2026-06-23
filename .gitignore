@@ -24,6 +24,7 @@ result.csv
 docs/_build/
 docs/_static/
 docs/_templates/
+docs/MagicMock/
 
 # created by coverage
 htmlcov/

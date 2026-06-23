@@ -4,18 +4,26 @@ import os
 import numpy as np
 
 def setGates(gateList: list) -> tuple[list, dict]:
-    """create instances for qubit gates
+    """Create pulse instances for all qubit gates in the gate list.
 
-        args:
-            gateList (list): input list for qubit gates
-                gateList[:][0] (list[int]): qubit index
-                gateList[:][1] (str): gate name
-                gateList[:][2] (dict): kwargs for gates
+    Parameters
+    ----------
+    gateList : list
+        Input list of gate specifications. Each element is a 3-item list:
 
-        returns:
-            pulse (list): list with qubit index and pulse
-            pulseMap (dict): dictionary for mapping
-                from qubit indeces to pulse indeces
+        ``gateList[i][0]`` : list of int
+            Qubit indices the gate acts on.
+        ``gateList[i][1]`` : str
+            Gate name (e.g. ``'rxyStep'``, ``'directCplStepVarJ'``).
+        ``gateList[i][2]`` : dict
+            Keyword arguments passed to the pulse constructor.
+
+    Returns
+    -------
+    pulse : list
+        List of ``[qubit_indices, pulse_instance]`` pairs.
+    pulseMap : dict
+        Mapping from sorted qubit-index tuples to pulse list indices.
     """
 
     numGates = len(gateList)
@@ -26,21 +34,31 @@ def setGates(gateList: list) -> tuple[list, dict]:
     for i in range(numGates):
         pulse.append([gateList[i][0],
                       getGate(gateList[i][1], gateList[i][2])])
-        
+
         pulseIdx = tuple(np.sort([j for j in gateList[i][0]]))
         pulseMap[pulseIdx] = i
 
     return pulse, pulseMap
 
 def getGate(pulseName: str, kwargs: dict):
-    """create a instance for pulse
+    """Instantiate a pulse object by name.
 
-        args:
-            pulseName (str): gate name
-            kwargs (dict): arguments for pulse
+    Parameters
+    ----------
+    pulseName : str
+        Name of the pulse class (e.g. ``'rxyStep'``).
+    kwargs : dict
+        Keyword arguments forwarded to the pulse constructor.
 
-        returns:
-            abstract_pulse.abstractPulse: class for gate
+    Returns
+    -------
+    abstractPulse
+        Instantiated pulse object.
+
+    Raises
+    ------
+    ValueError
+        If ``pulseName`` is not a supported gate type.
     """
 
     sys.path.append(os.path.dirname(__file__))
@@ -53,8 +71,8 @@ def getGate(pulseName: str, kwargs: dict):
         module = importlib.import_module(class_map[pulseName],
                                          package=__package__)
         cls = getattr(module, pulseName)
-    
+
     else:
         raise ValueError(f"Unsupported gate type: {pulseName}")
-    
+
     return cls(**kwargs)

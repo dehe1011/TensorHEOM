@@ -3,52 +3,58 @@ import numpy as np
 import copy
 
 class TTs(ABC):
-    """abstract class for MPS and MPO
+    """Abstract base class for the MPS/MPO tensor-train representation.
 
-        attributes:
-            numQ (int): number of qubits
-            numCore (int): number of cores
-            numH (int): number of partial Hamiltonians
-            dim (list): list of dimension of reservoir mode
-            ptrKet, ptrBra (list): list of pointer to ket/bra vector of spin
-            rho (numpy.ndarray): 1d array of tt.zTT (MPS)
-            H (numpy.ndarray): 2d array of tt.zTT (MPO)
-            omegaQSeq (numpy.ndarray): time sequence of qubit frequency
-            pulse (list[
-                    list[list[int], pulse.abstract_pulse.abstractPulse]
-                ]):
-                list of class for pulse
-            map (dict[tuple[int]: int]): dictionary for a mapping from
-                qubit indeces to pulse indeces
-                keys (tuple[int]): qubit indedes
-                values (int): pulse indeces for self.pulse
-            matVZ (numpy.ndarray): matrix representation of virtual Z gates
-            permMat (numpy.ndarray): matrix for permutation of qubits
-            
-            shapeBathEye1 (list[tuple]):
-                shapes of MPO cores for identity operators acting on baths
-                bond dimension = 1
-            coreBathEye1 (list[numpy.ndarray]):
-                MPO cores for identity operators action on baths
-                bond dimension = 1
-            shapeBathEye2 (list[tuple]):
-                shapes of MPO cores for identity operators acting on baths
-                bond dimension = 2
-            coreBathEye2 (list[numpy.ndarray]):
-                MPO cores for identity operators action on baths
-                bond dimension = 2
-            shapeBathEye3 (list[tuple]):
-                shapes of MPO cores for identity operators acting on baths
-                bond dimension = 3
-            coreBathEye3 (list[numpy.ndarray]):
-                MPO cores for identity operators action on baths
-                bond dimension = 3
+    Attributes
+    ----------
+    numQ : int
+        Number of qubits.
+    numCore : int
+        Number of tensor-train cores.
+    numH : int
+        Number of partial Hamiltonian terms.
+    dim : list
+        Dimensions of the reservoir modes.
+    ptrKet : list
+        Pointers to the ket (row) indices of each spin.
+    ptrBra : list
+        Pointers to the bra (column) indices of each spin.
+    rho : numpy.ndarray
+        1-D array of :class:`~ttheom.tt.tt.zTT` cores representing the MPS.
+    H : numpy.ndarray
+        2-D array of :class:`~ttheom.tt.tt.zTT` cores representing the MPO.
+    omegaQSeq : numpy.ndarray
+        Time sequence of qubit frequencies.
+    pulse : list
+        List of ``[qubit_indices, abstractPulse]`` pairs.
+    map : dict
+        Mapping from qubit-index tuples to pulse indices in ``self.pulse``.
+    matVZ : numpy.ndarray
+        Matrix representation of the virtual Z gates.
+    permMat : numpy.ndarray
+        Permutation matrix for qubit reordering.
+    shapeBathEye1 : list of tuple
+        Shapes of bond-dimension-1 identity MPO cores for the bath modes.
+    coreBathEye1 : list of numpy.ndarray
+        Bond-dimension-1 identity MPO cores for the bath modes.
+    shapeBathEye2 : list of tuple
+        Shapes of bond-dimension-2 identity MPO cores for the bath modes.
+    coreBathEye2 : list of numpy.ndarray
+        Bond-dimension-2 identity MPO cores for the bath modes.
+    shapeBathEye3 : list of tuple
+        Shapes of bond-dimension-3 identity MPO cores for the bath modes.
+    coreBathEye3 : list of numpy.ndarray
+        Bond-dimension-3 identity MPO cores for the bath modes.
     """
 
     def __init__(self, depth):
-        """args:
-            depth (list):
-                1d list of depth of hierarchy of FP-HEOM (from 0 to depth)
+        """Initialize the TTs base class and pre-build bath identity MPO cores.
+
+        Parameters
+        ----------
+        depth : list of int
+            Hierarchy depths of FP-HEOM for each bath mode
+            (truncation at level ``depth[i]``).
         """
 
         self.numQ = None
@@ -92,15 +98,20 @@ class TTs(ABC):
             self.coreBathEye3.append(coreTmp.flatten(order='F'))
 
     def getRhoBondDims(self, levels, bondDim):
-        """compute bond dimension of rhos
+        """Compute the bond dimensions for each MPS core.
 
-            args:
-                rhoBondDims (numpy.ndarray): 2d array of bond dimensions
-                levels (numpy.ndarray): 1d array of levels for each MPS
-                bondDim (int): maximum bond dimension of MPS
+        Parameters
+        ----------
+        levels : numpy.ndarray
+            1-D array of local Hilbert-space dimensions for each core.
+        bondDim : int
+            Maximum allowed bond dimension.
 
-            returns:
-                rhoBondDims (numpy.ndarray): 2d array of bond dimensions
+        Returns
+        -------
+        rhoBondDims : numpy.ndarray
+            2-D array of shape ``(numCore, 2)`` with left and right bond
+            dimensions for each core.
         """
 
         rhoBondDims = np.zeros([self.numCore, 2], dtype=int)
@@ -122,15 +133,20 @@ class TTs(ABC):
         return rhoBondDims
 
     def setBathMPO(self, depth, nu, coeff, sysIdx, HIdx):
-        """compute MPO cores
-            set values to self.H
+        """Build and store MPO cores for the system-bath interaction.
 
-            args:
-                depth (int): maximum hierarchy for bath
-                nu (numpy.ndarray): poles for FP-HEOM
-                coeff (numpy.ndarray): residues for FP-HEOM
-                sysIdx (int): system index for ptrKet and ptrBra
-                HIdx (int): MPO index
+        Parameters
+        ----------
+        depth : int
+            Maximum FP-HEOM hierarchy depth for this bath.
+        nu : numpy.ndarray
+            Poles of the bath correlation function decomposition.
+        coeff : numpy.ndarray
+            Residues of the bath correlation function decomposition.
+        sysIdx : int
+            Index used to look up ``ptrKet`` and ``ptrBra`` for the system site.
+        HIdx : int
+            Row index in ``self.H`` where the MPO cores will be stored.
         """
 
         dim  = len(nu)
@@ -175,12 +191,15 @@ class TTs(ABC):
 
 
     def setH(self, coreIn, TTOut):
-        """set values to MPO cores,
-            by copying values from coreIn to TTOut
-        
-            args:
-                coreIn (numpy.ndarray): MPO core for input
-                TTOut (tt.zTT): MPO for output, overwritten
+        """Copy an MPO core array into a :class:`~ttheom.tt.tt.zTT` object.
+
+        Parameters
+        ----------
+        coreIn : numpy.ndarray
+            4-D MPO core array of shape
+            ``(bondDimL, level, level, bondDimR)``.
+        TTOut : tt.zTT
+            Target MPO core object; overwritten in place.
         """
 
         TTOut.bondDimL = coreIn.shape[0]
@@ -189,13 +208,17 @@ class TTs(ABC):
         TTOut.core = copy.deepcopy(coreIn.flatten(order='F'))
 
     def setRefH(self, coreShape, coreFlattenIn, TTOut):
-        """set values to MPO cores,
-            by referring to values of coreFlattenIn
+        """Set an MPO core by reference (no copy) from a flattened array.
 
-            args:
-                coreShape (tuple): shape of core before flattening 
-                coreFlattenIn (numpy.ndarray): MPO core for input
-                TTOut (tt.zTT): MPO for output, overwritten
+        Parameters
+        ----------
+        coreShape : tuple
+            Shape of the core before flattening,
+            ``(bondDimL, level, level, bondDimR)``.
+        coreFlattenIn : numpy.ndarray
+            Flattened MPO core data; assigned by reference.
+        TTOut : tt.zTT
+            Target MPO core object; overwritten in place.
         """
 
         TTOut.bondDimL = coreShape[0]

@@ -1,28 +1,39 @@
 def slurmShell(submissionParams, qpyName, scriptName):
-    """shell script for Slurm systems
-    
-        args:
-            submissionParams (dict):
-                parameters for submissoin
-                submissoinParams['schedulerName']: job scheduler name
-                submissionParams['numNodes'] (int): the number of nodes
-                submissionParams['tasksPerNode'] (int):
-                    the number of tasks per node
-                submissionParams['cpusPerTask'] (int):
-                    the number of cpus per task
-                submissionParams['maxTime'] (str):
-                    maximum time for calculation in the form 'D-H:MM:SS'
-                submissionParams['emailAddress'] (str):
-                    email address for sending notification
-                submissionParams['others'] (str): user-defined parameters
-                submissionParams['venvPath']:
-                    path of venv (virtual environment)
-            qpyName (str): name of input file (QPY format)
-            scriptName (str): name of python file
-                
-        returns:
-            shell (str): schell script for job submission
-            submissionCommand(str): submission command
+    """Generate a Slurm batch script for job submission.
+
+    Parameters
+    ----------
+    submissionParams : dict
+        Slurm submission parameters with the following keys:
+
+        ``'schedulerName'`` : str
+            Job scheduler name.
+        ``'numNodes'`` : int
+            Number of compute nodes.
+        ``'tasksPerNode'`` : int
+            Number of MPI tasks per node.
+        ``'cpusPerTask'`` : int
+            Number of CPU cores per task.
+        ``'maxTime'`` : str
+            Wall-clock time limit in the form ``'D-H:MM:SS'``.
+        ``'emailAddress'`` : str
+            Email address for Slurm job notifications.
+        ``'others'`` : str
+            Additional user-defined ``#SBATCH`` directives.
+        ``'venvPath'`` : str
+            Path to the Python virtual environment.
+
+    qpyName : str
+        Name of the input file in QPY format.
+    scriptName : str
+        Name of the Python runner script.
+
+    Returns
+    -------
+    shell : str
+        Slurm batch script content.
+    submissionCommand : str
+        Command used to submit the script (``'sbatch'``).
     """
 
     # shell script for submission
@@ -39,7 +50,7 @@ def slurmShell(submissionParams, qpyName, scriptName):
     venvPath = submissionParams['venvPath']
     if venvPath[-1] == '/':
         venvPath = venvPath[:-1]
-    
+
     shell += 'module load numlib/python_scipy/1.16.0_numpy-1.26.4_python-3.12.11\n\n'
     shell += 'export MKL_NUM_THREADS=$SLURM_CPUS_PER_TASK\n'
     shell += 'export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK\n'
@@ -49,7 +60,7 @@ def slurmShell(submissionParams, qpyName, scriptName):
     shell += 'export MKL_DYNAMIC=FALSE\n'
     shell += 'export OMP_DYNAMIC=FALSE\n'
     shell += '. ' + submissionParams['venvPath'] + '/bin/activate\n\n'
-    
+
     shell += 'qpyNew=qc${SLURM_JOB_ID}\n'
     shell += 'outName=${SLURM_JOB_ID}.csv\n\n'
     shell += 'mv ' + qpyName + ' $qpyNew\n\n'
@@ -60,15 +71,19 @@ def slurmShell(submissionParams, qpyName, scriptName):
     return shell, submissionCommand
 
 def slurmStatus(jobID, client):
-    """return whether the job with jobID is completed
-        For Slurm systems
+    """Check whether a Slurm job has completed.
 
-        args:
-            jobID: job ID of the simulation
-            client (paramiko.client.SSHClient): client for ssh connection
+    Parameters
+    ----------
+    jobID : int or str
+        Job ID of the simulation.
+    client : paramiko.client.SSHClient
+        Active SSH client connected to the HPC cluster.
 
-        returns:
-            bool: whether the job is completed
+    Returns
+    -------
+    bool
+        ``True`` if the job has completed, ``False`` if it is still running.
     """
 
     command = f'squeue -j {jobID}'
