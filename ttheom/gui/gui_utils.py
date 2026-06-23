@@ -27,10 +27,13 @@ SECTION_COLOR_DARK  = "#2b2d30"
 
 def change_state_all_widgets(frame, state):
     for widget in frame.winfo_children():
-        if isinstance(widget, ctk.CTkBaseClass):
-            widget.configure(state=state)
-        elif isinstance(widget, ctk.CTkFrame):
+        if isinstance(widget, (ctk.CTkFrame, ctk.CTkScrollableFrame)):
             change_state_all_widgets(widget, state)
+        elif isinstance(widget, ctk.CTkBaseClass) and not isinstance(widget, ctk.CTkLabel):
+            try:
+                widget.configure(state=state)
+            except Exception:
+                pass
 
 
 def make_section_label(parent, text, row, colspan=2):
