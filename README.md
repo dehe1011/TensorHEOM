@@ -3,15 +3,24 @@
 </p>
 
 <p align="center">
+    <a href="https://tensorheom.readthedocs.io/en/latest/">
+        <img src="https://readthedocs.org/projects/tensorheom/badge/?version=latest"
+            alt="Documentation Status" /></a>
     <a href="https://opensource.org/licenses/BSD-3-Clause">
         <img src="https://img.shields.io/badge/license-New%20BSD-blue.svg"
             alt="License"></a>
     <a href='https://github.com/dehe1011/QuantumDNA/actions/workflows/code-quality.yml'>
         <img src='https://img.shields.io/github/actions/workflow/status/dehe1011/QuantumDNA/code-quality.yml?branch=main'
             alt='GitHub Workflow Status' /></a>
-    <a href='https://github.com/psf/black'>
+    <!-- <a href='https://github.com/psf/black'>
         <img src='https://img.shields.io/badge/code%20style-black-000000.svg'
-            alt='Code Style: black' /></a>
+            alt='Code Style: black' /></a> -->
+    <a href="https://pypi.org/project/ttheom/">
+        <img src="https://img.shields.io/pypi/v/ttheom.svg"
+            alt="PyPI version"></a>
+    <a href="https://pypi.org/project/ttheom/">
+        <img src="https://img.shields.io/pypi/pyversions/ttheom.svg"
+            alt="Python versions"></a>
 </p>
 
 ---
@@ -116,16 +125,18 @@ TensorHeomApp().mainloop()
     <img src="ttheom/figures/GUI1.png" width="800">
 </p>
 
-## Documentation and examples
+## Documentation
 
-Example scripts and workflows are provided in the repository and in the accompanying paper.
+[![Documentation Status](https://readthedocs.org/projects/tensorheom/badge/?version=latest)](https://tensorheom.readthedocs.io/en/latest/)
+
+The documentation is available on Read the Docs: https://tensorheom.readthedocs.io/en/latest/
 
 ## References
 
 Recent papers from our group:
 
-* [K. Nakamura and J. Ankerhold, Impact of time-retarded noise on dynamical decoupling schemes for qubits. *Physical Review B* **111**, 064503 (2025).](https://doi.org/10.1103/PhysRevB.111.064503)
-* [K. Nakamura and J. Ankerhold, Entanglement dynamics and performance of two-qubit gates for superconducting qubits under non-Markovian effects. *Physical Review Research* **8**, 013337 (2026).](https://doi.org/10.1103/b5jp-s6t2)
+* K. Nakamura and J. Ankerhold, Entanglement dynamics and performance of two-qubit gates for superconducting qubits under non-Markovian effects. [*Physical Review Research* **8**, 013337 (2026).](https://doi.org/10.1103/b5jp-s6t2)
+* K. Nakamura and J. Ankerhold, Impact of time-retarded noise on dynamical decoupling schemes for qubits. [*Physical Review B* **111**, 064503 (2025).](https://doi.org/10.1103/PhysRevB.111.064503)
 
 ## License
 
