@@ -38,7 +38,7 @@ def commandsForSubmission(submissionParams, qpyName, path):
     submissionParams['tasksPerNode'] = TASKSPERNODE
 
     pythonScript = 'import sys\n'
-    pythonScript += 'from heom.cui import run_cui\n\n'
+    pythonScript += 'from ttheom.cui import run_cui\n\n'
     pythonScript += 'run_cui(sys.argv[1], sys.argv[2])\n'
     pythonScript += 'EOF1\n'
 

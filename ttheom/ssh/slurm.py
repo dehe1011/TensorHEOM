@@ -47,9 +47,7 @@ def slurmShell(submissionParams, qpyName, scriptName):
     shell += f"#SBATCH --mail-type=ALL,TIME_LIMIT\n"
     shell += submissionParams['others'] + '\n\n'
 
-    venvPath = submissionParams['venvPath']
-    if venvPath[-1] == '/':
-        venvPath = venvPath[:-1]
+    venvPath = submissionParams["venvPath"].strip().rstrip("/")
 
     shell += 'module load numlib/python_scipy/1.16.0_numpy-1.26.4_python-3.12.11\n\n'
     shell += 'export MKL_NUM_THREADS=$SLURM_CPUS_PER_TASK\n'
@@ -59,7 +57,7 @@ def slurmShell(submissionParams, qpyName, scriptName):
     shell += 'export VECLIB_MAXIMUM_THREADS=$SLURM_CPUS_PER_TASK\n'
     shell += 'export MKL_DYNAMIC=FALSE\n'
     shell += 'export OMP_DYNAMIC=FALSE\n'
-    shell += '. ' + submissionParams['venvPath'] + '/bin/activate\n\n'
+    shell += f"source {venvPath}/bin/activate\n\n"
 
     shell += 'qpyNew=qc${SLURM_JOB_ID}\n'
     shell += 'outName=${SLURM_JOB_ID}.csv\n\n'
