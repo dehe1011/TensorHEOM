@@ -128,38 +128,48 @@ class StepIndicator(ctk.CTkFrame):
     def __init__(self, master):
         super().__init__(master, fg_color="transparent")
         self._labels: list[ctk.CTkLabel] = []
+
         for i, name in enumerate(self.STEPS):
             lbl = ctk.CTkLabel(
-                self, text=name,
-                font=ctk.CTkFont(size=11),
-                width=120,
+                self,
+                text=name,
+                font=ctk.CTkFont(size=12),
+                width=130,
             )
-            lbl.grid(row=0, column=i * 2, padx=4)
+            lbl.grid(row=0, column=i * 2, padx=5)
             self._labels.append(lbl)
+
             if i < len(self.STEPS) - 1:
                 arrow = ctk.CTkLabel(
-                    self, text="›", font=ctk.CTkFont(size=14),
-                    text_color=("gray50", "gray60"),
+                    self,
+                    text="›",
+                    font=ctk.CTkFont(size=16),
+                    text_color=("gray35", "gray50"),
                 )
                 arrow.grid(row=0, column=i * 2 + 1)
+
         self.set_step(0)
 
     def set_step(self, active: int):
+        inactive_color = ("gray30", "gray50")
+        completed_color = ("gray25", "gray45")
+        active_color = ("#1a73e8", "#4fa3f7")
+
         for i, lbl in enumerate(self._labels):
             if i < active:
                 lbl.configure(
-                    text_color=("gray50", "gray55"),
-                    font=ctk.CTkFont(size=11),
+                    text_color=completed_color,
+                    font=ctk.CTkFont(size=12),
                 )
             elif i == active:
                 lbl.configure(
-                    text_color=("#1a73e8", "#4fa3f7"),
-                    font=ctk.CTkFont(size=11, weight="bold"),
+                    text_color=active_color,
+                    font=ctk.CTkFont(size=12, weight="bold"),
                 )
             else:
                 lbl.configure(
-                    text_color=("gray50", "gray55"),
-                    font=ctk.CTkFont(size=11),
+                    text_color=inactive_color,
+                    font=ctk.CTkFont(size=12),
                 )
 
 # ----------------------------------------------------------------------

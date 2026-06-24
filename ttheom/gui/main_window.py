@@ -23,7 +23,7 @@ from .windows.circuit_editor_window import CircuitEditor
 from .windows.help_window import HelpWindow
 from .windows.state_editor_window import StateEditor
 from .windows.plotting_pulse_window import PlottingPulseWindow
-from .windows.plotting_circ_window import PlottingCircWindow
+ 
 from .windows.hpc_settings_window import HPCSettings, HPCDownload
 from .windows.plotting_window import PlottingWindow
 
@@ -51,11 +51,12 @@ class TensorHeomApp(ctk.CTk):
         # ── state ────────────────────────────────────────────────────────
         self.numQ = 2
         self.directory_display = "simulations_GUI"
-        self.directory = os.path.join(os.getcwd(), self.directory_display)
-        self.fileName = "package_test"
+        self.directory = None
+        self.fileName = "package_test" 
         self.kwargs = {}
 
-        self.qc = QuantumCircuit(self.numQ)
+        self.qc = None
+        self.metadata = {}
         self.qcFilePath = None
         self.csvFilePath = None
         self.params = {}
@@ -67,7 +68,7 @@ class TensorHeomApp(ctk.CTk):
 
         # ── root grid ────────────────────────────────────────────────────
         self.grid_columnconfigure(0, weight=0, minsize=220)  # left
-        self.grid_columnconfigure(1, weight=1, minsize=320)  # middle
+        self.grid_columnconfigure(1, weight=1, minsize=400)  # middle
         self.grid_columnconfigure(2, weight=0, minsize=240)  # right
         self.grid_rowconfigure(0, weight=0)  # header
         self.grid_rowconfigure(1, weight=5)  # main content
@@ -159,29 +160,47 @@ class TensorHeomApp(ctk.CTk):
         popup = CircuitEditor(self)
         popup.grab_set()
         self.wait_window(popup)
-        print(f"Circuit built and saved as {self.qcFilePath}")
+
+        if popup._circuit_built:
+            print(f"Circuit built and saved as {self.qcFilePath}")
+        else:
+            print("No circuit was built or saved.")
+
 
     def upload_circuit(self):
         self.directory_display, self.fileName, self.numQ = self.left_frame.get_args()
         self.directory = os.path.join(os.getcwd(), self.directory_display)
+        os.makedirs(self.directory, exist_ok=True)
         self.qcFilePath = os.path.join(self.directory, "qcData_" + self.fileName)
 
         print("Uploading circuit...")
-        path = filedialog.askopenfilename(filetypes=[("QPY files", "*.qpy")])
-        if path:
+        path = filedialog.askopenfilename(
+            initialdir=self.directory,
+            filetypes=[("QPY files", "*.qpy")],
+        )
+
+        if not path:
+            print("No circuit file selected.")
+        else: 
             self.qcFilePath = path
             self.qc = loadQC(self.qcFilePath)
-            print("Circuit uploaded successfully.")
+            self.metadata = self.qc.metadata
+            print(f"Found metadata in the uploaded circuit: {self.metadata}")
+            print(f"Circuit uploaded successfully from {path}.")
+
 
     def continue_to_middle_frame(self):
+        if self.qc is None:
+            print("Please create or upload a quantum circuit before continuing.")
+            return
+
         self.directory_display, self.fileName, self.numQ = self.left_frame.get_args()
         self.directory = os.path.join(os.getcwd(), self.directory_display)
-        self.qcFilePath = os.path.join(self.directory, "qcData_" + self.fileName)
-        self.csvFilePath = os.path.join(self.directory, self.fileName + ".csv")
+        os.makedirs(self.directory, exist_ok=True)
+        print(f"Directory set to: {self.directory}")
 
-        if self.qc is None:
-            print("Please define a quantum circuit first.")
-            return
+        self.qcFilePath = os.path.join(self.directory, "qcData_" + self.fileName + '.qpy')
+        self.csvFilePath = os.path.join(self.directory, self.fileName + ".csv")
 
         if self.qc.num_qubits != self.numQ:
             print(
@@ -213,9 +232,18 @@ class TensorHeomApp(ctk.CTk):
 
     def open_state_editor(self):
         print("Opening state editor window...")
+
         popup = StateEditor(self)
         popup.grab_set()
         self.wait_window(popup)
+
+        if getattr(popup, "state_confirmed", False):
+            print("Initial state confirmed. Using:")
+            print(self.kwargs["rhoIni"])
+        else:
+            print("Initial state was not confirmed.")
+            print("Using the current/default initial state instead:")
+            print(self.kwargs["rhoIni"])
 
     def back_to_left_frame(self):
         self.right_frame.change_state1("disabled")
@@ -237,6 +265,9 @@ class TensorHeomApp(ctk.CTk):
             useRFPlus=useRFPlus, isRK13=isRK13, qc=self.qc,
         )
 
+        print("Using the following parameters for simulation:")
+        print(self.kwargs)
+        
         self.middle_frame.change_state("disabled")
         self.right_frame.change_state1("normal")
         self._set_step(2)
@@ -244,7 +275,7 @@ class TensorHeomApp(ctk.CTk):
     def open_plotting_pulse_window(self):
         print("Opening pulse sequence plotting window...")
         PlottingPulseWindow(self)
-        PlottingCircWindow(self)
+        # PlottingCircWindow(self)
 
     def plot_pulse_seq(self):
         return plotPulseSeq(**self.kwargs)
@@ -255,8 +286,12 @@ class TensorHeomApp(ctk.CTk):
 
     def upload_file(self):
         print("Uploading result file...")
-        filepath = filedialog.askopenfilename(filetypes=[("CSV files", "*.csv")])
+        filepath = filedialog.askopenfilename(
+            initialdir=self.directory,
+            filetypes=[("CSV files", "*.csv")],
+        )            
         if not filepath:
+            print("No result file selected.")
             return
         self.t_list, self.dm_list = loadResult(filepath)
         self.t_list /= self.params.get("omegaQmax", 1.0)
@@ -276,7 +311,7 @@ class TensorHeomApp(ctk.CTk):
         self._set_step(3)
 
     def submit_hpc(self):
-        print("Opening HPC Settings window...")
+        print("Opening HPC Submission window...")
         popup = HPCSettings(self)
         popup.grab_set()
         self.wait_window(popup)
@@ -309,9 +344,14 @@ class TensorHeomApp(ctk.CTk):
         popup.grab_set()
         self.wait_window(popup)
 
-        self.t_list, self.dm_list = loadResult(self.job_id + ".csv")
+        if not getattr(popup, "download_successful", False):
+            print("No result was downloaded.")
+            return
+
+        self.t_list, self.dm_list = loadResult(self.csvFilePath)
         self.t_list /= self.params.get("omegaQmax", 1.0)
-        print(f"Result downloaded and saved as {self.job_id}.csv.")
+
+        print(f"Result downloaded and saved as {self.csvFilePath}.")
         self.right_frame.change_state2("normal")
         self._set_step(3)
 

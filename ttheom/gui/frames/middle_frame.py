@@ -92,8 +92,8 @@ class MiddleFrame(ctk.CTkScrollableFrame):
             self,
             text="Open State Editor",
             width=BTN_WIDTH_SECONDARY,
-            fg_color=("gray75", "gray30"),
-            hover_color=("gray65", "gray40"),
+            fg_color=("gray65", "gray25"),
+            hover_color=("gray55", "gray35"),
             command=master.open_state_editor,
         )
         self.initial_state_button.grid(
@@ -152,8 +152,8 @@ class MiddleFrame(ctk.CTkScrollableFrame):
             self,
             text="← Back",
             width=BTN_WIDTH_SECONDARY,
-            fg_color=("gray75", "gray30"),
-            hover_color=("gray65", "gray40"),
+            fg_color=("gray65", "gray25"),
+            hover_color=("gray55", "gray35"),
             command=master.back_to_left_frame,
         )
         self.back_button.grid(

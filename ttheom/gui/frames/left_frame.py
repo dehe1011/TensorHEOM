@@ -48,8 +48,8 @@ class LeftFrame(ctk.CTkFrame):
             self,
             text="Upload Circuit (.qpy)",
             width=BTN_WIDTH_PRIMARY,
-            fg_color=("gray75", "gray30"),
-            hover_color=("gray65", "gray40"),
+            fg_color=("gray65", "gray25"),
+            hover_color=("gray55", "gray35"),
             command=master.upload_circuit,
         )
         self.circuit_upload_button.grid(

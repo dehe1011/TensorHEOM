@@ -34,8 +34,8 @@ class RightFrame(ctk.CTkFrame):
             self,
             text="Upload Result File",
             width=BTN_WIDTH_PRIMARY,
-            fg_color=("gray75", "gray30"),
-            hover_color=("gray65", "gray40"),
+            fg_color=("gray65", "gray25"),
+            hover_color=("gray55", "gray35"),
             command=master.upload_file,
         )
         self.load_result_button.grid(
@@ -49,8 +49,8 @@ class RightFrame(ctk.CTkFrame):
             self,
             text="Submit to HPC",
             width=BTN_WIDTH_SECONDARY,
-            fg_color=("gray75", "gray30"),
-            hover_color=("gray65", "gray40"),
+            fg_color=("gray65", "gray25"),
+            hover_color=("gray55", "gray35"),
             command=master.submit_hpc,
         )
         self.submit_hpc_button.grid(
@@ -61,8 +61,8 @@ class RightFrame(ctk.CTkFrame):
             self,
             text="Download Result",
             width=BTN_WIDTH_SECONDARY,
-            fg_color=("gray75", "gray30"),
-            hover_color=("gray65", "gray40"),
+            fg_color=("gray65", "gray25"),
+            hover_color=("gray55", "gray35"),
             command=master.download_file,
         )
         self.download_button.grid(
@@ -74,8 +74,8 @@ class RightFrame(ctk.CTkFrame):
             self,
             text="← Back",
             width=BTN_WIDTH_PRIMARY,
-            fg_color=("gray75", "gray30"),
-            hover_color=("gray65", "gray40"),
+            fg_color=("gray65", "gray25"),
+            hover_color=("gray55", "gray35"),
             command=master.back_to_middle_frame,
         )
         self.back_button.grid(
@@ -133,7 +133,7 @@ class RightFrame(ctk.CTkFrame):
 
         self.plot_combobox = ctk.CTkComboBox(
             self,
-            values=["RDO", "Fidelity", "Concurrence"],
+            values=["RDO", "Fidelity", "Concurrence", "Logarithmic Negativity"],
             width=130,
         )
         self.plot_combobox.set("RDO")

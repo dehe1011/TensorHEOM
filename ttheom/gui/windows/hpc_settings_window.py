@@ -27,7 +27,7 @@ class HPCSettings(ctk.CTkToplevel):
     def __init__(self, master=None):
         super().__init__(master)
         self.title("HPC Settings")
-        self.geometry("480x680")
+        self.geometry("380x620")
         self.resizable(False, False)
         self.master = master
         self.grid_columnconfigure(1, weight=1)
@@ -35,11 +35,11 @@ class HPCSettings(ctk.CTkToplevel):
         row = 0
         row += make_section_label(self, "Login", row)
 
-        self.hostname_entry = _add_entry(self, "Hostname:", row)
+        self.hostname_entry = _add_entry(self, "Hostname:", row, default="justus2.uni-ulm.de")
         row += 1
-        self.username_entry = _add_entry(self, "Username:", row)
+        self.username_entry = _add_entry(self, "Username:", row, default="ul_kfo52")
         row += 1
-        self.password_entry = _add_entry(self, "Password:", row, show="●")
+        self.password_entry = _add_entry(self, "Password:", row, show="●", default="3bA5huBB5n!NdU8")
         row += 1
         self.otp_entry = _add_entry(self, "One-Time Password:", row, show="●")
         row += 1
@@ -56,7 +56,7 @@ class HPCSettings(ctk.CTkToplevel):
         row += 1
         self.time_entry = _add_entry(self, "Max time (D-H:MM:SS):", row, default="0-04:00:00")
         row += 1
-        self.venv_entry = _add_entry(self, "Virtualenv path:", row, default="$HOME/.venv")
+        self.venv_entry = _add_entry(self, "Virtualenv path:", row, default="$HOME/python_HEOM/.venv")
         row += 1
         self.email_entry = _add_entry(self, "Email (optional):", row)
         row += 1
@@ -95,9 +95,14 @@ class HPCDownload(ctk.CTkToplevel):
     def __init__(self, master=None):
         super().__init__(master)
         self.title("HPC Download")
-        self.geometry("480x400")
+        self.geometry("380x400")
         self.resizable(False, False)
         self.master = master
+
+        # Track whether the download was successful
+        self.download_successful = False
+        self.download_path = None
+
         self.grid_columnconfigure(1, weight=1)
 
         prev = master.submissionParams
@@ -139,15 +144,33 @@ class HPCDownload(ctk.CTkToplevel):
 
     def _download(self):
         download_params = {
-            "hostname":      self.hostname_entry.get(),
-            "username":      self.username_entry.get(),
-            "password":      self.password_entry.get(),
-            "otp":           self.otp_entry.get(),
+            "hostname": self.hostname_entry.get(),
+            "username": self.username_entry.get(),
+            "password": self.password_entry.get(),
+            "otp": self.otp_entry.get(),
             "schedulerName": self.scheduler_entry.get(),
         }
-        self.master.job_id = self.job_id_entry.get()
-        downloadResult(download_params, self.master.job_id,
-                       self.master.job_id + ".csv")
-        self.destroy()
+
+        self.master.job_id = self.job_id_entry.get().strip()
+
+        if not self.master.job_id:
+            print("No Job ID specified. Download cancelled.")
+            return
+
+        local_file = self.master.csvFilePath
+
+        try:
+            downloadResult(download_params, self.master.job_id, local_file)
+
+            self.download_successful = True
+            self.download_path = local_file
+
+            print(f"Result downloaded successfully: {local_file}")
+            self.destroy()
+
+        except Exception as exc:
+            self.download_successful = False
+            self.download_path = None
+            print(f"Download failed: {exc}")
 
 # ----------------------------------------------------------------------

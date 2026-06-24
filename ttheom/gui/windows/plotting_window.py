@@ -1,14 +1,12 @@
-import os
-
 import numpy as np
 import customtkinter as ctk
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
 from qiskit.quantum_info import Operator
-from scipy.linalg import eigvals
 from tkinter import filedialog
 
 from ..gui_utils import PAD_OUTER, PAD_Y
+from ...evaluation import getConcurrence, getFidelity, getLogarithmicNegativity
 
 # ----------------------------------------------------------------------
 
@@ -68,7 +66,17 @@ class PlottingWindow(ctk.CTkToplevel):
         elif plot_type == "Fidelity":
             self._plot_fidelity()
         elif plot_type == "Concurrence":
-            self._plot_concurrence()
+            if self.master.numQ != 2:
+                print("Concurrence is only defined for 2 qubits.")
+                return 
+            else:
+                self._plot_concurrence()
+        elif plot_type == "Logarithmic Negativity":
+            if self.master.numQ < 2:
+                print("Logarithmic Negativity is only defined for 2 or more qubits.")
+                return 
+            else:
+                self._plot_logarithmic_negativity()
 
         if self.fig is not None:
             self._embed_figure()
@@ -76,41 +84,69 @@ class PlottingWindow(ctk.CTkToplevel):
     # ------------------------------------------------------------------
 
     def _embed_figure(self):
-        canvas = FigureCanvasTkAgg(self.fig, master=self._canvas_frame)
+        # Clear old widgets
+        for widget in self._canvas_frame.winfo_children():
+            widget.destroy()
+
+        # Separate frames: toolbar and canvas must not mix pack/grid
+        toolbar_frame = ctk.CTkFrame(self._canvas_frame, fg_color="transparent")
+        toolbar_frame.grid(row=0, column=0, sticky="ew")
+
+        canvas_frame = ctk.CTkFrame(self._canvas_frame, fg_color="transparent")
+        canvas_frame.grid(row=1, column=0, sticky="nsew")
+
+        self._canvas_frame.grid_rowconfigure(0, weight=0)
+        self._canvas_frame.grid_rowconfigure(1, weight=1)
+        self._canvas_frame.grid_columnconfigure(0, weight=1)
+
+        canvas_frame.grid_rowconfigure(0, weight=1)
+        canvas_frame.grid_columnconfigure(0, weight=1)
+
+        canvas = FigureCanvasTkAgg(self.fig, master=canvas_frame)
         canvas.draw()
-        toolbar = NavigationToolbar2Tk(canvas, self._canvas_frame)
+
+        canvas_widget = canvas.get_tk_widget()
+        canvas_widget.grid(row=0, column=0, sticky="nsew")
+
+        toolbar = NavigationToolbar2Tk(canvas, toolbar_frame, pack_toolbar=False)
         toolbar.update()
-        canvas.get_tk_widget().grid(row=0, column=0, sticky="nsew")
+        toolbar.grid(row=0, column=0, sticky="w")
+
+        self.canvas = canvas
+        self.toolbar = toolbar
 
     def _plot_concurrence(self):
-        if self.master.numQ != 2:
-            print("Concurrence is only defined for 2 qubits.")
-            return
 
-        sigma_y = np.array([[0, -1j], [1j, 0]])
-        Y = np.kron(sigma_y, sigma_y)
-        concs = []
-        for rho in self.master.dm_list:
-            rho_tilde = Y @ rho.conj() @ Y
-            eigenvals_sorted = np.sort(np.sqrt(np.abs(eigvals(rho @ rho_tilde))))[::-1]
-            concs.append(max(0.0, eigenvals_sorted[0] - sum(eigenvals_sorted[1:])))
+        concs = [getConcurrence(rho) for rho in self.master.dm_list]
 
         self.fig, ax = plt.subplots(figsize=(6, 3.5), tight_layout=True)
         ax.plot(self.master.t_list, concs, linewidth=1.8)
-        ax.set_xlabel("Time (ns)")
-        ax.set_ylabel("Concurrence")
+        ax.set_xlabel("t [ns]")
+        ax.set_ylabel("C")
         ax.set_ylim(-0.02, 1.02)
         ax.grid(True, alpha=0.3)
+
+    def _plot_logarithmic_negativity(self):
+        # TODO: always wrt first qubit, or allow user to select qubit?
+        log_neg = [getLogarithmicNegativity(rho, transposeQIdx=[0]) for rho in self.master.dm_list]
+
+        self.fig, ax = plt.subplots(figsize=(6, 3.5), tight_layout=True)
+        ax.plot(self.master.t_list, log_neg, linewidth=1.8)
+        ax.set_xlabel("t [ns]")
+        ax.set_ylabel("E_N")
+        ax.set_ylim(-0.02, max(log_neg) + 0.1)
+        ax.grid(True, alpha=0.3) 
 
     def _plot_fidelity(self):
         U = Operator(self.master.kwargs["qc"]).data
         target = U @ self.master.kwargs["rhoIni"] @ U.conj().T
-        fids = [np.real(np.trace(rho @ target)) for rho in self.master.dm_list]
+
+        fids = [getFidelity(rho, target) for rho in self.master.dm_list]
 
         self.fig, ax = plt.subplots(figsize=(6, 3.5), tight_layout=True)
         ax.plot(self.master.t_list, fids, linewidth=1.8)
-        ax.set_xlabel("Time (ns)")
-        ax.set_ylabel("Fidelity")
+        ax.set_xlabel("t [ns]")
+        ax.set_ylabel("F")
         ax.set_ylim(-0.02, 1.02)
         ax.grid(True, alpha=0.3)
 
@@ -138,7 +174,7 @@ class PlottingWindow(ctk.CTkToplevel):
                 ax.tick_params(labelsize=7)
 
         for j in range(dim):
-            axes[-1, j].set_xlabel("t (ns)", fontsize=8)
+            axes[-1, j].set_xlabel("t [ns]", fontsize=8)
         axes[0, 0].legend(loc="upper right", fontsize=6)
 
     # ------------------------------------------------------------------
