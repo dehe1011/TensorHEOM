@@ -39,5 +39,6 @@ def getLogarithmicNegativity(rho, transposeQIdx):
     vals = np.linalg.svd(rhoPartTrans, compute_uv=False)
 
     traceNorm = np.sum(vals).real
+    traceNorm = max(traceNorm, 1.0)
 
     return np.log2(traceNorm)
