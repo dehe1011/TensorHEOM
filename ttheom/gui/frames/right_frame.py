@@ -1,138 +1,183 @@
 import customtkinter as ctk
 
+from ..gui_utils import (
+    make_section_label,
+    BTN_WIDTH_PRIMARY, BTN_WIDTH_SECONDARY, PAD_OUTER, PAD_Y,
+)
+
 # ----------------------------------------------------------------------
 
 
 class RightFrame(ctk.CTkFrame):
     def __init__(self, master):
-
-        # initialization of the ctk.CTkFrame class
-        super().__init__(master)
+        super().__init__(master, corner_radius=10)
+        self.grid_columnconfigure(0, weight=1)
+        self.grid_columnconfigure(1, weight=1)
         row = 0
 
-        # --------------------------------------------------------------
+        # ── section: Run ─────────────────────────────────────────────────
+        row += make_section_label(self, "Run Simulation", row)
 
-        # label
-        self.logo_label = ctk.CTkLabel(
-            self, text="Calculation", font=ctk.CTkFont(size=20, weight="bold")
+        self.submit_button = ctk.CTkButton(
+            self,
+            text="▶  Run Locally",
+            width=BTN_WIDTH_PRIMARY,
+            command=master.submit_local,
         )
-        self.logo_label.grid(row=row, column=0, columnspan=2, pady=10, padx=10)
+        self.submit_button.grid(
+            row=row, column=0, columnspan=2, padx=PAD_OUTER,
+            pady=(PAD_Y, 2), sticky="ew",
+        )
         row += 1
 
-        # load result label and button
-        self.load_result_label = ctk.CTkLabel(self, text="1. Upload result:")
-        self.load_result_label.grid(row=row, column=0, padx=10, pady=10)
         self.load_result_button = ctk.CTkButton(
-            self, text="Upload file", command=master.upload_file
+            self,
+            text="Upload Result File",
+            width=BTN_WIDTH_PRIMARY,
+            fg_color=("gray65", "gray25"),
+            hover_color=("gray55", "gray35"),
+            command=master.upload_file,
         )
-        self.load_result_button.grid(row=row, column=1, padx=10, pady=10)
+        self.load_result_button.grid(
+            row=row, column=0, columnspan=2, padx=PAD_OUTER,
+            pady=2, sticky="ew",
+        )
         row += 1
 
-        # submit local button	
-        self.submit_label = ctk.CTkLabel(self, text="2. Calculate locally:")
-        self.submit_label.grid(row=row, column=0, padx=10, pady=10)
-        self.submit_button = ctk.CTkButton(self, text="Submit", command=master.submit_local)
-        self.submit_button.grid(row=row, column=1, pady=10, padx=10)
-        row += 1
+        # ── HPC sub-row ──────────────────────────────────────────────────
+        self.submit_hpc_button = ctk.CTkButton(
+            self,
+            text="Submit to HPC",
+            width=BTN_WIDTH_SECONDARY,
+            fg_color=("gray65", "gray25"),
+            hover_color=("gray55", "gray35"),
+            command=master.submit_hpc,
+        )
+        self.submit_hpc_button.grid(
+            row=row, column=0, padx=(PAD_OUTER, 2), pady=2, sticky="ew"
+        )
 
-        # submit HPC button
-        self.submit_HPC_label = ctk.CTkLabel(self, text="3. Submit to HPC:")
-        self.submit_HPC_label.grid(row=row, column=0, padx=10, pady=10)
-        self.submit_hpc_button = ctk.CTkButton(self, text="Submit", command=master.submit_hpc)
-        self.submit_hpc_button.grid(row=row, column=1, pady=10, padx=10)
-        row += 1
-
-        # download label and button
         self.download_button = ctk.CTkButton(
-            self, text="Download file", command=master.download_file
+            self,
+            text="Download Result",
+            width=BTN_WIDTH_SECONDARY,
+            fg_color=("gray65", "gray25"),
+            hover_color=("gray55", "gray35"),
+            command=master.download_file,
         )
-        self.download_button.grid(row=row, column=1, padx=10, pady=10)
+        self.download_button.grid(
+            row=row, column=1, padx=(2, PAD_OUTER), pady=2, sticky="ew"
+        )
         row += 1
 
-        # back button
         self.back_button = ctk.CTkButton(
-            self, text="Back", command=master.back_to_middle_frame
+            self,
+            text="← Back",
+            width=BTN_WIDTH_PRIMARY,
+            fg_color=("gray65", "gray25"),
+            hover_color=("gray55", "gray35"),
+            command=master.back_to_middle_frame,
         )
-        self.back_button.grid(row=row, column=0, columnspan=2, pady=10, padx=10)
+        self.back_button.grid(
+            row=row, column=0, columnspan=2, padx=PAD_OUTER,
+            pady=(2, PAD_Y), sticky="ew",
+        )
         row += 1
 
-        # empty row for spacing
+        # ── spacer ───────────────────────────────────────────────────────
         self.grid_rowconfigure(row, weight=1)
         row += 1
 
-        # --------------------------------------------------------------
+        # ── section: Evaluation ──────────────────────────────────────────
+        row += make_section_label(self, "Evaluation", row)
 
-        # label
-        self.logo_label = ctk.CTkLabel(
-            self, text="Evaluation", font=ctk.CTkFont(size=20, weight="bold")
-        )
-        self.logo_label.grid(row=row, column=0, columnspan=2, pady=10, padx=10)
-        row += 1
-
-        # plot pulse sequence button
         self.plot_pulse_seq_button = ctk.CTkButton(
-            self, text="Plot pulse sequence", command=master.open_plotting_pulse_window)
-        self.plot_pulse_seq_button.grid(row=row, column=0, columnspan=2, pady=10, padx=10)
+            self,
+            text="Pulse Sequence",
+            width=BTN_WIDTH_PRIMARY,
+            command=master.open_plotting_pulse_window,
+        )
+        self.plot_pulse_seq_button.grid(
+            row=row, column=0, columnspan=2, padx=PAD_OUTER,
+            pady=(PAD_Y, 2), sticky="ew",
+        )
         row += 1
 
-        # calculate fidelity button
         self.calculate_fidelity_button = ctk.CTkButton(
-            self, text="Calculate fidelity", command=master.calculate_fidelity
+            self,
+            text="Calculate Fidelity",
+            width=BTN_WIDTH_SECONDARY,
+            command=master.calculate_fidelity,
         )
-        self.calculate_fidelity_button.grid(row=row, column=0, columnspan=2, pady=10, padx=10)
-        row += 1
+        self.calculate_fidelity_button.grid(
+            row=row, column=0, padx=(PAD_OUTER, 2), pady=2, sticky="ew"
+        )
 
-        # calculate concurrence button
         self.calculate_concurrence_button = ctk.CTkButton(
-            self, text="Calculate concurrence", command=master.calculate_concurrence
+            self,
+            text="Calculate Concurrence",
+            width=BTN_WIDTH_SECONDARY,
+            command=master.calculate_concurrence,
         )
-        self.calculate_concurrence_button.grid(row=row, column=0, columnspan=2, pady=10, padx=10)
+        self.calculate_concurrence_button.grid(
+            row=row, column=1, padx=(2, PAD_OUTER), pady=2, sticky="ew"
+        )
         row += 1
 
-        # empty row for spacing
+        # ── spacer ───────────────────────────────────────────────────────
         self.grid_rowconfigure(row, weight=1)
         row += 1
 
-        # --------------------------------------------------------------
+        # ── section: Plot ────────────────────────────────────────────────
+        row += make_section_label(self, "Plot Results", row)
 
-        # label
-        self.logo_label2 = ctk.CTkLabel(
-            self, text="Plotting", font=ctk.CTkFont(size=20, weight="bold")
-        )
-        self.logo_label2.grid(row=row, column=0, columnspan=2, pady=10, padx=10)
-        row += 1
-
-        # plot combobox
         self.plot_combobox = ctk.CTkComboBox(
-            self, values=["RDO", "Fidelity", "Concurrence"]
+            self,
+            values=["RDO", "Fidelity", "Concurrence", "Logarithmic Negativity"],
+            width=130,
         )
         self.plot_combobox.set("RDO")
-        self.plot_combobox.grid(row=row, column=0, columnspan=1, padx=10, pady=10)
-        # row += 1
+        self.plot_combobox.grid(
+            row=row, column=0, padx=(PAD_OUTER, 2), pady=PAD_Y, sticky="ew"
+        )
 
-        # plot button
-        self.plot_button = ctk.CTkButton(self, text="Plot", command=master.plot)
-        self.plot_button.grid(row=row, column=1, columnspan=1, padx=10, pady=10)
+        self.plot_button = ctk.CTkButton(
+            self,
+            text="Plot",
+            width=80,
+            command=master.plot,
+        )
+        self.plot_button.grid(
+            row=row, column=1, padx=(2, PAD_OUTER), pady=PAD_Y, sticky="ew"
+        )
         row += 1
 
-        # --------------------------------------------------------------
+        # ── bottom spacer ─────────────────────────────────────────────────
+        self.grid_rowconfigure(row, weight=1)
+
+    # ------------------------------------------------------------------
 
     def get_args(self):
-        plot_type = self.plot_combobox.get()
-        return plot_type
+        return self.plot_combobox.get()
 
     def change_state1(self, state):
-        self.load_result_button.configure(state=state)
-        self.download_button.configure(state=state)
-        self.submit_button.configure(state=state)
-        self.submit_hpc_button.configure(state=state)
-        self.back_button.configure(state=state)
-        self.plot_pulse_seq_button.configure(state=state)
-    
+        for w in (
+            self.load_result_button,
+            self.download_button,
+            self.submit_button,
+            self.submit_hpc_button,
+            self.back_button,
+            self.plot_pulse_seq_button,
+        ):
+            w.configure(state=state)
+
     def change_state2(self, state):
-        self.calculate_fidelity_button.configure(state=state)
-        self.calculate_concurrence_button.configure(state=state)
-        self.plot_combobox.configure(state=state)
-        self.plot_button.configure(state=state)
+        for w in (
+            self.calculate_fidelity_button,
+            self.calculate_concurrence_button,
+            self.plot_combobox,
+            self.plot_button,
+        ):
+            w.configure(state=state)
 
 # ----------------------------------------------------------------------
